@@ -22,5 +22,9 @@ export const api = {
   createLead: (data: any) => apiCall('createLeadWithConsent', { ...data, gym_id: 'gym_oxigen_demo' }),
   getClassSchedule: (branch_id?: string) => apiCall('getClassSchedule', { branch_id, gym_id: 'gym_oxigen_demo' }),
   createClassBooking: (class_id: string, member_id: string) =>
-    apiCall('createClassBooking', { class_id, member_id, gym_id: 'gym_oxigen_demo' })
+    apiCall('createClassBooking', { class_id, member_id, gym_id: 'gym_oxigen_demo' }),
+  getMemberships: () => apiCall('getMemberships'),
+  getRenewals: () => apiCall('getRenewals'),
+  getStaff: () => apiCall('getStaff'),
+  getReferrals: () => apiCall('getReferrals')
 }

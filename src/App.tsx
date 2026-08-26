@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { HashRouter, Routes, Route } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
 import Dashboard from './pages/Dashboard'
@@ -6,10 +6,16 @@ import Leads from './pages/Leads'
 import Trials from './pages/Trials'
 import CheckIn from './pages/CheckIn'
 import Members from './pages/Members'
+import Memberships from './pages/Memberships'
+import Classes from './pages/Classes'
+import Renewals from './pages/Renewals'
+import AtRisk from './pages/AtRisk'
+import Staff from './pages/Staff'
+import Referrals from './pages/Referrals'
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <div className="flex min-h-screen bg-slate-50">
         <Sidebar />
         <div className="flex-1 flex flex-col">
@@ -21,10 +27,16 @@ export default function App() {
               <Route path="/trials" element={<Trials />} />
               <Route path="/check-in" element={<CheckIn />} />
               <Route path="/members" element={<Members />} />
+              <Route path="/memberships" element={<Memberships />} />
+              <Route path="/classes" element={<Classes />} />
+              <Route path="/renewals" element={<Renewals />} />
+              <Route path="/at-risk" element={<AtRisk />} />
+              <Route path="/staff" element={<Staff />} />
+              <Route path="/referrals" element={<Referrals />} />
             </Routes>
           </main>
         </div>
       </div>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
