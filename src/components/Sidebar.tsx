@@ -18,7 +18,6 @@ const navItems = [
 export default function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => void }) {
   return (
     <>
-      {/* Mobile overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 bg-black/50 z-30 lg:hidden" onClick={onClose} />
       )}
@@ -64,7 +63,6 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; 
         <div className="px-5 py-3 border-t border-brand-800">
           <p className="text-xs text-brand-300">Oxigen Fitness</p>
           <p className="text-xs text-brand-500">C-Scheme, Jaipur</p>
-          <p className="text-[10px] text-amber-400 mt-1 font-semibold">[ DEMO MODE ACTIVE ]</p>
         </div>
       </aside>
     </>

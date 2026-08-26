@@ -28,7 +28,6 @@ export default function Memberships() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-slate-800">Memberships</h2>
-        <span className="text-[10px] font-semibold text-orange-500 bg-orange-50 px-2 py-1 rounded">[ DEMO MODE ACTIVE ]</span>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
