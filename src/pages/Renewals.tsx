@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { RefreshCw, AlertCircle, XCircle } from 'lucide-react'
+import LoadingScreen from '../components/LoadingScreen'
 import { api } from '../api/client'
 
 const stageColors: Record<string, string> = {
@@ -24,7 +25,7 @@ export default function Renewals() {
     }).catch(() => setLoading(false))
   }, [])
 
-  if (loading) return <div className="px-4 py-12 text-center text-slate-400">Loading renewal pipeline...</div>
+  if (loading) return <LoadingScreen message="Loading renewal pipeline..." />
   const critical = renewals.filter(r => r.days_to_expiry < 7 && r.days_to_expiry >= 0).length
   const expiredCount = renewals.filter(r => r.days_to_expiry < 0).length
   const warning = renewals.filter(r => r.days_to_expiry >= 7 && r.days_to_expiry < 30).length

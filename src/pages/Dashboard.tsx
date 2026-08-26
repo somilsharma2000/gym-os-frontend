@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import LoadingScreen from '../components/LoadingScreen'
 import { useNavigate } from 'react-router-dom'
 import { Users, UserPlus, Ticket, UserCheck, ClipboardList, CreditCard, AlertTriangle, Calendar, RefreshCw } from 'lucide-react'
 import { api } from '../api/client'
@@ -29,7 +30,7 @@ export default function Dashboard() {
 
   useEffect(() => { fetchData() }, [])
 
-  if (loading) return <div className="flex items-center justify-center h-96 text-slate-400">Loading dashboard...</div>
+  if (loading) return <LoadingScreen message="Loading dashboard..." />
   if (error) return <div className="flex items-center justify-center h-96 text-red-500">Error: {error}</div>
   if (!data) return <div className="flex items-center justify-center h-96 text-slate-400">No data</div>
 

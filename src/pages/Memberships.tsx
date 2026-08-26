@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { CreditCard, CheckCircle, AlertCircle, XCircle } from 'lucide-react'
+import LoadingScreen from '../components/LoadingScreen'
 import { api } from '../api/client'
 import StatusBadge from '../components/StatusBadge'
 
@@ -15,7 +16,7 @@ export default function Memberships() {
     }).catch(() => setLoading(false))
   }, [])
 
-  if (loading) return <div className="px-4 py-12 text-center text-slate-400">Loading memberships...</div>
+  if (loading) return <LoadingScreen message="Loading memberships..." />
   const memberships = data?.memberships || []
   const plans = data?.plans || []
   const filtered = filter === 'all' ? memberships : memberships.filter((m: any) => m.status === filter)

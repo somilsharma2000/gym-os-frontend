@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { UserCog, Dumbbell } from 'lucide-react'
+import LoadingScreen from '../components/LoadingScreen'
 import { api } from '../api/client'
 import StatusBadge from '../components/StatusBadge'
 
@@ -15,7 +16,7 @@ export default function Staff() {
     }).catch(() => setLoading(false))
   }, [])
 
-  if (loading) return <div className="px-4 py-12 text-center text-slate-400">Loading staff...</div>
+  if (loading) return <LoadingScreen message="Loading staff..." />
   const staff: any[] = data?.staff || []
   const trainers: any[] = data?.trainers || []
   const activeStaff = staff.filter((s: any) => s.is_active).length

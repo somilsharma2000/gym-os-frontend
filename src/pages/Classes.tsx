@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Calendar, Users, Clock } from 'lucide-react'
+import LoadingScreen from '../components/LoadingScreen'
 import { api } from '../api/client'
 import StatusBadge from '../components/StatusBadge'
 
@@ -14,7 +15,7 @@ export default function Classes() {
     }).catch(() => setLoading(false))
   }, [])
 
-  if (loading) return <div className="px-4 py-12 text-center text-slate-400">Loading classes...</div>
+  if (loading) return <LoadingScreen message="Loading classes..." />
   const total = classes.length
   const active = classes.filter(c => c.status === 'active' || c.status === 'scheduled').length
   const full = classes.filter(c => c.booked_count >= c.capacity).length

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { AlertTriangle, ShieldCheck, AlertCircle } from 'lucide-react'
+import LoadingScreen from '../components/LoadingScreen'
 import { api } from '../api/client'
 import StatusBadge from '../components/StatusBadge'
 
@@ -14,7 +15,7 @@ export default function AtRisk() {
     }).catch(() => setLoading(false))
   }, [])
 
-  if (loading) return <div className="px-4 py-12 text-center text-slate-400">Loading at-risk members...</div>
+  if (loading) return <LoadingScreen message="Loading at-risk members..." />
   const atRisk = members.filter(m => m.risk_status && m.risk_status !== 'none' && m.risk_status !== 'healthy' && m.risk_status !== '')
   const high = atRisk.filter(m => m.risk_status === 'high' || m.risk_status === 'critical').length
   const medium = atRisk.filter(m => m.risk_status === 'medium' || m.risk_status === 'at_risk').length

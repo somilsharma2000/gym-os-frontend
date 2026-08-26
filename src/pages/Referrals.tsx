@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Share2, CheckCircle, Clock, TrendingUp } from 'lucide-react'
+import LoadingScreen from '../components/LoadingScreen'
 import { api } from '../api/client'
 import StatusBadge from '../components/StatusBadge'
 
@@ -14,7 +15,7 @@ export default function Referrals() {
     }).catch(() => setLoading(false))
   }, [])
 
-  if (loading) return <div className="px-4 py-12 text-center text-slate-400">Loading referrals...</div>
+  if (loading) return <LoadingScreen message="Loading referrals..." />
   const total = referrals.length
   const converted = referrals.filter(r => r.status === 'converted').length
   const pending = referrals.filter(r => r.status === 'pending').length

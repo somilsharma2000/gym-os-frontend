@@ -1,6 +1,7 @@
 import { HashRouter, Routes, Route } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
+import Footer from './components/Footer'
 import Dashboard from './pages/Dashboard'
 import Leads from './pages/Leads'
 import Trials from './pages/Trials'
@@ -35,6 +36,7 @@ export default function App() {
               <Route path="/referrals" element={<Referrals />} />
             </Routes>
           </main>
+          <Footer />
         </div>
       </div>
     </HashRouter>
