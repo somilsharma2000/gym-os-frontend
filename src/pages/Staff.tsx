@@ -51,7 +51,7 @@ export default function Staff() {
 
       <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
         {tab === 'staff' ? (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="w-full text-sm whitespace-nowrap">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="text-left px-4 py-2.5 font-medium text-slate-600">Name</th>
@@ -72,9 +72,9 @@ export default function Staff() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="w-full text-sm whitespace-nowrap">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="text-left px-4 py-2.5 font-medium text-slate-600">Name</th>
@@ -95,7 +95,7 @@ export default function Staff() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
     </div>

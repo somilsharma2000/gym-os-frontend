@@ -31,7 +31,7 @@ export default function Memberships() {
         <span className="text-[10px] font-semibold text-orange-500 bg-orange-50 px-2 py-1 rounded">[ DEMO MODE ACTIVE ]</span>
       </div>
 
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard icon={CreditCard} label="Total" value={memberships.length} color="text-slate-700" />
         <StatCard icon={CheckCircle} label="Active" value={active} color="text-green-600" />
         <StatCard icon={AlertCircle} label="Expiring" value={expiring} color="text-amber-600" />
@@ -50,7 +50,7 @@ export default function Memberships() {
         {filtered.length === 0 ? (
           <div className="px-4 py-12 text-center text-slate-400">No memberships found.</div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="w-full text-sm whitespace-nowrap">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="text-left px-4 py-2.5 font-medium text-slate-600">Member</th>
@@ -73,14 +73,14 @@ export default function Memberships() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
 
       {plans.length > 0 && (
         <div className="bg-white rounded-lg border border-slate-200 p-4">
           <h3 className="text-sm font-semibold text-slate-700 mb-3">Available Plans</h3>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {plans.map((p: any) => (
               <div key={p.id} className="border border-slate-200 rounded-md p-3">
                 <p className="font-medium text-slate-700">{p.name}</p>

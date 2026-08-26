@@ -27,7 +27,7 @@ export default function Classes() {
         <span className="text-[10px] font-semibold text-orange-500 bg-orange-50 px-2 py-1 rounded">[ DEMO MODE ACTIVE ]</span>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="bg-white rounded-lg border border-slate-200 p-4">
           <div className="flex items-center gap-2 mb-2"><Calendar size={16} className="text-slate-600" /><span className="text-xs text-slate-500">Total Classes</span></div>
           <p className="text-2xl font-bold text-slate-700">{total}</p>
@@ -46,7 +46,7 @@ export default function Classes() {
         {classes.length === 0 ? (
           <div className="px-4 py-12 text-center text-slate-400">No classes scheduled.</div>
         ) : (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto"><table className="w-full text-sm whitespace-nowrap">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="text-left px-4 py-2.5 font-medium text-slate-600">Class</th>
@@ -79,7 +79,7 @@ export default function Classes() {
                 )
               })}
             </tbody>
-          </table>
+          </table></div>
         )}
       </div>
     </div>
