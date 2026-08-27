@@ -72,7 +72,7 @@ export default function Login() {
       {/* Logo Header */}
       <div className="flex items-center gap-3 mb-8">
         <img
-          src={`${import.meta.env.BASE_URL}brand/beyond-pixels-logo.jpg`}
+          src={`${import.meta.env.BASE_URL}brand/beyond-pixels-logo.png`}
           alt="Beyond Pixels"
           className="w-12 h-12 rounded-full object-cover"
         />

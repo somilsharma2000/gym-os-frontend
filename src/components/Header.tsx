@@ -28,7 +28,6 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
         setSelectedGym(current)
       }
     }).catch(() => {
-      // Fallback
       const fallback = { id: 'gym_oxigen', gym_name: 'Oxigen Fitness', gym_code: 'gym_oxigen' }
       setGyms([fallback])
       setSelectedGym(fallback)
@@ -106,9 +105,11 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
           onClick={() => setUserMenuOpen(!userMenuOpen)}
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
         >
-          <div className="w-8 h-8 rounded-full bg-brand-600 text-white flex items-center justify-center text-sm font-semibold">
-            {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-          </div>
+          <img
+            src={`${import.meta.env.BASE_URL}brand/beyond-pixels-logo.png`}
+            alt="Beyond Pixels"
+            className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+          />
           <span className="text-sm font-medium text-slate-700 hidden sm:block">{user?.name || 'User'}</span>
           <ChevronDown size={16} className="text-slate-400" />
         </button>

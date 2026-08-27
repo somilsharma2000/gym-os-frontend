@@ -3,7 +3,7 @@ export default function LoadingScreen({ message = 'Loading...' }: { message?: st
     <div className="flex flex-col items-center justify-center h-96 gap-4">
       <div className="relative">
         <img
-          src={`${import.meta.env.BASE_URL}brand/beyond-pixels-logo.jpg`}
+          src={`${import.meta.env.BASE_URL}brand/beyond-pixels-logo.png`}
           alt="Beyond Pixels"
           className="w-16 h-16 rounded-full object-cover animate-pulse"
         />

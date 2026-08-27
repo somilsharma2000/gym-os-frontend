@@ -4,7 +4,7 @@ export default function Footer() {
       <div className="flex items-center justify-between text-xs">
         <div className="flex items-center gap-2">
           <img
-            src={`${import.meta.env.BASE_URL}brand/beyond-pixels-logo.jpg`}
+            src={`${import.meta.env.BASE_URL}brand/beyond-pixels-logo.png`}
             alt="Beyond Pixels"
             className="w-5 h-5 rounded-full object-cover"
           />

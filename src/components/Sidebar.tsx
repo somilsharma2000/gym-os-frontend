@@ -37,7 +37,7 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; 
         }`}
       >
         <div className="px-5 py-5 border-b border-brand-800 flex items-center gap-3">
-          <img src={`${import.meta.env.BASE_URL}brand/beyond-pixels-logo.jpg`} alt="Beyond Pixels" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+          <img src={`${import.meta.env.BASE_URL}brand/beyond-pixels-logo.png`} alt="Beyond Pixels" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
           <div className="flex-1">
             <h1 className="text-base font-bold tracking-tight leading-tight">GYM OS</h1>
             <p className="text-[10px] text-brand-300 leading-tight">by Beyond Pixels</p>
