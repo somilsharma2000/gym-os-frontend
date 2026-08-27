@@ -39,8 +39,8 @@ export default function CheckIn() {
     try {
       const res = await api.validateQR(token.trim())
       setValidation(res)
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unknown error")
     }
     setValidating(false)
   }
@@ -57,8 +57,8 @@ export default function CheckIn() {
       } else {
         setError(res.error || 'Check-in failed')
       }
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unknown error")
     }
     setCheckingIn(false)
   }

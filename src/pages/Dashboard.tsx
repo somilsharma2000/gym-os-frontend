@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import LoadingScreen from '../components/LoadingScreen'
 import { useNavigate } from 'react-router-dom'
 import { Users, UserPlus, Ticket, UserCheck, ClipboardList, CreditCard, AlertTriangle, Calendar, RefreshCw } from 'lucide-react'
-import { api } from '../api/client'
+import { api, ApiRequestError } from '../api/client'
 import type { DashboardData } from '../types'
 import StatCard from '../components/StatCard'
 import StatusBadge from '../components/StatusBadge'
@@ -21,8 +21,14 @@ export default function Dashboard() {
       const res = await api.getDashboardData()
       if (res.success) setData(res)
       else setError(res.error || 'Failed to load dashboard data')
-    } catch (e: any) {
-      setError(e.message || 'Connection error')
+    } catch (e: unknown) {
+      if (e instanceof ApiRequestError) {
+        setError(e instanceof Error ? e.message : "Unknown error")
+      } else if (e instanceof Error) {
+        setError(e instanceof Error ? e.message : "Unknown error")
+      } else {
+        setError('Connection error')
+      }
     }
     setLoading(false)
     setLastRefresh(new Date().toLocaleTimeString())
@@ -31,7 +37,12 @@ export default function Dashboard() {
   useEffect(() => { fetchData() }, [])
 
   if (loading) return <LoadingScreen message="Loading dashboard..." />
-  if (error) return <div className="flex items-center justify-center h-96 text-red-500">Error: {error}</div>
+  if (error) return (
+    <div className="flex flex-col items-center justify-center h-96 gap-3 text-center">
+      <p className="text-red-500 font-medium">Error: {error}</p>
+      <button onClick={fetchData} className="px-3 py-1.5 text-sm text-white bg-brand-600 rounded-md hover:bg-brand-700">Retry</button>
+    </div>
+  )
   if (!data) return <div className="flex items-center justify-center h-96 text-slate-400">No data</div>
 
   const m = data.metrics
@@ -59,7 +70,7 @@ export default function Dashboard() {
         <StatCard label="Expiring Memberships" value={m.expiring_memberships} icon={<AlertTriangle size={16} />} color="text-orange-600" onClick={() => navigate('/members')} />
         <StatCard label="At-Risk Members" value={m.at_risk_members} icon={<AlertTriangle size={16} />} color="text-red-600" onClick={() => navigate('/members')} />
         <StatCard label="Today's Attendance" value={m.today_attendance} icon={<Calendar size={16} />} color="text-teal-600" onClick={() => navigate('/check-in')} />
-        <StatCard label="Pending Referrals" value={m.pending_referrals} icon={<Users size={16} />} color="text-indigo-600" onClick={() => navigate('/')} />
+        <StatCard label="Pending Referrals" value={m.pending_referrals} icon={<Users size={16} />} color="text-indigo-600" onClick={() => navigate('/referrals')} />
       </div>
 
       {/* Recent Activity Sections */}

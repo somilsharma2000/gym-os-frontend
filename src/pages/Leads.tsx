@@ -23,8 +23,8 @@ export default function Leads() {
       const res = await api.getLeads({ status: statusFilter, source: sourceFilter, search })
       if (res.success) setLeads(res.leads)
       else setError(res.error)
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unknown error")
     }
     setLoading(false)
   }
@@ -137,8 +137,8 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
       } else {
         setError(res.error || 'Failed to create lead')
       }
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unknown error")
     }
     setSubmitting(false)
   }

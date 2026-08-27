@@ -119,8 +119,8 @@ function IssuePassModal({ leads, onClose, onIssued }: { leads: Lead[]; onClose: 
       } else {
         setError(res.error || 'Failed to issue trial pass')
       }
-    } catch (e: any) {
-      setError(e.message)
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Unknown error")
     }
     setSubmitting(false)
   }

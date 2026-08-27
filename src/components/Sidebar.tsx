@@ -1,5 +1,6 @@
-import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, Users, Ticket, QrCode, UserCircle, CreditCard, Calendar, RefreshCw, AlertTriangle, UserCog, Share2, X } from 'lucide-react'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { LayoutDashboard, Users, Ticket, QrCode, UserCircle, CreditCard, Calendar, RefreshCw, AlertTriangle, UserCog, Share2, X, LogOut } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
 
 const navItems = [
   { path: '/', label: 'Command Center', icon: LayoutDashboard },
@@ -16,6 +17,14 @@ const navItems = [
 ]
 
 export default function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => void }) {
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login', { replace: true })
+  }
+
   return (
     <>
       {mobileOpen && (
@@ -61,8 +70,18 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; 
           })}
         </nav>
         <div className="px-5 py-3 border-t border-brand-800">
-          <p className="text-xs text-brand-300">Oxigen Fitness</p>
-          <p className="text-xs text-brand-500">C-Scheme, Jaipur</p>
+          {user && (
+            <div className="mb-2">
+              <p className="text-xs text-white font-medium truncate">{user.name}</p>
+              <p className="text-xs text-brand-400 truncate">{user.email}</p>
+            </div>
+          )}
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 text-xs text-brand-300 hover:text-white transition-colors mt-1"
+          >
+            <LogOut size={14} /> Sign Out
+          </button>
         </div>
       </aside>
     </>
