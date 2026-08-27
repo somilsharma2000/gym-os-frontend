@@ -23,9 +23,9 @@ export default function Dashboard() {
       else setError(res.error || 'Failed to load dashboard data')
     } catch (e: unknown) {
       if (e instanceof ApiRequestError) {
-        setError(e instanceof Error ? e.message : "Unknown error")
+        setError(e.message)
       } else if (e instanceof Error) {
-        setError(e instanceof Error ? e.message : "Unknown error")
+        setError(e.message)
       } else {
         setError('Connection error')
       }
@@ -39,21 +39,21 @@ export default function Dashboard() {
   if (loading) return <LoadingScreen message="Loading dashboard..." />
   if (error) return (
     <div className="flex flex-col items-center justify-center h-96 gap-3 text-center">
-      <p className="text-red-500 font-medium">Error: {error}</p>
-      <button onClick={fetchData} className="px-3 py-1.5 text-sm text-white bg-brand-600 rounded-md hover:bg-brand-700">Retry</button>
+      <p className="text-red-500 dark:text-red-400 font-medium">Error: {error}</p>
+      <button onClick={fetchData} className="px-3 py-1.5 text-sm text-white bg-brand-600 rounded-md hover:bg-brand-700 transition-colors">Retry</button>
     </div>
   )
-  if (!data) return <div className="flex items-center justify-center h-96 text-slate-400">No data</div>
+  if (!data) return <div className="flex items-center justify-center h-96 text-slate-400 dark:text-slate-500">No data</div>
 
   const m = data.metrics
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-slate-800">Command Center</h2>
+        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Command Center</h2>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-slate-400">Last refreshed: {lastRefresh}</span>
-          <button onClick={fetchData} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 bg-white border border-slate-200 rounded-md hover:bg-slate-50">
+          <span className="text-xs text-slate-400 dark:text-slate-500">Last refreshed: {lastRefresh}</span>
+          <button onClick={fetchData} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
             <RefreshCw size={14} /> Refresh
           </button>
         </div>
@@ -76,19 +76,19 @@ export default function Dashboard() {
       {/* Recent Activity Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Recent Leads */}
-        <div className="bg-white rounded-lg border border-slate-200">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-            <h3 className="text-sm font-semibold text-slate-700">Recent Leads</h3>
-            <button onClick={() => navigate('/leads')} className="text-xs text-brand-600 hover:underline">View all</button>
+        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700">
+            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Recent Leads</h3>
+            <button onClick={() => navigate('/leads')} className="text-xs text-brand-600 dark:text-brand-400 hover:underline">View all</button>
           </div>
-          <div className="divide-y divide-slate-50">
+          <div className="divide-y divide-slate-50 dark:divide-slate-700/50">
             {data.recent_leads.length === 0 ? (
-              <p className="px-4 py-6 text-sm text-slate-400 text-center">No leads yet</p>
+              <p className="px-4 py-6 text-sm text-slate-400 dark:text-slate-500 text-center">No leads yet</p>
             ) : data.recent_leads.map(lead => (
-              <div key={lead.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-slate-50">
+              <div key={lead.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/30">
                 <div>
-                  <p className="text-sm font-medium text-slate-700">{lead.name}</p>
-                  <p className="text-xs text-slate-400">{lead.phone} · {lead.source}</p>
+                  <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{lead.name}</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">{lead.phone} · {lead.source}</p>
                 </div>
                 <StatusBadge status={lead.status} />
               </div>
@@ -97,19 +97,19 @@ export default function Dashboard() {
         </div>
 
         {/* Pending Follow-ups */}
-        <div className="bg-white rounded-lg border border-slate-200">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-            <h3 className="text-sm font-semibold text-slate-700">Follow-ups Requiring Action</h3>
-            <button onClick={() => navigate('/leads')} className="text-xs text-brand-600 hover:underline">View all</button>
+        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700">
+            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Follow-ups Requiring Action</h3>
+            <button onClick={() => navigate('/leads')} className="text-xs text-brand-600 dark:text-brand-400 hover:underline">View all</button>
           </div>
-          <div className="divide-y divide-slate-50">
+          <div className="divide-y divide-slate-50 dark:divide-slate-700/50">
             {data.pending_followup_tasks.length === 0 ? (
-              <p className="px-4 py-6 text-sm text-slate-400 text-center">No pending follow-ups</p>
+              <p className="px-4 py-6 text-sm text-slate-400 dark:text-slate-500 text-center">No pending follow-ups</p>
             ) : data.pending_followup_tasks.map(task => (
-              <div key={task.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-slate-50">
+              <div key={task.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/30">
                 <div>
-                  <p className="text-sm font-medium text-slate-700">{task.entity_name || 'Unknown'}</p>
-                  <p className="text-xs text-slate-400">{task.task_type} · Due: {task.due_date?.split('T')[0] || 'N/A'}</p>
+                  <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{task.entity_name || 'Unknown'}</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">{task.task_type} · Due: {task.due_date?.split('T')[0] || 'N/A'}</p>
                 </div>
                 <StatusBadge status={task.priority} />
               </div>
@@ -118,40 +118,40 @@ export default function Dashboard() {
         </div>
 
         {/* Recent Check-ins */}
-        <div className="bg-white rounded-lg border border-slate-200">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-            <h3 className="text-sm font-semibold text-slate-700">Recent Check-ins</h3>
-            <button onClick={() => navigate('/check-in')} className="text-xs text-brand-600 hover:underline">View all</button>
+        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700">
+            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Recent Check-ins</h3>
+            <button onClick={() => navigate('/check-in')} className="text-xs text-brand-600 dark:text-brand-400 hover:underline">View all</button>
           </div>
-          <div className="divide-y divide-slate-50">
+          <div className="divide-y divide-slate-50 dark:divide-slate-700/50">
             {data.recent_checkins.length === 0 ? (
-              <p className="px-4 py-6 text-sm text-slate-400 text-center">No check-ins recorded</p>
+              <p className="px-4 py-6 text-sm text-slate-400 dark:text-slate-500 text-center">No check-ins recorded</p>
             ) : data.recent_checkins.map(ci => (
-              <div key={ci.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-slate-50">
+              <div key={ci.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/30">
                 <div>
-                  <p className="text-sm font-medium text-slate-700">{ci.member_name}</p>
-                  <p className="text-xs text-slate-400">{ci.entry_method} · {ci.check_in_time?.split('T')[1]?.split('.')[0] || ''}</p>
+                  <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{ci.member_name}</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">{ci.entry_method} · {ci.check_in_time?.split('T')[1]?.split('.')[0] || ''}</p>
                 </div>
-                <span className="text-xs text-slate-400">{ci.check_in_time?.split('T')[0]}</span>
+                <span className="text-xs text-slate-400 dark:text-slate-500">{ci.check_in_time?.split('T')[0]}</span>
               </div>
             ))}
           </div>
         </div>
 
         {/* Expiring Memberships */}
-        <div className="bg-white rounded-lg border border-slate-200">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-            <h3 className="text-sm font-semibold text-slate-700">Memberships Expiring Soon</h3>
-            <button onClick={() => navigate('/members')} className="text-xs text-brand-600 hover:underline">View all</button>
+        <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 transition-colors">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-700">
+            <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200">Memberships Expiring Soon</h3>
+            <button onClick={() => navigate('/members')} className="text-xs text-brand-600 dark:text-brand-400 hover:underline">View all</button>
           </div>
-          <div className="divide-y divide-slate-50">
+          <div className="divide-y divide-slate-50 dark:divide-slate-700/50">
             {data.expiring_memberships.length === 0 ? (
-              <p className="px-4 py-6 text-sm text-slate-400 text-center">No expiring memberships</p>
+              <p className="px-4 py-6 text-sm text-slate-400 dark:text-slate-500 text-center">No expiring memberships</p>
             ) : data.expiring_memberships.map((ms: any) => (
-              <div key={ms.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-slate-50">
+              <div key={ms.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/30">
                 <div>
-                  <p className="text-sm font-medium text-slate-700">{ms.member_name}</p>
-                  <p className="text-xs text-slate-400">{ms.plan_name} · Expires: {ms.expiry_date}</p>
+                  <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{ms.member_name}</p>
+                  <p className="text-xs text-slate-400 dark:text-slate-500">{ms.plan_name} · Expires: {ms.expiry_date}</p>
                 </div>
                 <StatusBadge status={ms.status} />
               </div>
