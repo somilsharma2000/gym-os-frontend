@@ -1,0 +1,60 @@
+{
+  "updated": "2026-08-27T18:30:00Z",
+  "notifications": [
+    {
+      "id": "6a9081c741f07fd471cf6287",
+      "type": "daily_report",
+      "title": "Daily Report — 27 Aug 2026 | Revenue: Rs.144500 | Leads: 8 | Active: 3 | At-Risk: 2",
+      "priority": "medium",
+      "is_read": false,
+      "action_type": "view",
+      "action_label": "View Dashboard",
+      "action_data": {"revenue": 144500, "total_leads": 8, "new_leads": 3, "active_members": 3, "at_risk": 2, "pending_payments": 2, "upcoming_renewals": 3},
+      "created_date": "2026-08-27T18:28:23.599Z"
+    },
+    {
+      "id": "6a9081c741f07fd471cf6288",
+      "type": "lead_welcome",
+      "title": "New Lead: Rohit Verma (+919876543210) — Interest: Weight Loss | Source: Website Form",
+      "priority": "high",
+      "is_read": false,
+      "action_type": "whatsapp",
+      "action_label": "Send Welcome",
+      "action_data": {"name": "Rohit Verma", "phone": "+919876543210", "email": "rohit.verma@gmail.com", "interest": "Weight Loss", "source": "Website Form"},
+      "created_date": "2026-08-27T18:28:23.599Z"
+    },
+    {
+      "id": "6a9081c741f07fd471cf6289",
+      "type": "renewal_reminder",
+      "title": "Renewal Alert: 3 member(s) expiring within 7 days",
+      "priority": "high",
+      "is_read": false,
+      "action_type": "whatsapp",
+      "action_label": "Send Reminders",
+      "action_data": {"count": 3, "expiring": [{"member_name": "Rohit Verma", "phone": "+919876544000", "membership_expiry_date": "2026-09-02T00:00:00Z", "plan_name": "Gold Monthly"}, {"member_name": "Sneha Patel", "phone": "+919876544001", "membership_expiry_date": "2026-09-01T00:00:00Z", "plan_name": "Silver Monthly"}, {"member_name": "Karan Malhotra", "phone": "+919876544002", "membership_expiry_date": "2026-08-31T00:00:00Z", "plan_name": "Gold Quarterly"}]},
+      "created_date": "2026-08-27T18:28:23.599Z"
+    },
+    {
+      "id": "6a9081c741f07fd471cf628a",
+      "type": "at_risk_alert",
+      "title": "At-Risk Alert: 3 member(s) need retention attention",
+      "priority": "high",
+      "is_read": false,
+      "action_type": "whatsapp",
+      "action_label": "Contact Members",
+      "action_data": {"count": 3, "at_risk_members": [{"name": "Arjun Singh", "phone": "+919876545001", "risk_reason": "No check-in for 14 days"}, {"name": "Priya Gupta", "phone": "+919876545002", "risk_reason": "Membership expiring + low attendance"}, {"name": "Vikram Rao", "phone": "+919876545003", "risk_reason": "No check-in for 21 days"}]},
+      "created_date": "2026-08-27T18:28:23.599Z"
+    },
+    {
+      "id": "6a9081c741f07fd471cf628b",
+      "type": "payment_receipt",
+      "title": "Payment Recorded: Rahul Verma — Rs.7500 (UPI) | Invoice: INV-2026-021",
+      "priority": "medium",
+      "is_read": false,
+      "action_type": "whatsapp",
+      "action_label": "Send Receipt",
+      "action_data": {"amount": 7500, "date": "2026-08-27", "gst": 1350, "invoice": "INV-2026-021", "member_name": "Rahul Verma", "method": "UPI", "type": "Quarterly"},
+      "created_date": "2026-08-27T18:28:23.599Z"
+    }
+  ]
+}
