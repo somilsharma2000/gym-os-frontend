@@ -22,7 +22,7 @@ export default function CheckIn() {
   const [error, setError] = useState('')
 
   const fetchRecent = async () => {
-    try { const res = await api.getRecentCheckIns(5); if (res.success) setRecentCheckins(res.checkins) } catch (e) { console.error(e) }
+    try { const res = await api.getRecentCheckIns(5); if (res.success) setRecentCheckins(res.checkins || []) } catch (e) { console.error(e) }
   }
 
   useEffect(() => { fetchRecent() }, [])

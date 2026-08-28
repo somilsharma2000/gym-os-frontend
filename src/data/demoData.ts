@@ -31,11 +31,32 @@ export const demoDashboardData = {
     { id: 'lead_005', name: 'Vikram Reddy', phone: '+91 98765 99988', email: 'vikram@email.com', source: 'Google Ads', status: 'follow_up', interest: 'Strength Training', created_date: '2026-08-23T11:00:00Z', notes: 'Clicked Google ad, wants personal training' }
   ],
   recent_check_ins: [
-    { id: 'cin_001', member_name: 'John Doe', check_in_time: '2026-08-28T07:15:00Z', duration_minutes: 75 },
-    { id: 'cin_002', member_name: 'Sarah Chen', check_in_time: '2026-08-28T06:45:00Z', duration_minutes: 60 },
-    { id: 'cin_003', member_name: 'Mike Ross', check_in_time: '2026-08-28T06:30:00Z', duration_minutes: 90 },
-    { id: 'cin_004', member_name: 'Emma Wilson', check_in_time: '2026-08-28T05:45:00Z', duration_minutes: 45 },
-    { id: 'cin_005', member_name: 'Alex Turner', check_in_time: '2026-08-27T19:30:00Z', duration_minutes: 120 }
+    { id: 'cin_001', member_name: 'John Doe', check_in_time: '2026-08-28T07:15:00Z', duration_minutes: 75, entry_method: 'QR Scan' },
+    { id: 'cin_002', member_name: 'Sarah Chen', check_in_time: '2026-08-28T06:45:00Z', duration_minutes: 60, entry_method: 'QR Scan' },
+    { id: 'cin_003', member_name: 'Mike Ross', check_in_time: '2026-08-28T06:30:00Z', duration_minutes: 90, entry_method: 'Manual' },
+    { id: 'cin_004', member_name: 'Emma Wilson', check_in_time: '2026-08-28T05:45:00Z', duration_minutes: 45, entry_method: 'QR Scan' },
+    { id: 'cin_005', member_name: 'Alex Turner', check_in_time: '2026-08-27T19:30:00Z', duration_minutes: 120, entry_method: 'QR Scan' }
+  ],
+  recent_checkins: [
+    { id: 'cin_001', member_name: 'John Doe', check_in_time: '2026-08-28T07:15:00Z', duration_minutes: 75, entry_method: 'QR Scan' },
+    { id: 'cin_002', member_name: 'Sarah Chen', check_in_time: '2026-08-28T06:45:00Z', duration_minutes: 60, entry_method: 'QR Scan' },
+    { id: 'cin_003', member_name: 'Mike Ross', check_in_time: '2026-08-28T06:30:00Z', duration_minutes: 90, entry_method: 'Manual' },
+    { id: 'cin_004', member_name: 'Emma Wilson', check_in_time: '2026-08-28T05:45:00Z', duration_minutes: 45, entry_method: 'QR Scan' },
+    { id: 'cin_005', member_name: 'Alex Turner', check_in_time: '2026-08-27T19:30:00Z', duration_minutes: 120, entry_method: 'QR Scan' }
+  ],
+  pending_followup_tasks: [
+    { id: 'task_001', entity_name: 'Priya Patel', task_type: 'Phone Call', due_date: '2026-08-28T18:00:00Z', priority: 'high' },
+    { id: 'task_002', entity_name: 'Vikram Reddy', task_type: 'WhatsApp Message', due_date: '2026-08-29T12:00:00Z', priority: 'medium' },
+    { id: 'task_003', entity_name: 'Ananya Iyer', task_type: 'Tour Booking', due_date: '2026-08-28T16:00:00Z', priority: 'high' },
+    { id: 'task_004', entity_name: 'Ishita Bose', task_type: 'Phone Call', due_date: '2026-08-29T10:00:00Z', priority: 'low' },
+    { id: 'task_005', entity_name: 'Meera Joshi', task_type: 'Follow-up Email', due_date: '2026-08-30T14:00:00Z', priority: 'medium' }
+  ],
+  expiring_memberships: [
+    { id: 'mem_008', member_name: 'Raj Kumar', plan_name: 'Monthly Standard', expiry_date: '2026-09-02' },
+    { id: 'mem_012', member_name: 'Neha Singh', plan_name: 'Quarterly Premium', expiry_date: '2026-09-05' },
+    { id: 'mem_015', member_name: 'Amit Verma', plan_name: 'Monthly Standard', expiry_date: '2026-09-08' },
+    { id: 'mem_019', member_name: 'Pooja Bhatt', plan_name: 'Annual VIP', expiry_date: '2026-09-12' },
+    { id: 'mem_022', member_name: 'Sahil Khan', plan_name: 'Quarterly Standard', expiry_date: '2026-09-15' }
   ]
 }
 

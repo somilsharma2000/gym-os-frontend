@@ -22,7 +22,7 @@ export default function Members() {
     setError('')
     try {
       const res = await api.getMembers({ membership_status: membershipFilter, risk_status: riskFilter, search })
-      if (res.success) setMembers(res.members)
+      if (res.success) setMembers(res.members || [])
       else setError(res.error || 'Failed to load members')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Unknown error")

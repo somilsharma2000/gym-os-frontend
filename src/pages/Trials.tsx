@@ -20,7 +20,7 @@ export default function Trials() {
     setLoading(true)
     try {
       const res = await api.getTrialPasses({ status: statusFilter })
-      if (res.success) setPasses(res.trial_passes)
+      if (res.success) setPasses(res.trial_passes || [])
     } catch (e) { console.error(e) }
     setLoading(false)
   }
@@ -28,7 +28,7 @@ export default function Trials() {
   const fetchLeads = async () => {
     try {
       const res = await api.getLeads({})
-      if (res.success) setLeads(res.leads)
+      if (res.success) setLeads(res.leads || [])
     } catch (e) { console.error(e) }
   }
 

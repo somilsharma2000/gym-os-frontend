@@ -22,7 +22,7 @@ export default function Leads() {
     setLoading(true)
     try {
       const res = await api.getLeads({ status: statusFilter, source: sourceFilter, search })
-      if (res.success) setLeads(res.leads)
+      if (res.success) setLeads(res.leads || [])
       else setError(res.error)
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Unknown error")

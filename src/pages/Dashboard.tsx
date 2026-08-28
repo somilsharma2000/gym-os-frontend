@@ -82,9 +82,9 @@ export default function Dashboard() {
             <button onClick={() => navigate('/leads')} className="text-xs text-brand-600 dark:text-brand-400 hover:underline">View all</button>
           </div>
           <div className="divide-y divide-slate-50 dark:divide-slate-700/50">
-            {data.recent_leads.length === 0 ? (
+            {(data.recent_leads || []).length === 0 ? (
               <p className="px-4 py-6 text-sm text-slate-400 dark:text-slate-500 text-center">No leads yet</p>
-            ) : data.recent_leads.map(lead => (
+            ) : (data.recent_leads || []).map(lead => (
               <div key={lead.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/30">
                 <div>
                   <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{lead.name}</p>
@@ -103,9 +103,9 @@ export default function Dashboard() {
             <button onClick={() => navigate('/leads')} className="text-xs text-brand-600 dark:text-brand-400 hover:underline">View all</button>
           </div>
           <div className="divide-y divide-slate-50 dark:divide-slate-700/50">
-            {data.pending_followup_tasks.length === 0 ? (
+            {(data.pending_followup_tasks || []).length === 0 ? (
               <p className="px-4 py-6 text-sm text-slate-400 dark:text-slate-500 text-center">No pending follow-ups</p>
-            ) : data.pending_followup_tasks.map(task => (
+            ) : (data.pending_followup_tasks || []).map(task => (
               <div key={task.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/30">
                 <div>
                   <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{task.entity_name || 'Unknown'}</p>
@@ -124,9 +124,9 @@ export default function Dashboard() {
             <button onClick={() => navigate('/check-in')} className="text-xs text-brand-600 dark:text-brand-400 hover:underline">View all</button>
           </div>
           <div className="divide-y divide-slate-50 dark:divide-slate-700/50">
-            {data.recent_checkins.length === 0 ? (
+            {(data.recent_checkins || []).length === 0 ? (
               <p className="px-4 py-6 text-sm text-slate-400 dark:text-slate-500 text-center">No check-ins recorded</p>
-            ) : data.recent_checkins.map(ci => (
+            ) : (data.recent_checkins || []).map(ci => (
               <div key={ci.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/30">
                 <div>
                   <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{ci.member_name}</p>
@@ -145,9 +145,9 @@ export default function Dashboard() {
             <button onClick={() => navigate('/members')} className="text-xs text-brand-600 dark:text-brand-400 hover:underline">View all</button>
           </div>
           <div className="divide-y divide-slate-50 dark:divide-slate-700/50">
-            {data.expiring_memberships.length === 0 ? (
+            {(data.expiring_memberships || []).length === 0 ? (
               <p className="px-4 py-6 text-sm text-slate-400 dark:text-slate-500 text-center">No expiring memberships</p>
-            ) : data.expiring_memberships.map((ms: any) => (
+            ) : (data.expiring_memberships || []).map((ms: any) => (
               <div key={ms.id} className="flex items-center justify-between px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/30">
                 <div>
                   <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{ms.member_name}</p>
