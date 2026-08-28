@@ -21,6 +21,8 @@ import Renewals from './pages/Renewals'
 import AtRisk from './pages/AtRisk'
 import Staff from './pages/Staff'
 import Referrals from './pages/Referrals'
+import SuperAdmin from './pages/SuperAdmin'
+import Settings from './pages/Settings'
 
 function AppShell() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -46,6 +48,8 @@ function AppShell() {
             <Route path="/at-risk" element={<AtRisk />} />
             <Route path="/staff" element={<Staff />} />
             <Route path="/referrals" element={<Referrals />} />
+            <Route path="/super-admin" element={<SuperAdmin />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>

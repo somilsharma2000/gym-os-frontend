@@ -1,0 +1,38 @@
+{
+  "name": "Gym OS — Beyond Pixels",
+  "short_name": "Gym OS",
+  "description": "Complete gym management operating system with CRM, QR check-in, payments, and automation",
+  "start_url": "./#/dashboard",
+  "display": "standalone",
+  "background_color": "#0A0E27",
+  "theme_color": "#0066FF",
+  "orientation": "portrait-primary",
+  "scope": "./",
+  "icons": [
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "favicon-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "favicon-128.png",
+      "sizes": "128x128",
+      "type": "image/png"
+    },
+    {
+      "src": "favicon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["business", "productivity", "health"],
+  "lang": "en",
+  "dir": "ltr"
+}

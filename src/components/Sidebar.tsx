@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, Ticket, QrCode, UserCircle, CreditCard, Calendar, RefreshCw, AlertTriangle, UserCog, Share2, X, LogOut, IndianRupee, TrendingUp, MessageCircle } from 'lucide-react'
+import { LayoutDashboard, Users, Ticket, QrCode, UserCircle, CreditCard, Calendar, RefreshCw, AlertTriangle, UserCog, Share2, X, LogOut, IndianRupee, TrendingUp, MessageCircle, Building2, Settings } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 const navItems = [
@@ -16,7 +16,9 @@ const navItems = [
   { path: '/renewals', label: 'Renewals', icon: RefreshCw },
   { path: '/at-risk', label: 'At-Risk', icon: AlertTriangle },
   { path: '/staff', label: 'Staff', icon: UserCog },
-  { path: '/referrals', label: 'Referrals', icon: Share2 }
+  { path: '/referrals', label: 'Referrals', icon: Share2 },
+  { path: '/super-admin', label: 'Super Admin', icon: Building2 },
+  { path: '/settings', label: 'Integrations', icon: Settings }
 ]
 
 export default function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => void }) {

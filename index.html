@@ -2,12 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/jpeg" href="/brand/beyond-pixels-logo.jpg" />
+    <link rel="icon" type="image/jpeg" href="/gym-os-frontend/assets/beyond-pixels-logo-B49I-nI1.jpg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GYM OS — by Beyond Pixels</title>
+    <script type="module" crossorigin src="/gym-os-frontend/assets/index-Bxl_vXfj.js"></script>
+    <link rel="stylesheet" crossorigin href="/gym-os-frontend/assets/index-DrX7mA7q.css">
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+  <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("./sw.js").catch(() => {});
+        });
+      }
+    </script>
   </body>
 </html>
