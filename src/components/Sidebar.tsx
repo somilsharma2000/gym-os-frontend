@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, Ticket, QrCode, UserCircle, CreditCard, Calendar, RefreshCw, AlertTriangle, UserCog, Share2, X, LogOut } from 'lucide-react'
+import { LayoutDashboard, Users, Ticket, QrCode, UserCircle, CreditCard, Calendar, RefreshCw, AlertTriangle, UserCog, Share2, X, LogOut, IndianRupee, TrendingUp, MessageCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
 const navItems = [
@@ -9,6 +9,9 @@ const navItems = [
   { path: '/check-in', label: 'QR Check-In', icon: QrCode },
   { path: '/members', label: 'Members', icon: UserCircle },
   { path: '/memberships', label: 'Memberships', icon: CreditCard },
+  { path: '/payments', label: 'Payments', icon: IndianRupee },
+  { path: '/revenue', label: 'Revenue', icon: TrendingUp },
+  { path: '/whatsapp', label: 'WhatsApp', icon: MessageCircle },
   { path: '/classes', label: 'Classes', icon: Calendar },
   { path: '/renewals', label: 'Renewals', icon: RefreshCw },
   { path: '/at-risk', label: 'At-Risk', icon: AlertTriangle },
@@ -37,10 +40,10 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; 
         }`}
       >
         <div className="px-5 py-5 border-b border-brand-800 flex items-center gap-3">
-          <img src={`${import.meta.env.BASE_URL}brand/beyond-pixels-logo.png`} alt="Beyond Pixels" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
+          <img src={`${import.meta.env.BASE_URL}brand/beyond-pixells-logo.png`} alt="Beyond Pixells" className="w-9 h-9 rounded-full object-cover flex-shrink-0" />
           <div className="flex-1">
             <h1 className="text-base font-bold tracking-tight leading-tight">GYM OS</h1>
-            <p className="text-[10px] text-brand-300 leading-tight">by Beyond Pixels</p>
+            <p className="text-[10px] text-brand-300 leading-tight">by Beyond Pixells</p>
           </div>
           <button onClick={onClose} className="lg:hidden text-brand-300 hover:text-white">
             <X size={20} />

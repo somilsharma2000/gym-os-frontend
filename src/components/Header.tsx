@@ -118,8 +118,8 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
             className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
           >
             <img
-              src={`${import.meta.env.BASE_URL}brand/beyond-pixels-logo.png`}
-              alt="Beyond Pixels"
+              src={`${import.meta.env.BASE_URL}brand/beyond-pixells-logo.png`}
+              alt="Beyond Pixells"
               className="w-8 h-8 rounded-full object-cover flex-shrink-0"
             />
             <span className="text-sm font-medium text-slate-700 dark:text-slate-200 hidden sm:block">{user?.name || 'User'}</span>

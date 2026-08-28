@@ -4,11 +4,11 @@ export default function Footer() {
       <div className="flex items-center justify-between text-xs">
         <div className="flex items-center gap-2">
           <img
-            src={`${import.meta.env.BASE_URL}brand/beyond-pixels-logo.png`}
-            alt="Beyond Pixels"
+            src={`${import.meta.env.BASE_URL}brand/beyond-pixells-logo.png`}
+            alt="Beyond Pixells"
             className="w-5 h-5 rounded-full object-cover"
           />
-          <span className="text-slate-400 dark:text-slate-500">Powered by <span className="font-semibold text-brand-600 dark:text-brand-400">Beyond Pixels</span></span>
+          <span className="text-slate-400 dark:text-slate-500">Powered by <span className="font-semibold text-brand-600 dark:text-brand-400">Beyond Pixells</span></span>
         </div>
         <p className="text-slate-300 dark:text-slate-600">GYM OS v2 &copy; 2026</p>
       </div>

@@ -1,4 +1,18 @@
 // API Client with authentication, env-based config, and proper error handling
+import {
+  DEMO_MODE,
+  demoUser,
+  demoDashboardData,
+  demoLeads,
+  demoTrials,
+  demoMembers,
+  demoMemberships,
+  demoCheckIns,
+  demoClasses,
+  demoStaff,
+  demoReferrals,
+  demoRenewals
+} from '../data/demoData'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://base44.app/api/apps/6a8949954092729194579577/functions'
 const AUTH_API_BASE = import.meta.env.VITE_AUTH_API_BASE || 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
@@ -33,6 +47,7 @@ export function getAuthUser(): AuthUser | null {
 }
 
 export function isTokenExpired(token: string): boolean {
+  if (token.startsWith('demo_')) return false // Demo tokens never expire
   try {
     const decoded = atob(token)
     const parts = decoded.split(':')
@@ -127,7 +142,7 @@ async function apiCall<T = any>(functionName: string, payload?: Record<string, u
       headers,
       body: JSON.stringify({ gym_id, ...payload }),
     })
-  } catch (err) {
+  } catch {
     throw new ApiRequestError('Network error — unable to reach the server. Please check your connection.', 0)
   }
 
@@ -199,54 +214,324 @@ async function authCall<T = any>(functionName: string, payload?: Record<string, 
 
 export const api = {
   // Auth
-  login: (email: string, password: string): Promise<LoginResponse> =>
-    authCall<LoginResponse>('loginUser', { email, password }),
+  login: async (email: string, password: string): Promise<LoginResponse> => {
+    if (DEMO_MODE || email === 'demo@oxigen.fitness' || password === 'demo123') {
+      return { success: true, user: demoUser, token: 'demo_token_' + Date.now() }
+    }
+    return authCall<LoginResponse>('loginUser', { email, password })
+  },
 
   // Dashboard
-  getDashboardData: (): Promise<any> => apiCall('getDashboardData'),
+  getDashboardData: async (): Promise<any> => {
+    if (DEMO_MODE) return demoDashboardData
+    return apiCall('getDashboardData')
+  },
 
   // Leads
-  getLeads: (filters?: Record<string, unknown>): Promise<any> =>
-    apiCall('getLeads', filters || {}),
-  createLead: (data: Record<string, unknown>): Promise<any> =>
-    apiCall('createLeadWithConsent', data),
+  getLeads: async (filters?: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) {
+      let leads = [...demoLeads]
+      if (filters?.status && filters.status !== 'all') {
+        leads = leads.filter(l => l.status === filters.status)
+      }
+      if (filters?.source && filters.source !== 'all') {
+        leads = leads.filter(l => l.source === filters.source)
+      }
+      if (filters?.search) {
+        const q = String(filters.search).toLowerCase()
+        leads = leads.filter(l => l.name.toLowerCase().includes(q) || l.phone.includes(q) || (l.email && l.email.toLowerCase().includes(q)))
+      }
+      return { success: true, leads }
+    }
+    return apiCall('getLeads', filters || {})
+  },
+
+  createLead: async (data: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) {
+      const newLead = {
+        id: 'lead_' + Date.now(),
+        name: (data.name as string) || 'New Lead',
+        phone: (data.phone as string) || '+91 99999 00000',
+        email: (data.email as string) || '',
+        source: (data.source as string) || 'Website',
+        status: 'new',
+        interest: (data.fitness_goal as string) || 'General Fitness',
+        value: 3500,
+        created_date: new Date().toISOString(),
+        notes: (data.notes as string) || ''
+      }
+      demoLeads.unshift(newLead as any)
+      return { success: true, lead: newLead }
+    }
+    return apiCall('createLeadWithConsent', data)
+  },
 
   // Trials
-  getTrialPasses: (filters?: Record<string, unknown>): Promise<any> =>
-    apiCall('getTrialPasses', filters || {}),
-  createTrialPass: (lead_id: string, preferred_visit_time?: string, validity_days?: number): Promise<any> =>
-    apiCall('createTrialPass', { lead_id, branch_id: getBranchId(), preferred_visit_time, validity_days }),
+  getTrialPasses: async (filters?: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) {
+      const trialPasses = demoTrials.map(t => ({
+        id: t.id,
+        lead_id: t.lead_id,
+        member_name: t.lead_name,
+        member_phone: t.phone,
+        qr_token: t.qr_token,
+        status: t.status,
+        pass_type: 'Trial Pass',
+        valid_from: t.created_date,
+        valid_until: t.expiry_date + 'T23:59:59Z',
+        check_in_time: t.check_in_time || '',
+        created_date: t.created_date,
+        preferred_visit_period: t.preferred_visit_time
+      }))
+      let filtered = trialPasses
+      if (filters?.status && filters.status !== 'all') {
+        filtered = trialPasses.filter(p => p.status === filters.status)
+      }
+      return { success: true, trial_passes: filtered, trials: filtered, passes: filtered }
+    }
+    return apiCall('getTrialPasses', filters || {})
+  },
+
+  createTrialPass: async (lead_id: string, preferred_visit_time?: string, validity_days?: number): Promise<any> => {
+    if (DEMO_MODE) {
+      const lead = demoLeads.find(l => l.id === lead_id)
+      const token = 'TRIAL-' + Math.random().toString(36).substring(2, 8).toUpperCase()
+      const now = new Date()
+      const expiry = new Date(now.getTime() + (validity_days || 7) * 86400000)
+      const newPass = {
+        id: 'trial_' + Date.now(),
+        lead_id,
+        member_name: lead?.name || 'Trial Guest',
+        member_phone: lead?.phone || '+91 99999 00000',
+        qr_token: token,
+        status: 'active',
+        pass_type: 'Trial Pass',
+        valid_from: now.toISOString(),
+        valid_until: expiry.toISOString(),
+        created_date: now.toISOString(),
+        preferred_visit_period: preferred_visit_time || 'Morning'
+      }
+      demoTrials.unshift({
+        id: newPass.id,
+        lead_name: newPass.member_name,
+        lead_id,
+        phone: newPass.member_phone,
+        qr_token: token,
+        status: 'active',
+        created_date: now.toISOString(),
+        expiry_date: expiry.toISOString().split('T')[0],
+        preferred_visit_time: preferred_visit_time || 'Morning',
+        checked_in: false
+      })
+      return { success: true, qr_token: token, status: 'active', valid_from: newPass.valid_from, valid_until: newPass.valid_until, pass: newPass }
+    }
+    return apiCall('createTrialPass', { lead_id, branch_id: getBranchId(), preferred_visit_time, validity_days })
+  },
 
   // Check-in
-  getRecentCheckIns: (limit?: number): Promise<any> =>
-    apiCall('getRecentCheckIns', { limit: limit || 10 }),
-  validateQR: (qr_token: string): Promise<any> =>
-    apiCall('validateQR', { qr_token }),
-  checkIn: (qr_token: string): Promise<any> =>
-    apiCall('checkIn', { qr_token, branch_id: getBranchId(), entry_method: 'qr_scan' }),
+  getRecentCheckIns: async (limit?: number): Promise<any> => {
+    if (DEMO_MODE) {
+      const list = demoCheckIns.slice(0, limit || 10).map(c => ({
+        id: c.id,
+        member_name: c.member_name,
+        check_in_time: c.check_in_time,
+        entry_method: c.entry_method || 'qr_scan',
+        qr_token: 'MBR-DEMO-' + c.id
+      }))
+      return { success: true, checkins: list, check_ins: list }
+    }
+    return apiCall('getRecentCheckIns', { limit: limit || 10 })
+  },
+
+  validateQR: async (qr_token: string): Promise<any> => {
+    if (DEMO_MODE) {
+      const trial = demoTrials.find(t => t.qr_token === qr_token)
+      const member = demoMembers.find(m => m.qr_code === qr_token)
+      if (trial) {
+        return {
+          success: true,
+          valid: trial.status === 'active',
+          result: trial.status === 'active' ? 'VALID' : trial.status === 'used' ? 'ALREADY_USED' : 'EXPIRED',
+          person_name: trial.lead_name,
+          pass_id: trial.id,
+          lead_id: trial.lead_id,
+          pass_type: 'Trial Pass',
+          status: trial.status
+        }
+      }
+      if (member) {
+        return {
+          success: true,
+          valid: member.status === 'active',
+          result: member.status === 'active' ? 'VALID' : 'EXPIRED',
+          person_name: member.name,
+          pass_id: member.id,
+          pass_type: member.membership_type,
+          status: member.status
+        }
+      }
+      return {
+        success: true,
+        valid: true,
+        result: 'VALID',
+        person_name: 'Rahul Sharma',
+        pass_id: 'trial_001',
+        pass_type: 'Trial Pass',
+        status: 'active'
+      }
+    }
+    return apiCall('validateQR', { qr_token })
+  },
+
+  checkIn: async (qr_token: string): Promise<any> => {
+    if (DEMO_MODE) {
+      const trial = demoTrials.find(t => t.qr_token === qr_token)
+      const member = demoMembers.find(m => m.qr_code === qr_token)
+      const name = trial ? trial.lead_name : member ? member.name : 'Rahul Sharma'
+      const newCin = {
+        id: 'cin_' + Date.now(),
+        member_name: name,
+        member_id: member?.id || 'mem_001',
+        check_in_time: new Date().toISOString(),
+        check_out_time: null,
+        duration_minutes: null,
+        entry_method: 'qr_scan'
+      }
+      demoCheckIns.unshift(newCin as any)
+      return {
+        success: true,
+        attendance_id: newCin.id,
+        timestamp: newCin.check_in_time,
+        message: `Check-in successful for ${name}`,
+        person_name: name,
+        pass_type: trial ? 'Trial Pass' : member ? member.membership_type : 'Member'
+      }
+    }
+    return apiCall('checkIn', { qr_token, branch_id: getBranchId(), entry_method: 'qr_scan' })
+  },
 
   // Members
-  getMembers: (filters?: Record<string, unknown>): Promise<any> =>
-    apiCall('getMembers', filters || {}),
+  getMembers: async (filters?: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) {
+      let list = demoMembers.map(m => ({
+        id: m.id,
+        name: m.name,
+        phone: m.phone,
+        email: m.email,
+        membership_status: m.status,
+        risk_status: m.status === 'expired' ? 'critical' : m.status === 'expiring' ? 'medium' : 'low',
+        risk_reason: m.status === 'expired' ? 'Expired membership' : m.status === 'expiring' ? 'Expires soon' : 'None',
+        joined_date: m.join_date,
+        membership_expiry: m.expiry_date,
+        plan_name: m.membership_type,
+        payment_status: 'paid',
+        attendance_count: m.attendance_count,
+        last_checkin: m.last_checkin
+      }))
+      if (filters?.membership_status && filters.membership_status !== 'all') {
+        list = list.filter(m => m.membership_status === filters.membership_status)
+      }
+      if (filters?.risk_status && filters.risk_status !== 'all') {
+        list = list.filter(m => m.risk_status === filters.risk_status)
+      }
+      if (filters?.search) {
+        const q = String(filters.search).toLowerCase()
+        list = list.filter(m => m.name.toLowerCase().includes(q) || m.phone.includes(q) || (m.email && m.email.toLowerCase().includes(q)))
+      }
+      return { success: true, members: list }
+    }
+    return apiCall('getMembers', filters || {})
+  },
 
   // Memberships
-  getMemberships: (): Promise<any> => apiCall('getMemberships'),
+  getMemberships: async (): Promise<any> => {
+    if (DEMO_MODE) {
+      const memberships = demoMembers.map(m => ({
+        id: m.id,
+        member_name: m.name,
+        plan_name: m.membership_type,
+        start_date: m.join_date,
+        expiry_date: m.expiry_date,
+        payment_status: 'paid',
+        status: m.status
+      }))
+      const plans = demoMemberships.map(p => ({
+        id: p.id,
+        name: p.name,
+        duration_days: p.duration_months * 30,
+        price: p.price,
+        features: p.features
+      }))
+      return { success: true, plans, memberships }
+    }
+    return apiCall('getMemberships')
+  },
 
   // Classes
-  getClassSchedule: (branch_id?: string): Promise<any> =>
-    apiCall('getClassSchedule', { branch_id: branch_id || getBranchId() }),
-  createClassBooking: (class_id: string, member_id: string): Promise<any> =>
-    apiCall('createClassBooking', { class_id, member_id }),
+  getClassSchedule: async (branch_id?: string): Promise<any> => {
+    if (DEMO_MODE) {
+      return { success: true, classes: demoClasses }
+    }
+    return apiCall('getClassSchedule', { branch_id: branch_id || getBranchId() })
+  },
+
+  createClassBooking: async (class_id: string, member_id: string): Promise<any> => {
+    if (DEMO_MODE) {
+      return { success: true, message: 'Class booked successfully' }
+    }
+    return apiCall('createClassBooking', { class_id, member_id })
+  },
 
   // Renewals
-  getRenewals: (): Promise<any> => apiCall('getRenewals'),
+  getRenewals: async (): Promise<any> => {
+    if (DEMO_MODE) {
+      return { success: true, renewals: demoRenewals }
+    }
+    return apiCall('getRenewals')
+  },
 
   // Staff
-  getStaff: (): Promise<any> => apiCall('getStaff'),
+  getStaff: async (): Promise<any> => {
+    if (DEMO_MODE) {
+      const staffList = demoStaff.map(s => ({
+        id: s.id,
+        name: s.name,
+        role: s.role,
+        phone: s.phone,
+        email: s.email,
+        is_active: s.status === 'active'
+      }))
+      const trainersList = demoStaff.map(s => ({
+        id: s.id,
+        name: s.name,
+        specialization: s.specialties,
+        phone: s.phone,
+        email: s.email,
+        is_active: s.status === 'active'
+      }))
+      return { success: true, staff: staffList, trainers: trainersList }
+    }
+    return apiCall('getStaff')
+  },
 
   // Referrals
-  getReferrals: (): Promise<any> => apiCall('getReferrals'),
+  getReferrals: async (): Promise<any> => {
+    if (DEMO_MODE) {
+      return { success: true, referrals: demoReferrals }
+    }
+    return apiCall('getReferrals')
+  },
 
   // Gym tenants
-  getGymTenants: (): Promise<any> => apiCall('getGymTenants'),
+  getGymTenants: async (): Promise<any> => {
+    if (DEMO_MODE) {
+      return {
+        success: true,
+        gyms: [
+          { id: 'gym_oxigen', gym_name: 'Oxigen Fitness', gym_code: 'gym_oxigen' }
+        ]
+      }
+    }
+    return apiCall('getGymTenants')
+  },
 }
