@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, Users, Ticket, QrCode, UserCircle, CreditCard, Calendar, RefreshCw, AlertTriangle, UserCog, Share2, X, LogOut, IndianRupee, TrendingUp, MessageCircle, Building2, Settings, ChevronDown, Check } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { canSwitchGym, isSuperAdmin, getAuthUser } from '../api/client'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
 
-const navItems = [
+// Full nav — super admin sees everything including Super Admin
+const allNavItems = [
   { path: '/', label: 'Command Center', icon: LayoutDashboard },
   { path: '/leads', label: 'Lead CRM', icon: Users },
   { path: '/trials', label: 'Trial Engine', icon: Ticket },
@@ -20,9 +22,12 @@ const navItems = [
   { path: '/at-risk', label: 'At-Risk', icon: AlertTriangle },
   { path: '/staff', label: 'Staff', icon: UserCog },
   { path: '/referrals', label: 'Referrals', icon: Share2 },
-  { path: '/super-admin', label: 'Super Admin', icon: Building2 },
+  { path: '/super-admin', label: 'Super Admin', icon: Building2, superAdminOnly: true },
   { path: '/settings', label: 'Integrations', icon: Settings }
 ]
+
+// Gym owner nav — no Super Admin
+const gymOwnerNavItems = allNavItems.filter(item => !item.superAdminOnly)
 
 interface Gym {
   gym_id: string
@@ -37,33 +42,44 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; 
   const [currentGymId, setCurrentGymId] = useState(localStorage.getItem('gym_os_gym_id') || 'gym_oxigen')
   const [gymDropdownOpen, setGymDropdownOpen] = useState(false)
 
+  const _isSuperAdmin = isSuperAdmin()
+  const navItems = _isSuperAdmin ? allNavItems : gymOwnerNavItems
+
   useEffect(() => {
-    fetchGyms()
-  }, [])
+    // Only fetch gyms for super admin
+    if (_isSuperAdmin) fetchGyms()
+  }, [_isSuperAdmin])
+
+  // For gym owners, lock to their gym_id
+  useEffect(() => {
+    if (!_isSuperAdmin && user?.gym_id) {
+      localStorage.setItem('gym_os_gym_id', user.gym_id)
+      setCurrentGymId(user.gym_id)
+    }
+  }, [_isSuperAdmin, user])
 
   const fetchGyms = async () => {
     try {
       const res = await fetch(`${API_BASE}/getAllGyms`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({})
+        body: JSON.stringify({ gym_id: 'ALL' })
       })
       const data = await res.json()
       if (data.success && data.gyms) {
         setGyms(data.gyms.map((g: any) => ({ gym_id: g.gym_id, gym_name: g.gym_name, branding: g.branding })))
       }
     } catch (err) {
-      // Silent fail — gym switcher is optional
+      // Silent fail
     }
   }
 
-  const currentGym = gyms.find(g => g.gym_id === currentGymId) || { gym_id: currentGymId, gym_name: 'Select Gym' }
+  const currentGym = gyms.find(g => g.gym_id === currentGymId) || { gym_id: currentGymId, gym_name: user?.gym_name || 'My Gym' }
 
-  const handleGymSwitch = (gymId: string, gymName: string) => {
+  const handleGymSwitch = (gymId: string) => {
     localStorage.setItem('gym_os_gym_id', gymId)
     setCurrentGymId(gymId)
     setGymDropdownOpen(false)
-    // Reload the page to refresh all data with new gym_id
     window.location.reload()
   }
 
@@ -94,8 +110,8 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; 
           </button>
         </div>
 
-        {/* Gym Switcher */}
-        {gyms.length > 0 && (
+        {/* Gym Switcher — ONLY for super admin */}
+        {_isSuperAdmin && gyms.length > 0 && (
           <div className="relative border-b border-brand-800">
             <button
               onClick={() => setGymDropdownOpen(!gymDropdownOpen)}
@@ -113,7 +129,7 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; 
                 {gyms.map(gym => (
                   <button
                     key={gym.gym_id}
-                    onClick={() => handleGymSwitch(gym.gym_id, gym.gym_name)}
+                    onClick={() => handleGymSwitch(gym.gym_id)}
                     className="w-full flex items-center gap-2 px-5 py-2.5 text-left text-sm hover:bg-brand-800 transition-colors"
                   >
                     <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: gym.branding?.primary_color || '#0066FF' }} />
@@ -130,6 +146,19 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; 
                 </NavLink>
               </div>
             )}
+          </div>
+        )}
+
+        {/* For gym owners — show their gym name (locked, no switching) */}
+        {!_isSuperAdmin && (
+          <div className="border-b border-brand-800 px-5 py-3">
+            <div className="flex items-center gap-2">
+              <Building2 size={16} className="text-brand-300 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] text-brand-400 uppercase tracking-wide">Your Gym</p>
+                <p className="text-sm font-semibold truncate">{user?.gym_name || 'My Gym'}</p>
+              </div>
+            </div>
           </div>
         )}
 
@@ -161,6 +190,7 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; 
             <div className="mb-2">
               <p className="text-xs text-white font-medium truncate">{user.name}</p>
               <p className="text-xs text-brand-400 truncate">{user.email}</p>
+              {_isSuperAdmin && <p className="text-[10px] text-brand-300 mt-1">Super Admin</p>}
             </div>
           )}
           <button

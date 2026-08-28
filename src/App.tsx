@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { HashRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
+import SuperAdminRoute from './components/SuperAdminRoute'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
 import Footer from './components/Footer'
@@ -48,7 +49,7 @@ function AppShell() {
             <Route path="/at-risk" element={<AtRisk />} />
             <Route path="/staff" element={<Staff />} />
             <Route path="/referrals" element={<Referrals />} />
-            <Route path="/super-admin" element={<SuperAdmin />} />
+            <Route path="/super-admin" element={<SuperAdminRoute><SuperAdmin /></SuperAdminRoute>} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

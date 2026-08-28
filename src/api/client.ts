@@ -21,6 +21,7 @@ const AUTH_API_BASE = import.meta.env.VITE_AUTH_API_BASE || 'https://base44.app/
 
 const TOKEN_KEY = 'gym_os_auth_token'
 const USER_KEY = 'gym_os_auth_user'
+const GYM_KEY = 'gym_os_gym_id'
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY)
@@ -29,11 +30,16 @@ export function getToken(): string | null {
 export function setAuth(token: string, user: AuthUser): void {
   localStorage.setItem(TOKEN_KEY, token)
   localStorage.setItem(USER_KEY, JSON.stringify(user))
+  // If gym_owner, lock their gym_id
+  if (user.role === 'gym_owner' && user.gym_id && user.gym_id !== 'ALL') {
+    localStorage.setItem(GYM_KEY, user.gym_id)
+  }
 }
 
 export function clearAuth(): void {
   localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(USER_KEY)
+  // Don't clear gym_id — super admin might want to keep their selection
 }
 
 export function getAuthUser(): AuthUser | null {
@@ -58,7 +64,6 @@ export function isTokenExpired(token: string): boolean {
     if (isNaN(expiryTimestamp)) return true
     return Math.floor(Date.now() / 1000) > expiryTimestamp
   } catch {
-    // If token parsing fails, assume NOT expired to avoid false logouts
     return false
   }
 }
@@ -79,8 +84,8 @@ export interface AuthUser {
   id: string
   name: string
   email: string
-  role: string
-  gym_id: string
+  role: string       // 'super_admin' | 'gym_owner'
+  gym_id: string     // 'ALL' for super_admin, specific gym_id for gym_owner
   gym_name: string
 }
 
@@ -96,14 +101,35 @@ export interface ApiError {
   error: string
 }
 
-// --- Gym Context ---
+// --- Gym Context (Role-Aware) ---
 
 export function getGymId(): string {
-  return localStorage.getItem('gym_os_gym_id') || import.meta.env.VITE_DEFAULT_GYM_ID || 'gym_oxigen'
+  // GYM OWNERS are locked to their gym — ignore localStorage
+  const user = getAuthUser()
+  if (user && user.role === 'gym_owner' && user.gym_id && user.gym_id !== 'ALL') {
+    return user.gym_id
+  }
+  // SUPER ADMIN can switch gyms — use localStorage selection
+  return localStorage.getItem(GYM_KEY) || import.meta.env.VITE_DEFAULT_GYM_ID || 'gym_oxigen'
 }
 
 export function setGymId(gymId: string): void {
-  localStorage.setItem('gym_os_gym_id', gymId)
+  // Only super admin can switch gyms
+  const user = getAuthUser()
+  if (user && user.role === 'gym_owner') {
+    return // Lock gym owners to their assigned gym
+  }
+  localStorage.setItem(GYM_KEY, gymId)
+}
+
+export function canSwitchGym(): boolean {
+  const user = getAuthUser()
+  return user?.role === 'super_admin'
+}
+
+export function isSuperAdmin(): boolean {
+  const user = getAuthUser()
+  return user?.role === 'super_admin'
 }
 
 export function getBranchId(): string {
@@ -148,7 +174,6 @@ async function apiCall<T = any>(functionName: string, payload?: Record<string, u
     throw new ApiRequestError('Network error — unable to reach the server. Please check your connection.', 0)
   }
 
-  // Check for non-OK responses
   if (!res.ok) {
     if (res.status === 401) {
       clearAuth()
@@ -162,18 +187,14 @@ async function apiCall<T = any>(functionName: string, payload?: Record<string, u
     if (res.status >= 500) {
       throw new ApiRequestError('Server error. Please try again in a moment.', res.status)
     }
-    // Try to parse error message from response
     let errorMsg = `Request failed with status ${res.status}`
     try {
       const errorBody = await res.json()
       errorMsg = errorBody.error || errorBody.message || errorMsg
-    } catch {
-      // Response wasn't JSON, use generic message
-    }
+    } catch {}
     throw new ApiRequestError(errorMsg, res.status)
   }
 
-  // Parse JSON safely
   try {
     return await res.json() as T
   } catch {
@@ -200,9 +221,7 @@ async function authCall<T = any>(functionName: string, payload?: Record<string, 
     try {
       const errorBody = await res.json()
       errorMsg = errorBody.error || errorBody.message || errorMsg
-    } catch {
-      // Not JSON
-    }
+    } catch {}
     throw new ApiRequestError(errorMsg, res.status)
   }
 
@@ -225,7 +244,6 @@ export const api = {
   getDashboardData: async (): Promise<any> => {
     if (DEMO_MODE) return demoDashboardData
     const res = await apiCall('getDashboardData')
-    // Fetch fresh leads to replace recent_leads (GYMOS returns junk/test leads there)
     try {
       const leadsRes = await apiCall('getLeads', {})
       if (leadsRes.success && leadsRes.leads) {
@@ -234,16 +252,10 @@ export const api = {
           .sort((a: any, b: any) => (b.created_date || '').localeCompare(a.created_date || ''))
           .slice(0, 5)
         res.recent_leads = cleanLeads
-        // Update total_leads to reflect non-archived count
-        if (res.stats) {
-          res.stats.total_leads = leadsRes.leads.filter((l: any) => l.status !== 'archived' && l.status !== 'Archived').length
-        }
-        if (res.metrics) {
-          res.metrics.total_leads = leadsRes.leads.filter((l: any) => l.status !== 'archived' && l.status !== 'Archived').length
-        }
+        if (res.stats) res.stats.total_leads = leadsRes.leads.filter((l: any) => l.status !== 'archived' && l.status !== 'Archived').length
+        if (res.metrics) res.metrics.total_leads = leadsRes.leads.filter((l: any) => l.status !== 'archived' && l.status !== 'Archived').length
       }
     } catch {}
-    // Ensure metrics exists (fallback to stats)
     if (!res.metrics && res.stats) res.metrics = res.stats
     if (!res.metrics && !res.stats) res.metrics = {}
     if (!res.stats) res.stats = res.metrics
@@ -254,12 +266,8 @@ export const api = {
   getLeads: async (filters?: Record<string, unknown>): Promise<any> => {
     if (DEMO_MODE) {
       let leads = [...demoLeads]
-      if (filters?.status && filters.status !== 'all') {
-        leads = leads.filter(l => l.status === filters.status)
-      }
-      if (filters?.source && filters.source !== 'all') {
-        leads = leads.filter(l => l.source === filters.source)
-      }
+      if (filters?.status && filters.status !== 'all') leads = leads.filter(l => l.status === filters.status)
+      if (filters?.source && filters.source !== 'all') leads = leads.filter(l => l.source === filters.source)
       if (filters?.search) {
         const q = String(filters.search).toLowerCase()
         leads = leads.filter(l => l.name.toLowerCase().includes(q) || l.phone.includes(q) || (l.email && l.email.toLowerCase().includes(q)))
@@ -267,7 +275,6 @@ export const api = {
       return { success: true, leads }
     }
     const res = await apiCall('getLeads', filters || {})
-    // Filter out archived/junk leads
     if (res.success && res.leads) {
       res.leads = res.leads.filter((l: any) => l.status !== 'archived' && l.status !== 'Archived')
     }
@@ -276,18 +283,7 @@ export const api = {
 
   createLead: async (data: Record<string, unknown>): Promise<any> => {
     if (DEMO_MODE) {
-      const newLead = {
-        id: 'lead_' + Date.now(),
-        name: (data.name as string) || 'New Lead',
-        phone: (data.phone as string) || '+91 99999 00000',
-        email: (data.email as string) || '',
-        source: (data.source as string) || 'Website',
-        status: 'new',
-        interest: (data.fitness_goal as string) || 'General Fitness',
-        value: 3500,
-        created_date: new Date().toISOString(),
-        notes: (data.notes as string) || ''
-      }
+      const newLead = { id: 'lead_' + Date.now(), name: (data.name as string) || 'New Lead', phone: (data.phone as string) || '+91 99999 00000', email: (data.email as string) || '', source: (data.source as string) || 'Website', status: 'new', interest: (data.fitness_goal as string) || 'General Fitness', value: 3500, created_date: new Date().toISOString(), notes: (data.notes as string) || '' }
       demoLeads.unshift(newLead as any)
       return { success: true, lead: newLead }
     }
@@ -296,486 +292,183 @@ export const api = {
 
   // Trials
   getTrialPasses: async (filters?: Record<string, unknown>): Promise<any> => {
-    if (DEMO_MODE) {
-      const trialPasses = demoTrials.map(t => ({
-        id: t.id,
-        lead_id: t.lead_id,
-        member_name: t.lead_name,
-        member_phone: t.phone,
-        qr_token: t.qr_token,
-        status: t.status,
-        pass_type: 'Trial Pass',
-        valid_from: t.created_date,
-        valid_until: t.expiry_date + 'T23:59:59Z',
-        check_in_time: t.check_in_time || '',
-        created_date: t.created_date,
-        preferred_visit_period: t.preferred_visit_time
-      }))
-      let filtered = trialPasses
-      if (filters?.status && filters.status !== 'all') {
-        filtered = trialPasses.filter(p => p.status === filters.status)
-      }
-      return { success: true, trial_passes: filtered, trials: filtered, passes: filtered }
-    }
+    if (DEMO_MODE) return { success: true, trial_passes: demoTrials.map(t => ({ id: t.id, lead_id: t.lead_id, member_name: t.lead_name, member_phone: t.phone, qr_token: t.qr_token, status: t.status, pass_type: 'Trial Pass', valid_from: t.created_date, valid_until: t.expiry_date + 'T23:59:59Z', check_in_time: t.check_in_time || '', created_date: t.created_date, preferred_visit_period: t.preferred_visit_time })) }
     return apiCall('getTrialPasses', filters || {})
   },
 
   createTrialPass: async (lead_id: string, preferred_visit_time?: string, validity_days?: number): Promise<any> => {
-    if (DEMO_MODE) {
-      const lead = demoLeads.find(l => l.id === lead_id)
-      const token = 'TRIAL-' + Math.random().toString(36).substring(2, 8).toUpperCase()
-      const now = new Date()
-      const expiry = new Date(now.getTime() + (validity_days || 7) * 86400000)
-      const newPass = {
-        id: 'trial_' + Date.now(),
-        lead_id,
-        member_name: lead?.name || 'Trial Guest',
-        member_phone: lead?.phone || '+91 99999 00000',
-        qr_token: token,
-        status: 'active',
-        pass_type: 'Trial Pass',
-        valid_from: now.toISOString(),
-        valid_until: expiry.toISOString(),
-        created_date: now.toISOString(),
-        preferred_visit_period: preferred_visit_time || 'Morning'
-      }
-      demoTrials.unshift({
-        id: newPass.id,
-        lead_name: newPass.member_name,
-        lead_id,
-        phone: newPass.member_phone,
-        qr_token: token,
-        status: 'active',
-        created_date: now.toISOString(),
-        expiry_date: expiry.toISOString().split('T')[0],
-        preferred_visit_time: preferred_visit_time || 'Morning',
-        checked_in: false
-      })
-      return { success: true, qr_token: token, status: 'active', valid_from: newPass.valid_from, valid_until: newPass.valid_until, pass: newPass }
-    }
-    return apiCall('createTrialPass', { lead_id, branch_id: getBranchId(), preferred_visit_time, validity_days })
+    if (DEMO_MODE) return { success: true }
+    return apiCall('createTrialPass', { lead_id, preferred_visit_time, validity_days: validity_days || 3 })
   },
 
   // Check-in
-  getRecentCheckIns: async (limit?: number): Promise<any> => {
-    if (DEMO_MODE) {
-      const list = demoCheckIns.slice(0, limit || 10).map(c => ({
-        id: c.id,
-        member_name: c.member_name,
-        check_in_time: c.check_in_time,
-        entry_method: c.entry_method || 'qr_scan',
-        qr_token: 'MBR-DEMO-' + c.id
-      }))
-      return { success: true, checkins: list, check_ins: list }
-    }
-    return apiCall('getRecentCheckIns', { limit: limit || 10 })
-  },
-
-  validateQR: async (qr_token: string): Promise<any> => {
-    if (DEMO_MODE) {
-      const trial = demoTrials.find(t => t.qr_token === qr_token)
-      const member = demoMembers.find(m => m.qr_code === qr_token)
-      if (trial) {
-        return {
-          success: true,
-          valid: trial.status === 'active',
-          result: trial.status === 'active' ? 'VALID' : trial.status === 'used' ? 'ALREADY_USED' : 'EXPIRED',
-          person_name: trial.lead_name,
-          pass_id: trial.id,
-          lead_id: trial.lead_id,
-          pass_type: 'Trial Pass',
-          status: trial.status
-        }
-      }
-      if (member) {
-        return {
-          success: true,
-          valid: member.status === 'active',
-          result: member.status === 'active' ? 'VALID' : 'EXPIRED',
-          person_name: member.name,
-          pass_id: member.id,
-          pass_type: member.membership_type,
-          status: member.status
-        }
-      }
-      return {
-        success: true,
-        valid: true,
-        result: 'VALID',
-        person_name: 'Rahul Sharma',
-        pass_id: 'trial_001',
-        pass_type: 'Trial Pass',
-        status: 'active'
-      }
-    }
-    return apiCall('validateQR', { qr_token })
-  },
-
-  checkIn: async (qr_token: string): Promise<any> => {
-    if (DEMO_MODE) {
-      const trial = demoTrials.find(t => t.qr_token === qr_token)
-      const member = demoMembers.find(m => m.qr_code === qr_token)
-      const name = trial ? trial.lead_name : member ? member.name : 'Rahul Sharma'
-      const newCin = {
-        id: 'cin_' + Date.now(),
-        member_name: name,
-        member_id: member?.id || 'mem_001',
-        check_in_time: new Date().toISOString(),
-        check_out_time: null,
-        duration_minutes: null,
-        entry_method: 'qr_scan'
-      }
-      demoCheckIns.unshift(newCin as any)
-      return {
-        success: true,
-        attendance_id: newCin.id,
-        timestamp: newCin.check_in_time,
-        message: `Check-in successful for ${name}`,
-        person_name: name,
-        pass_type: trial ? 'Trial Pass' : member ? member.membership_type : 'Member'
-      }
-    }
-    return apiCall('checkIn', { qr_token, branch_id: getBranchId(), entry_method: 'qr_scan' })
+  getCheckIns: async (): Promise<any> => {
+    if (DEMO_MODE) return { success: true, check_ins: demoCheckIns }
+    return apiCall('getRecentCheckIns')
   },
 
   // Members
   getMembers: async (filters?: Record<string, unknown>): Promise<any> => {
-    if (DEMO_MODE) {
-      let list = demoMembers.map(m => ({
-        id: m.id,
-        name: m.name,
-        phone: m.phone,
-        email: m.email,
-        membership_status: m.status,
-        risk_status: m.status === 'expired' ? 'critical' : m.status === 'expiring' ? 'medium' : 'low',
-        risk_reason: m.status === 'expired' ? 'Expired membership' : m.status === 'expiring' ? 'Expires soon' : 'None',
-        joined_date: m.join_date,
-        membership_expiry: m.expiry_date,
-        plan_name: m.membership_type,
-        payment_status: 'paid',
-        attendance_count: m.attendance_count,
-        last_checkin: m.last_checkin
-      }))
-      if (filters?.membership_status && filters.membership_status !== 'all') {
-        list = list.filter(m => m.membership_status === filters.membership_status)
-      }
-      if (filters?.risk_status && filters.risk_status !== 'all') {
-        list = list.filter(m => m.risk_status === filters.risk_status)
-      }
-      if (filters?.search) {
-        const q = String(filters.search).toLowerCase()
-        list = list.filter(m => m.name.toLowerCase().includes(q) || m.phone.includes(q) || (m.email && m.email.toLowerCase().includes(q)))
-      }
-      return { success: true, members: list }
-    }
-    return apiCall('getMembers', filters || {})
+    if (DEMO_MODE) return { success: true, members: demoMembers }
+    return apiCall("getMembers", filters || {})
+  },
+
+  addMember: async (data: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) return { success: true }
+    return apiCall('addMember', data)
   },
 
   // Memberships
   getMemberships: async (): Promise<any> => {
-    if (DEMO_MODE) {
-      const memberships = demoMembers.map(m => ({
-        id: m.id,
-        member_name: m.name,
-        plan_name: m.membership_type,
-        start_date: m.join_date,
-        expiry_date: m.expiry_date,
-        payment_status: 'paid',
-        status: m.status
-      }))
-      const plans = demoMemberships.map(p => ({
-        id: p.id,
-        name: p.name,
-        duration_days: p.duration_months * 30,
-        price: p.price,
-        features: p.features
-      }))
-      return { success: true, plans, memberships }
-    }
+    if (DEMO_MODE) return { success: true, memberships: demoMemberships }
     return apiCall('getMemberships')
   },
 
+  // Payments
+  getPayments: async (): Promise<any> => {
+    if (DEMO_MODE) return { success: true, payments: [] }
+    return apiCall('getPayments')
+  },
+
+  recordPayment: async (data: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) return { success: true }
+    return apiCall('recordPayment', data)
+  },
+
+  // Expenses
+  getExpenses: async (): Promise<any> => {
+    if (DEMO_MODE) return { success: true, expenses: [] }
+    return apiCall('getExpenses')
+  },
+
+  createExpense: async (data: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) return { success: true }
+    return apiCall('createExpense', data)
+  },
+
+  // Revenue
+  getRevenue: async (): Promise<any> => {
+    if (DEMO_MODE) return { success: true, revenue: { monthly: [], breakdown: {} } }
+    return apiCall('getRevenue')
+  },
+
   // Classes
-  getClassSchedule: async (branch_id?: string): Promise<any> => {
-    if (DEMO_MODE) {
-      const classes = demoClasses.map(c => ({
-        id: c.id,
-        title: c.name,
-        name: c.name,
-        trainer_name: c.trainer_name,
-        trainer_id: c.trainer_id,
-        day_of_week: c.day,
-        day: c.day,
-        start_time: c.time,
-        time: c.time,
-        duration_minutes: 60,
-        capacity: c.capacity,
-        booked_count: c.enrolled,
-        enrolled: c.enrolled,
-        spots_left: c.spots_left,
-        intensity: c.intensity,
-        status: c.spots_left === 0 ? 'full' : 'active'
-      }))
-      return { success: true, classes }
-    }
-    return apiCall('getClassSchedule', { branch_id: branch_id || getBranchId() })
-  },
-
-  createClassBooking: async (class_id: string, member_id: string): Promise<any> => {
-    if (DEMO_MODE) {
-      return { success: true, message: 'Class booked successfully' }
-    }
-    return apiCall('createClassBooking', { class_id, member_id })
-  },
-
-  // Renewals
-  getRenewals: async (): Promise<any> => {
-    if (DEMO_MODE) {
-      const renewals = demoRenewals.map(r => {
-        const days = r.days_left ?? 0
-        let stage = 'safe'
-        if (days < 0) stage = 'expired'
-        else if (days < 7) stage = r.status === 'overdue' ? 'critical' : 'urgent'
-        else if (days < 30) stage = 'warning'
-        else stage = 'notice'
-        return {
-          id: r.id,
-          member_name: r.member_name,
-          member_id: r.member_id,
-          plan_name: r.membership_type,
-          expiry_date: r.expiry_date,
-          amount: r.amount,
-          status: r.status,
-          days_to_expiry: days,
-          days_left: days,
-          stage,
-          assigned_to: 'Front Desk'
-        }
-      })
-      return { success: true, renewals }
-    }
-    return apiCall('getRenewals')
+  getClassSchedule: async (): Promise<any> => {
+    if (DEMO_MODE) return { success: true, classes: demoClasses }
+    return apiCall('getClassSchedule')
   },
 
   // Staff
   getStaff: async (): Promise<any> => {
-    if (DEMO_MODE) {
-      const staffList = demoStaff.map(s => ({
-        id: s.id,
-        name: s.name,
-        role: s.role,
-        phone: s.phone,
-        email: s.email,
-        is_active: s.status === 'active'
-      }))
-      const trainersList = demoStaff.map(s => ({
-        id: s.id,
-        name: s.name,
-        specialization: s.specialties,
-        phone: s.phone,
-        email: s.email,
-        is_active: s.status === 'active'
-      }))
-      return { success: true, staff: staffList, trainers: trainersList }
-    }
+    if (DEMO_MODE) return { success: true, staff: demoStaff }
     return apiCall('getStaff')
   },
 
   // Referrals
   getReferrals: async (): Promise<any> => {
-    if (DEMO_MODE) {
-      const referrals = demoReferrals.map((r, i) => ({
-        ...r,
-        referral_code: 'REF' + String(i + 1).padStart(4, '0'),
-        conversion_date: r.status === 'converted' ? r.date : null
-      }))
-      return { success: true, referrals }
-    }
+    if (DEMO_MODE) return { success: true, referrals: demoReferrals }
     return apiCall('getReferrals')
   },
 
-  // Gym tenants
+  // Renewals
+  getRenewals: async (): Promise<any> => {
+    if (DEMO_MODE) return { success: true, renewals: demoRenewals }
+    return apiCall('fetchExpiringMembers')
+  },
+
+  // At-Risk
+  getAtRiskMembers: async (): Promise<any> => {
+    if (DEMO_MODE) return { success: true, members: [] }
+    return apiCall('fetchAtRiskMembers')
+  },
+
+  // Notifications
+  getNotifications: async (): Promise<any> => {
+    if (DEMO_MODE) return { success: true, notifications: [] }
+    return apiCall('getNotifications')
+  },
+
+  // WhatsApp
+  sendWhatsApp: async (phone: string, message: string): Promise<any> => {
+    if (DEMO_MODE) return { success: true }
+    return apiCall('sendWhatsAppMessage', { phone, message })
+  },
+
+  // Lead status update
+  updateLeadStatus: async (lead_id: string, status: string, notes?: string, lost_reason?: string): Promise<any> => {
+    if (DEMO_MODE) return { success: true }
+    return apiCall('updateLeadStatus', { lead_id, status, notes, lost_reason })
+  },
+
+  // Super Admin — gym management
+  getAllGyms: async (): Promise<any> => {
+    if (DEMO_MODE) return { success: true, gyms: [] }
+    return apiCall('getAllGyms')
+  },
+
+  createGym: async (data: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) return { success: true }
+    return apiCall('createGym', data)
+  },
+
+  // QR Check-in
+  qrCheckIn: async (qr_token: string): Promise<any> => {
+    if (DEMO_MODE) return { success: true }
+    return apiCall('qrCheckIn', { qr_token })
+  },
+
+  // Gym Settings
+  getGymSettings: async (): Promise<any> => {
+    if (DEMO_MODE) return { success: true, settings: {} }
+    return apiCall('getGymSettings')
+  },
+
+  updateGymSettings: async (data: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) return { success: true }
+    return apiCall('updateGymSettings', data)
+  },
+
+  getGymProfile: async (): Promise<any> => {
+    if (DEMO_MODE) return { success: true, profile: {} }
+    return apiCall('getGymProfile')
+  },
+
+  updateGymProfile: async (data: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) return { success: true }
+    return apiCall('updateGymProfile', data)
+  },
+
+  // Integrations
+  getIntegrations: async (): Promise<any> => {
+    if (DEMO_MODE) return { success: true, settings: {} }
+    return apiCall('getIntegrations')
+  },
+
+  updateIntegrations: async (data: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) return { success: true }
+    return apiCall('updateIntegrations', data)
+  },
+
+  generateGymWebsite: async (): Promise<any> => {
+    if (DEMO_MODE) return { success: true, website_url: 'https://example.com' }
+    return apiCall('generateGymWebsite')
+  },
+  // Gym tenants (Header)
   getGymTenants: async (): Promise<any> => {
-    if (DEMO_MODE) {
-      return {
-        success: true,
-        gyms: [
-          { id: 'gym_oxigen', gym_name: 'Oxigen Fitness', gym_code: 'gym_oxigen' }
-        ]
-      }
-    }
-    return apiCall('getGymTenants')
+    if (DEMO_MODE) return { success: true, tenants: [] }
+    return apiCall('getAllGyms')
   },
-
-  // Helper to format ISO date to clean date string
-  formatDate: (dateStr: string): string => {
-    if (!dateStr) return ''
-    try {
-      const d = new Date(dateStr)
-      if (isNaN(d.getTime())) return dateStr
-      return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-    } catch { return dateStr }
+  // Check-in specific
+  getRecentCheckIns: async (limit?: number): Promise<any> => {
+    if (DEMO_MODE) return { success: true, checkins: [] }
+    return apiCall('getRecentCheckIns', { limit: limit || 10 })
   },
-
-  // Payments — derived from getMemberships (GYMOS app has membership payment data)
-  getPayments: async (filters?: Record<string, unknown>): Promise<any> => {
-    try {
-      const res = await apiCall('getMemberships', {})
-      if (!res.success) return { success: true, payments: [], count: 0 }
-
-      let memberships = res.memberships || []
-
-      // Transform memberships into payment records
-      let payments = memberships.map((m: any) => ({
-        id: m.id || '',
-        member_id: m.member_id || '',
-        member_name: m.member_name || 'Unknown Member',
-        amount: m.amount || m.plan_price || 0,
-        date: (() => {
-          const raw = m.payment_date || m.start_date || m.created_date || ''
-          if (!raw) return ''
-          try {
-            const d = new Date(raw)
-            if (isNaN(d.getTime())) return raw
-            return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-          } catch { return raw }
-        })(),
-        method: m.payment_method || 'cash',
-        status: m.payment_status || m.status || 'paid',
-        type: m.payment_type || 'membership',
-        invoice_number: m.invoice_number || ('INV-' + String(m.id || '').slice(-8).toUpperCase()),
-        gst_amount: m.gst_amount || 0,
-        plan_name: m.plan_name || '',
-        created_date: m.created_date || ''
-      }))
-
-      // Apply filters
-      if (filters?.status && filters.status !== 'all') {
-        payments = payments.filter((p: any) => String(p.status).toLowerCase() === String(filters.status).toLowerCase())
-      }
-      if (filters?.search) {
-        const q = String(filters.search).toLowerCase()
-        payments = payments.filter((p: any) =>
-          (p.member_name || '').toLowerCase().includes(q) ||
-          (p.invoice_number || '').toLowerCase().includes(q)
-        )
-      }
-
-      // Sort by date descending
-      payments.sort((a: any, b: any) => (b.date || '').localeCompare(a.date || ''))
-
-      return { success: true, payments, count: payments.length }
-    } catch (e) {
-      return { success: true, payments: [], count: 0 }
-    }
+  validateQR: async (qr_token: string): Promise<any> => {
+    if (DEMO_MODE) return { success: true }
+    return apiCall('validateQR', { qr_token })
   },
-
-  // Revenue — derived from getMemberships
-  getRevenue: async (): Promise<any> => {
-    try {
-      const res = await apiCall('getMemberships', {})
-      if (!res.success) {
-        return {
-          success: true,
-          summary: { total_revenue: 0, monthly_revenue: 0, total_expenses: 0, net_revenue: 0, payments_count: 0 },
-          monthly_data: [],
-          category_breakdown: [],
-          by_method: {},
-          by_type: {},
-          expenses: [],
-          recent_payments: []
-        }
-      }
-
-      const memberships = res.memberships || []
-      const currentMonthStr = new Date().toISOString().slice(0, 7)
-
-      let total_revenue = 0
-      let monthly_revenue = 0
-
-      const by_method: any = { cash: { count: 0, total: 0 }, upi: { count: 0, total: 0 }, card: { count: 0, total: 0 }, other: { count: 0, total: 0 } }
-      const by_type: any = { membership: { count: 0, total: 0 }, personal_training: { count: 0, total: 0 }, merchandise: { count: 0, total: 0 }, other: { count: 0, total: 0 } }
-
-      // Monthly data (6 months)
-      const monthlyData: any[] = []
-      for (let i = 5; i >= 0; i--) {
-        const d = new Date()
-        d.setMonth(d.getMonth() - i)
-        monthlyData.push({ month: d.toLocaleString('default', { month: 'short' }), revenue: 0, expenses: 0 })
-      }
-
-      const recentPayments: any[] = []
-
-      for (const m of memberships) {
-        const amount = Number(m.amount || m.plan_price || 0)
-        const status = String(m.payment_status || m.status || '').toLowerCase()
-        const dateStr = String(m.payment_date || m.start_date || m.created_date || '')
-
-        if (status === 'paid' || status === 'active' || status === 'confirmed' || status === '') {
-          total_revenue += amount
-          if (dateStr.startsWith(currentMonthStr)) monthly_revenue += amount
-
-          // Monthly chart
-          const monthKey = dateStr.slice(0, 7)
-          for (let j = 0; j < monthlyData.length; j++) {
-            const d = new Date()
-            d.setMonth(d.getMonth() - (5 - j))
-            if (d.toISOString().slice(0, 7) === monthKey) {
-              monthlyData[j].revenue += amount
-            }
-          }
-
-          // By method
-          let methodKey = String(m.payment_method || '').toLowerCase().trim()
-          if (!['cash', 'upi', 'card'].includes(methodKey)) methodKey = 'other'
-          if (by_method[methodKey]) { by_method[methodKey].count += 1; by_method[methodKey].total += amount }
-
-          // By type
-          let typeKey = String(m.payment_type || 'membership').toLowerCase().trim()
-          if (typeKey === 'pt' || typeKey === 'personal training') typeKey = 'personal_training'
-          if (!['membership', 'personal_training', 'merchandise'].includes(typeKey)) typeKey = 'other'
-          if (by_type[typeKey]) { by_type[typeKey].count += 1; by_type[typeKey].total += amount }
-
-          recentPayments.push({
-            id: m.id,
-            member_name: m.member_name || 'Unknown',
-            amount,
-            date: (() => {
-              try {
-                const d = new Date(dateStr)
-                if (isNaN(d.getTime())) return dateStr
-                return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-              } catch { return dateStr }
-            })(),
-            method: m.payment_method || 'cash',
-            status
-          })
-        }
-      }
-
-      recentPayments.sort((a: any, b: any) => (b.date || '').localeCompare(a.date || ''))
-
-      const categoryBreakdown = Object.entries(by_type).map(([key, val]: any) => ({
-        category: key, count: val.count, total: val.total,
-        percentage: total_revenue > 0 ? Math.round((val.total / total_revenue) * 100) : 0
-      }))
-
-      return {
-        success: true,
-        summary: { total_revenue, monthly_revenue, total_expenses: 0, net_revenue: total_revenue, payments_count: recentPayments.length },
-        monthly_data: monthlyData,
-        category_breakdown: categoryBreakdown,
-        by_method,
-        by_type,
-        expenses: [],
-        recent_payments: recentPayments.slice(0, 10)
-      }
-    } catch (e) {
-      return {
-        success: true,
-        summary: { total_revenue: 0, monthly_revenue: 0, total_expenses: 0, net_revenue: 0, payments_count: 0 },
-        monthly_data: [], category_breakdown: [], by_method: {}, by_type: {}, expenses: [], recent_payments: []
-      }
-    }
-  },
+  checkIn: async (qr_token: string): Promise<any> => {
+    if (DEMO_MODE) return { success: true }
+    return apiCall('checkIn', { qr_token })
+  }
 }
