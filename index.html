@@ -32,9 +32,9 @@
       var r = sessionStorage.redirect;
       if (r) {
         delete sessionStorage.redirect;
-        var p = r.replace(/^https?:\/\/[^\/]+/, "");
-        if (p && p !== "/gym-os-frontend/" && p !== "/gym-os-frontend") {
-          history.replaceState(null, "", p);
+        // Convert path-based route to hash route for HashRouter
+        if (r && r !== '/' && r !== '') {
+          location.hash = '#' + r;
         }
       }
     })();

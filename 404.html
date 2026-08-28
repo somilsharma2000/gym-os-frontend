@@ -4,8 +4,13 @@
   <meta charset="UTF-8" />
   <title>GYM OS — Gym Management Software by Beyond Pixells</title>
   <script>
-    sessionStorage.redirect = location.href;
-    location.replace('/gym-os-frontend/');
+    // Save the original path and redirect to index.html
+    // The app uses HashRouter, so we need to convert path to hash
+    var path = location.pathname;
+    var base = '/gym-os-frontend';
+    var route = path.replace(base, '') || '/';
+    sessionStorage.redirect = route;
+    location.replace(base + '/');
   </script>
 </head>
 <body>
