@@ -222,7 +222,26 @@ export const api = {
   // Dashboard
   getDashboardData: async (): Promise<any> => {
     if (DEMO_MODE) return demoDashboardData
-    return apiCall('getDashboardData')
+    const res = await apiCall('getDashboardData')
+    // Fetch fresh leads to replace recent_leads (GYMOS returns junk/test leads there)
+    try {
+      const leadsRes = await apiCall('getLeads', {})
+      if (leadsRes.success && leadsRes.leads) {
+        const cleanLeads = leadsRes.leads
+          .filter((l: any) => l.status !== 'archived' && l.status !== 'Archived')
+          .sort((a: any, b: any) => (b.created_date || '').localeCompare(a.created_date || ''))
+          .slice(0, 5)
+        res.recent_leads = cleanLeads
+        // Update total_leads to reflect non-archived count
+        if (res.stats) {
+          res.stats.total_leads = leadsRes.leads.filter((l: any) => l.status !== 'archived' && l.status !== 'Archived').length
+        }
+        if (res.metrics) {
+          res.metrics.total_leads = leadsRes.leads.filter((l: any) => l.status !== 'archived' && l.status !== 'Archived').length
+        }
+      }
+    } catch {}
+    return res
   },
 
   // Leads
@@ -241,7 +260,12 @@ export const api = {
       }
       return { success: true, leads }
     }
-    return apiCall('getLeads', filters || {})
+    const res = await apiCall('getLeads', filters || {})
+    // Filter out archived/junk leads
+    if (res.success && res.leads) {
+      res.leads = res.leads.filter((l: any) => l.status !== 'archived' && l.status !== 'Archived')
+    }
+    return res
   },
 
   createLead: async (data: Record<string, unknown>): Promise<any> => {
@@ -577,13 +601,175 @@ export const api = {
     return apiCall('getGymTenants')
   },
 
-  // Payments
-  getPayments: async (filters?: Record<string, unknown>): Promise<any> => {
-    return apiCall('getPayments', filters || {})
+  // Helper to format ISO date to clean date string
+  formatDate: (dateStr: string): string => {
+    if (!dateStr) return ''
+    try {
+      const d = new Date(dateStr)
+      if (isNaN(d.getTime())) return dateStr
+      return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+    } catch { return dateStr }
   },
 
-  // Revenue
+  // Payments — derived from getMemberships (GYMOS app has membership payment data)
+  getPayments: async (filters?: Record<string, unknown>): Promise<any> => {
+    try {
+      const res = await apiCall('getMemberships', {})
+      if (!res.success) return { success: true, payments: [], count: 0 }
+
+      let memberships = res.memberships || []
+
+      // Transform memberships into payment records
+      let payments = memberships.map((m: any) => ({
+        id: m.id || '',
+        member_id: m.member_id || '',
+        member_name: m.member_name || 'Unknown Member',
+        amount: m.amount || m.plan_price || 0,
+        date: (() => {
+          const raw = m.payment_date || m.start_date || m.created_date || ''
+          if (!raw) return ''
+          try {
+            const d = new Date(raw)
+            if (isNaN(d.getTime())) return raw
+            return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+          } catch { return raw }
+        })(),
+        method: m.payment_method || 'cash',
+        status: m.payment_status || m.status || 'paid',
+        type: m.payment_type || 'membership',
+        invoice_number: m.invoice_number || ('INV-' + String(m.id || '').slice(-8).toUpperCase()),
+        gst_amount: m.gst_amount || 0,
+        plan_name: m.plan_name || '',
+        created_date: m.created_date || ''
+      }))
+
+      // Apply filters
+      if (filters?.status && filters.status !== 'all') {
+        payments = payments.filter((p: any) => String(p.status).toLowerCase() === String(filters.status).toLowerCase())
+      }
+      if (filters?.search) {
+        const q = String(filters.search).toLowerCase()
+        payments = payments.filter((p: any) =>
+          (p.member_name || '').toLowerCase().includes(q) ||
+          (p.invoice_number || '').toLowerCase().includes(q)
+        )
+      }
+
+      // Sort by date descending
+      payments.sort((a: any, b: any) => (b.date || '').localeCompare(a.date || ''))
+
+      return { success: true, payments, count: payments.length }
+    } catch (e) {
+      return { success: true, payments: [], count: 0 }
+    }
+  },
+
+  // Revenue — derived from getMemberships
   getRevenue: async (): Promise<any> => {
-    return apiCall('getRevenue')
+    try {
+      const res = await apiCall('getMemberships', {})
+      if (!res.success) {
+        return {
+          success: true,
+          summary: { total_revenue: 0, monthly_revenue: 0, total_expenses: 0, net_revenue: 0, payments_count: 0 },
+          monthly_data: [],
+          category_breakdown: [],
+          by_method: {},
+          by_type: {},
+          expenses: [],
+          recent_payments: []
+        }
+      }
+
+      const memberships = res.memberships || []
+      const currentMonthStr = new Date().toISOString().slice(0, 7)
+
+      let total_revenue = 0
+      let monthly_revenue = 0
+
+      const by_method: any = { cash: { count: 0, total: 0 }, upi: { count: 0, total: 0 }, card: { count: 0, total: 0 }, other: { count: 0, total: 0 } }
+      const by_type: any = { membership: { count: 0, total: 0 }, personal_training: { count: 0, total: 0 }, merchandise: { count: 0, total: 0 }, other: { count: 0, total: 0 } }
+
+      // Monthly data (6 months)
+      const monthlyData: any[] = []
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date()
+        d.setMonth(d.getMonth() - i)
+        monthlyData.push({ month: d.toLocaleString('default', { month: 'short' }), revenue: 0, expenses: 0 })
+      }
+
+      const recentPayments: any[] = []
+
+      for (const m of memberships) {
+        const amount = Number(m.amount || m.plan_price || 0)
+        const status = String(m.payment_status || m.status || '').toLowerCase()
+        const dateStr = String(m.payment_date || m.start_date || m.created_date || '')
+
+        if (status === 'paid' || status === 'active' || status === 'confirmed' || status === '') {
+          total_revenue += amount
+          if (dateStr.startsWith(currentMonthStr)) monthly_revenue += amount
+
+          // Monthly chart
+          const monthKey = dateStr.slice(0, 7)
+          for (let j = 0; j < monthlyData.length; j++) {
+            const d = new Date()
+            d.setMonth(d.getMonth() - (5 - j))
+            if (d.toISOString().slice(0, 7) === monthKey) {
+              monthlyData[j].revenue += amount
+            }
+          }
+
+          // By method
+          let methodKey = String(m.payment_method || '').toLowerCase().trim()
+          if (!['cash', 'upi', 'card'].includes(methodKey)) methodKey = 'other'
+          if (by_method[methodKey]) { by_method[methodKey].count += 1; by_method[methodKey].total += amount }
+
+          // By type
+          let typeKey = String(m.payment_type || 'membership').toLowerCase().trim()
+          if (typeKey === 'pt' || typeKey === 'personal training') typeKey = 'personal_training'
+          if (!['membership', 'personal_training', 'merchandise'].includes(typeKey)) typeKey = 'other'
+          if (by_type[typeKey]) { by_type[typeKey].count += 1; by_type[typeKey].total += amount }
+
+          recentPayments.push({
+            id: m.id,
+            member_name: m.member_name || 'Unknown',
+            amount,
+            date: (() => {
+              try {
+                const d = new Date(dateStr)
+                if (isNaN(d.getTime())) return dateStr
+                return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+              } catch { return dateStr }
+            })(),
+            method: m.payment_method || 'cash',
+            status
+          })
+        }
+      }
+
+      recentPayments.sort((a: any, b: any) => (b.date || '').localeCompare(a.date || ''))
+
+      const categoryBreakdown = Object.entries(by_type).map(([key, val]: any) => ({
+        category: key, count: val.count, total: val.total,
+        percentage: total_revenue > 0 ? Math.round((val.total / total_revenue) * 100) : 0
+      }))
+
+      return {
+        success: true,
+        summary: { total_revenue, monthly_revenue, total_expenses: 0, net_revenue: total_revenue, payments_count: recentPayments.length },
+        monthly_data: monthlyData,
+        category_breakdown: categoryBreakdown,
+        by_method,
+        by_type,
+        expenses: [],
+        recent_payments: recentPayments.slice(0, 10)
+      }
+    } catch (e) {
+      return {
+        success: true,
+        summary: { total_revenue: 0, monthly_revenue: 0, total_expenses: 0, net_revenue: 0, payments_count: 0 },
+        monthly_data: [], category_breakdown: [], by_method: {}, by_type: {}, expenses: [], recent_payments: []
+      }
+    }
   },
 }
