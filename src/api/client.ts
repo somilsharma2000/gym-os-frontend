@@ -470,7 +470,25 @@ export const api = {
   // Classes
   getClassSchedule: async (branch_id?: string): Promise<any> => {
     if (DEMO_MODE) {
-      return { success: true, classes: demoClasses }
+      const classes = demoClasses.map(c => ({
+        id: c.id,
+        title: c.name,
+        name: c.name,
+        trainer_name: c.trainer_name,
+        trainer_id: c.trainer_id,
+        day_of_week: c.day,
+        day: c.day,
+        start_time: c.time,
+        time: c.time,
+        duration_minutes: 60,
+        capacity: c.capacity,
+        booked_count: c.enrolled,
+        enrolled: c.enrolled,
+        spots_left: c.spots_left,
+        intensity: c.intensity,
+        status: c.spots_left === 0 ? 'full' : 'active'
+      }))
+      return { success: true, classes }
     }
     return apiCall('getClassSchedule', { branch_id: branch_id || getBranchId() })
   },
@@ -485,7 +503,28 @@ export const api = {
   // Renewals
   getRenewals: async (): Promise<any> => {
     if (DEMO_MODE) {
-      return { success: true, renewals: demoRenewals }
+      const renewals = demoRenewals.map(r => {
+        const days = r.days_left ?? 0
+        let stage = 'safe'
+        if (days < 0) stage = 'expired'
+        else if (days < 7) stage = r.status === 'overdue' ? 'critical' : 'urgent'
+        else if (days < 30) stage = 'warning'
+        else stage = 'notice'
+        return {
+          id: r.id,
+          member_name: r.member_name,
+          member_id: r.member_id,
+          plan_name: r.membership_type,
+          expiry_date: r.expiry_date,
+          amount: r.amount,
+          status: r.status,
+          days_to_expiry: days,
+          days_left: days,
+          stage,
+          assigned_to: 'Front Desk'
+        }
+      })
+      return { success: true, renewals }
     }
     return apiCall('getRenewals')
   },
@@ -517,7 +556,12 @@ export const api = {
   // Referrals
   getReferrals: async (): Promise<any> => {
     if (DEMO_MODE) {
-      return { success: true, referrals: demoReferrals }
+      const referrals = demoReferrals.map((r, i) => ({
+        ...r,
+        referral_code: 'REF' + String(i + 1).padStart(4, '0'),
+        conversion_date: r.status === 'converted' ? r.date : null
+      }))
+      return { success: true, referrals }
     }
     return apiCall('getReferrals')
   },

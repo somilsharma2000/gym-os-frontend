@@ -60,7 +60,7 @@ export default function Renewals() {
                     </span>
                   </td>
                   <td className="px-4 py-2.5">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-xs font-medium capitalize ${stageColors[r.stage] || stageColors.safe}`}>{r.stage.replace(/_/g, ' ')}</span>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full border text-xs font-medium capitalize ${stageColors[r.stage] || stageColors.safe}`}>{(r.stage || 'safe').replace(/_/g, ' ')}</span>
                   </td>
                   <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400">{r.assigned_to || '—'}</td>
                 </tr>
