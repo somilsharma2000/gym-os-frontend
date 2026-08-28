@@ -27,6 +27,18 @@
     <meta name="twitter:image" content="/gym-os-frontend/brand/og-image.png" />
 
     <title>GYM OS — Gym Management Software by Beyond Pixells</title>
+  <script>
+    (function() {
+      var r = sessionStorage.redirect;
+      if (r) {
+        delete sessionStorage.redirect;
+        var p = r.replace(/^https?:\/\/[^\/]+/, "");
+        if (p && p !== "/gym-os-frontend/" && p !== "/gym-os-frontend") {
+          history.replaceState(null, "", p);
+        }
+      }
+    })();
+  </script>
     <script type="module" crossorigin src="/gym-os-frontend/assets/index-C68jqyMX.js"></script>
     <link rel="stylesheet" crossorigin href="/gym-os-frontend/assets/index-CCQx0aZG.css">
   </head>
