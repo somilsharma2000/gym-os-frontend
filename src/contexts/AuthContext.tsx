@@ -29,6 +29,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       setAuthed(false)
     }
+    
+    // Listen for auth:unauthorized events from API client (401 responses)
+    const handleUnauthorized = () => {
+      setToken(null)
+      setUser(null)
+      setAuthed(false)
+    }
+    window.addEventListener('auth:unauthorized', handleUnauthorized)
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized)
   }, [])
 
   const login = useCallback((newToken: string, newUser: AuthUser) => {

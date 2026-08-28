@@ -61,7 +61,7 @@ export default function WhatsApp() {
                 </div>
               </div>
               <textarea
-                defaultValue={tpl.body}
+                value={tpl.body} readOnly
                 className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-md p-2.5 text-xs text-slate-700 dark:text-slate-200 font-mono h-20 resize-none focus:outline-none focus:border-brand-400"
               />
             </div>

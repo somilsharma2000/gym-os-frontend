@@ -21,7 +21,9 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
   const userMenuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    let isMounted = true
     api.getGymTenants().then(res => {
+      if (!isMounted) return
       const list = res.gyms || res.data || res || []
       if (Array.isArray(list) && list.length > 0) {
         setGyms(list)

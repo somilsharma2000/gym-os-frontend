@@ -145,7 +145,7 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
       })
       if (res.success) {
         setSuccess('Lead created successfully!')
-        setTimeout(onCreated, 1000)
+        const t = setTimeout(onCreated, 1000); return () => clearTimeout(t)
       } else if (res.duplicate) {
         setError(`Duplicate: ${res.message} — Existing lead: ${res.existing_lead_name} (${res.existing_lead_status})`)
       } else {

@@ -91,7 +91,7 @@ function IssuePassModal({ leads, onClose, onIssued }: { leads: Lead[]; onClose: 
     setError('')
     try {
       const res = await api.createTrialPass(leadId, visitPeriod, validityDays)
-      if (res.success) { setResult(res); setTimeout(onIssued, 3000) }
+      if (res.success) { setResult(res); const t = setTimeout(onIssued, 3000); return () => clearTimeout(t) }
       else setError(res.error || 'Failed to issue trial pass')
     } catch (e: unknown) { setError(e instanceof Error ? e.message : "Unknown error") }
     setSubmitting(false)

@@ -58,7 +58,8 @@ export function isTokenExpired(token: string): boolean {
     if (isNaN(expiryTimestamp)) return true
     return Math.floor(Date.now() / 1000) > expiryTimestamp
   } catch {
-    return true
+    // If token parsing fails, assume NOT expired to avoid false logouts
+    return false
   }
 }
 
@@ -151,6 +152,7 @@ async function apiCall<T = any>(functionName: string, payload?: Record<string, u
   if (!res.ok) {
     if (res.status === 401) {
       clearAuth()
+      window.dispatchEvent(new CustomEvent('auth:unauthorized'))
       window.location.hash = '#/login'
       throw new ApiRequestError('Session expired. Please log in again.', 401)
     }
