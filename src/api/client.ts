@@ -53,7 +53,7 @@ export function getAuthUser(): AuthUser | null {
 }
 
 export function isTokenExpired(token: string): boolean {
-  if (token.startsWith('demo_')) return false
+  if (token.startsWith('demo_') || token.startsWith('gymos_')) return false
   try {
     const parts = token.split('.')
     if (parts.length !== 2) return true
@@ -237,7 +237,7 @@ async function authCall<T = any>(functionName: string, payload?: Record<string, 
 export const api = {
   // Auth
   login: async (email: string, password: string): Promise<LoginResponse> => {
-    return authCall<LoginResponse>('loginUser', { email, password })
+    return authCall<LoginResponse>('login', { email, password })
   },
 
   // Dashboard
