@@ -82,11 +82,6 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Demo Mode Badge */}
-      <div className="mb-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/30 text-brand-300 text-xs font-medium">
-        <Sparkles size={14} className="text-brand-400" />
-        <span>Demo mode active — explore with sample data</span>
-      </div>
 
       {/* Login Card */}
       <div className="bg-[#111827] border border-slate-800 rounded-xl shadow-2xl w-full max-w-md p-8">
@@ -182,21 +177,6 @@ export default function Login() {
             )}
           </button>
 
-          {/* Try Demo Button */}
-          <button
-            type="button"
-            onClick={() => {
-              setEmail('demo@oxigen.fitness')
-              setPassword('demo123')
-              setTimeout(() => {
-                const form = document.getElementById('login-form') as HTMLFormElement
-                form?.requestSubmit()
-              }, 100)
-            }}
-            className="w-full py-2.5 text-sm font-semibold text-brand-400 border border-brand-500/30 rounded-lg hover:bg-brand-500/10 transition-colors"
-          >
-            Try Demo Dashboard
-          </button>
         </form>
 
         {/* Book Demo Link */}

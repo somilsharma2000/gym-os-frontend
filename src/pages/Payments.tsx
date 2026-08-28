@@ -1,27 +1,41 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { IndianRupee, Clock, CheckCircle, AlertCircle, Plus, Send } from 'lucide-react'
-import { demoPayments } from '../data/demoData'
+import { api } from '../api/client'
 import StatCard from '../components/StatCard'
 import StatusBadge from '../components/StatusBadge'
 
 export default function Payments() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [payments, setPayments] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    api.getPayments().then(res => {
+      if (res.success) setPayments(res.payments || [])
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [])
 
   const filtered = useMemo(() => {
-    return demoPayments.filter(p => {
-      const matchSearch = p.member_name.toLowerCase().includes(search.toLowerCase()) || p.invoice_number.toLowerCase().includes(search.toLowerCase())
+    return payments.filter(p => {
+      const matchSearch = (p.member_name || '').toLowerCase().includes(search.toLowerCase()) || (p.invoice_number || '').toLowerCase().includes(search.toLowerCase())
       const matchStatus = statusFilter === 'all' || p.status === statusFilter
       return matchSearch && matchStatus
     })
-  }, [search, statusFilter])
+  }, [search, statusFilter, payments])
 
-  const totalRevenue = demoPayments.filter(p => p.status === 'paid').reduce((s, p) => s + p.amount, 0)
-  const pendingAmount = demoPayments.filter(p => p.status === 'pending').reduce((s, p) => s + p.amount, 0)
-  const overdueAmount = demoPayments.filter(p => p.status === 'overdue').reduce((s, p) => s + p.amount, 0)
-  const collectedThisMonth = demoPayments.filter(p => p.status === 'paid' && p.date.startsWith('2026-08')).reduce((s, p) => s + p.amount, 0)
+  const totalRevenue = payments.filter(p => p.status === 'paid' || p.status === 'Paid').reduce((s, p) => s + (p.amount || 0), 0)
+  const pendingAmount = payments.filter(p => p.status === 'pending' || p.status === 'Pending').reduce((s, p) => s + (p.amount || 0), 0)
+  const overdueAmount = payments.filter(p => p.status === 'overdue' || p.status === 'Overdue').reduce((s, p) => s + (p.amount || 0), 0)
+  const currentMonth = new Date().toISOString().slice(0, 7)
+  const collectedThisMonth = payments.filter(p => (p.status === 'paid' || p.status === 'Paid') && (p.date || '').startsWith(currentMonth)).reduce((s, p) => s + (p.amount || 0), 0)
 
-  const formatINR = (amt: number) => `\u20B9${amt.toLocaleString('en-IN')}`
+  const formatINR = (amt: number) => `\u20B9${(amt || 0).toLocaleString('en-IN')}`
+
+  if (loading) {
+    return <div className="flex items-center justify-center py-20 text-slate-500 dark:text-slate-400">Loading payments...</div>
+  }
 
   return (
     <div className="space-y-6">
@@ -43,7 +57,7 @@ export default function Payments() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard label="Total Revenue" value={totalRevenue} icon={<IndianRupee size={16} />} color="text-green-600 dark:text-green-400" />
         <StatCard label="Pending" value={pendingAmount} icon={<Clock size={16} />} color="text-amber-600 dark:text-amber-400" />
-        <StatCard label="Collected (Aug)" value={collectedThisMonth} icon={<CheckCircle size={16} />} color="text-blue-600 dark:text-blue-400" />
+        <StatCard label={`Collected (${new Date().toLocaleString('default', { month: 'short' })})`} value={collectedThisMonth} icon={<CheckCircle size={16} />} color="text-blue-600 dark:text-blue-400" />
         <StatCard label="Overdue" value={overdueAmount} icon={<AlertCircle size={16} />} color="text-red-600 dark:text-red-400" />
       </div>
 
@@ -82,18 +96,20 @@ export default function Payments() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-              {filtered.map((p) => (
+              {filtered.length === 0 ? (
+                <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-400 dark:text-slate-500">No payments found.</td></tr>
+              ) : filtered.map((p) => (
                 <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
-                  <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-100">{p.member_name}</td>
-                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{p.type}</td>
+                  <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-100">{p.member_name || '—'}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{p.type || '—'}</td>
                   <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-100">{formatINR(p.amount)}</td>
-                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{p.date}</td>
-                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{p.method}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{p.date || '—'}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{p.method || '—'}</td>
                   <td className="px-4 py-3"><StatusBadge status={p.status} /></td>
-                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400 font-mono text-xs">{p.invoice_number}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400 font-mono text-xs">{p.invoice_number || '—'}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      {p.status !== 'paid' && (
+                      {p.status !== 'paid' && p.status !== 'Paid' && (
                         <button className="text-xs px-2 py-1 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded border border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors">
                           Mark Paid
                         </button>

@@ -14,7 +14,7 @@ import {
   demoRenewals
 } from '../data/demoData'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://base44.app/api/apps/6a8949954092729194579577/functions'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
 const AUTH_API_BASE = import.meta.env.VITE_AUTH_API_BASE || 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
 
 // --- Token Management ---
@@ -47,15 +47,16 @@ export function getAuthUser(): AuthUser | null {
 }
 
 export function isTokenExpired(token: string): boolean {
-  if (token.startsWith('demo_')) return false // Demo tokens never expire
+  if (token.startsWith('demo_')) return false
   try {
-    const decoded = atob(token)
-    const parts = decoded.split(':')
-    if (parts.length < 2) return true
-    const expiryTimestamp = parseInt(parts[1], 10)
+    const parts = token.split('.')
+    if (parts.length !== 2) return true
+    const payload = atob(parts[0])
+    const [accountId, gymId, expiryStr] = payload.split(':')
+    if (!expiryStr) return true
+    const expiryTimestamp = parseInt(expiryStr, 10)
     if (isNaN(expiryTimestamp)) return true
-    // Check if expiry is within the next 60 seconds (buffer)
-    return Date.now() > (expiryTimestamp - 60) * 1000
+    return Math.floor(Date.now() / 1000) > expiryTimestamp
   } catch {
     return true
   }
@@ -215,9 +216,6 @@ async function authCall<T = any>(functionName: string, payload?: Record<string, 
 export const api = {
   // Auth
   login: async (email: string, password: string): Promise<LoginResponse> => {
-    if (DEMO_MODE || email === 'demo@oxigen.fitness' || password === 'demo123') {
-      return { success: true, user: demoUser, token: 'demo_token_' + Date.now() }
-    }
     return authCall<LoginResponse>('loginUser', { email, password })
   },
 
@@ -577,5 +575,15 @@ export const api = {
       }
     }
     return apiCall('getGymTenants')
+  },
+
+  // Payments
+  getPayments: async (filters?: Record<string, unknown>): Promise<any> => {
+    return apiCall('getPayments', filters || {})
+  },
+
+  // Revenue
+  getRevenue: async (): Promise<any> => {
+    return apiCall('getRevenue')
   },
 }
