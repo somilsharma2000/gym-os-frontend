@@ -1,60 +1,58 @@
 import { useState, useEffect, useRef } from 'react'
-import { Menu, ChevronDown, Building2, Check, LogOut, Sun, Moon } from 'lucide-react'
-import { api, getGymId, setGymId } from '../api/client'
+import { Menu, ChevronDown, Building2, Check, LogOut, Sun, Moon, Lock } from 'lucide-react'
+import { api, getGymId, setGymId, isSuperAdmin } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 
-interface GymTenant {
-  id: string
+interface GymInfo {
+  gym_id: string
   gym_name: string
-  gym_code: string
+  branding?: { primary_color: string }
 }
 
 export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
   const { user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
-  const [gyms, setGyms] = useState<GymTenant[]>([])
-  const [selectedGym, setSelectedGym] = useState<GymTenant | null>(null)
+  const [gyms, setGyms] = useState<GymInfo[]>([])
+  const [selectedGym, setSelectedGym] = useState<GymInfo | null>(null)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
+  const _isSuperAdmin = isSuperAdmin()
+
   useEffect(() => {
-    let isMounted = true
-    api.getGymTenants().then(res => {
-      if (!isMounted) return
-      const list = res.gyms || res.data || res || []
-      if (Array.isArray(list) && list.length > 0) {
-        setGyms(list)
-        const currentId = getGymId()
-        const current = list.find((g: GymTenant) => g.gym_code === currentId || g.id === currentId) || list[0]
-        setSelectedGym(current)
-      }
-    }).catch(() => {
-      const fallback = { id: 'gym_oxigen', gym_name: 'Oxigen Fitness', gym_code: 'gym_oxigen' }
-      setGyms([fallback])
-      setSelectedGym(fallback)
-    })
-  }, [])
+    if (_isSuperAdmin) {
+      api.getAllGyms().then(res => {
+        if (res.success && res.gyms) {
+          const list = res.gyms.map((g: any) => ({ gym_id: g.gym_id, gym_name: g.gym_name, branding: g.branding }))
+          setGyms(list)
+          const currentId = getGymId()
+          const current = list.find((g: GymInfo) => g.gym_id === currentId) || list[0]
+          setSelectedGym(current)
+        }
+      }).catch(() => {})
+    } else if (user) {
+      // Gym owner — locked to their gym
+      setSelectedGym({ gym_id: user.gym_id, gym_name: user.gym_name })
+    }
+  }, [_isSuperAdmin, user])
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false)
-      }
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
-        setUserMenuOpen(false)
-      }
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setDropdownOpen(false)
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setUserMenuOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  const selectGym = (gym: GymTenant) => {
+  const selectGym = (gym: GymInfo) => {
     setSelectedGym(gym)
-    setGymId(gym.gym_code || gym.id)
+    setGymId(gym.gym_id)
     setDropdownOpen(false)
+    // Real-time sync: reload to re-fetch all data for the new gym
     window.location.reload()
   }
 
@@ -69,33 +67,46 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
         <button onClick={onMenuClick} className="lg:hidden text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white p-1 -ml-1">
           <Menu size={22} />
         </button>
-        {/* Gym Selector */}
+        {/* Gym Selector — super admin can switch, gym owner is locked */}
         <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-          >
-            <Building2 size={16} className="text-brand-600 dark:text-brand-400" />
-            <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
-              {selectedGym?.gym_name || 'Select Gym'}
-            </span>
-            <ChevronDown size={16} className="text-slate-400 dark:text-slate-500" />
-          </button>
-          {dropdownOpen && (
+          {_isSuperAdmin ? (
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+            >
+              <Building2 size={16} className="text-brand-600 dark:text-brand-400" />
+              <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                {selectedGym?.gym_name || 'Select Gym'}
+              </span>
+              <ChevronDown size={16} className="text-slate-400 dark:text-slate-500" />
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 px-3 py-1.5 cursor-default">
+              <Building2 size={16} className="text-brand-600 dark:text-brand-400" />
+              <span className="text-sm font-semibold text-slate-800 dark:text-slate-100">
+                {selectedGym?.gym_name || user?.gym_name || 'My Gym'}
+              </span>
+              <span title="Locked to your gym"><Lock size={12} className="text-slate-400" /></span>
+            </div>
+          )}
+          {dropdownOpen && _isSuperAdmin && (
             <div className="absolute top-full left-0 mt-1 w-64 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-slate-200 dark:border-slate-700 py-1 max-h-80 overflow-y-auto z-50">
               {gyms.map(gym => (
                 <button
-                  key={gym.id}
+                  key={gym.gym_id}
                   onClick={() => selectGym(gym)}
                   className={`w-full text-left px-4 py-2.5 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-between ${
-                    selectedGym?.id === gym.id ? 'bg-brand-50 dark:bg-brand-900/30' : ''
+                    selectedGym?.gym_id === gym.gym_id ? 'bg-brand-50 dark:bg-brand-900/30' : ''
                   }`}
                 >
-                  <div>
-                    <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{gym.gym_name}</p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500">{gym.gym_code}</p>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full" style={{ background: gym.branding?.primary_color || '#0066FF' }} />
+                    <div>
+                      <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{gym.gym_name}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">{gym.gym_id}</p>
+                    </div>
                   </div>
-                  {selectedGym?.id === gym.id && <Check size={16} className="text-brand-600 dark:text-brand-400" />}
+                  {selectedGym?.gym_id === gym.gym_id && <Check size={16} className="text-brand-600 dark:text-brand-400" />}
                 </button>
               ))}
             </div>
@@ -104,7 +115,6 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
       </div>
 
       <div className="flex items-center gap-2">
-        {/* Dark mode toggle */}
         <button
           onClick={toggleTheme}
           className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-slate-600 dark:text-slate-300"
@@ -113,7 +123,6 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
           {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
         </button>
 
-        {/* User Menu */}
         <div className="relative" ref={userMenuRef}>
           <button
             onClick={() => setUserMenuOpen(!userMenuOpen)}

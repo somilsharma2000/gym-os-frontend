@@ -39,6 +39,7 @@ export default function SuperAdmin() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [generatingId, setGeneratingId] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     gym_name: '', subdomain: '', owner_name: '', owner_email: '', owner_phone: '',
     address: '', description: '', primary_color: '#0066FF', accent_color: '#3B82F6', plan: 'starter'
@@ -94,6 +95,33 @@ export default function SuperAdmin() {
       setMessage({ type: 'error', text: 'Network error' })
     }
     setSubmitting(false)
+  }
+
+  const handleGenerateWebsite = async (gymId: string, gymName: string) => {
+    setGeneratingId(gymId)
+    try {
+      const res = await fetch(`${API_BASE}/generateGymWebsite`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gym_id: gymId })
+      })
+      const data = await res.json()
+      if (data.success && data.html) {
+        const blob = new Blob([data.html], { type: "text/html" })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `${gymName.toLowerCase().replace(/[^a-z0-9]/g, "-")}-website.html`
+        a.click()
+        URL.revokeObjectURL(url)
+        setMessage({ type: "success", text: `Website generated for ${gymName}! HTML downloaded.` })
+        fetchGyms()
+      } else {
+        setMessage({ type: "error", text: data.error || "Failed to generate website" })
+      }
+    } catch (err) {
+      setMessage({ type: "error", text: "Network error" })
+    }
+    setGeneratingId(null)
   }
 
   const switchToGym = (gymId: string, gymName: string) => {
