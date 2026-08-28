@@ -2,15 +2,17 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/jpeg" href="/gym-os-frontend/assets/beyond-pixels-logo-B49I-nI1.jpg" />
+    <link rel="icon" type="image/jpeg" href="/gym-os-frontend/brand/beyond-pixells-logo.jpg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0A0E27" />
+    <link rel="manifest" href="/gym-os-frontend/manifest.json" />
+    <link rel="apple-touch-icon" href="/gym-os-frontend/apple-touch-icon.png" />
     <title>GYM OS — by Beyond Pixels</title>
-    <script type="module" crossorigin src="/gym-os-frontend/assets/index-Bxl_vXfj.js"></script>
-    <link rel="stylesheet" crossorigin href="/gym-os-frontend/assets/index-DrX7mA7q.css">
   </head>
   <body>
     <div id="root"></div>
-  <script>
+    <script type="module" src="/src/main.tsx"></script>
+    <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker.register("./sw.js").catch(() => {});

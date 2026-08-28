@@ -265,7 +265,7 @@ export default function SuperAdmin() {
                   </button>
                   <Link
                     to="/settings"
-                    onClick={() => localStorage.setItem('gym_id', gym.gym_id)}
+                    onClick={() => localStorage.setItem('gym_os_gym_id', gym.gym_id)}
                     className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-semibold transition-colors"
                   >
                     <SettingsIcon size={14} /> Integrations

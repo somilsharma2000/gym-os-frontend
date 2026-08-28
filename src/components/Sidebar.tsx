@@ -1,6 +1,9 @@
+import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, Ticket, QrCode, UserCircle, CreditCard, Calendar, RefreshCw, AlertTriangle, UserCog, Share2, X, LogOut, IndianRupee, TrendingUp, MessageCircle, Building2, Settings } from 'lucide-react'
+import { LayoutDashboard, Users, Ticket, QrCode, UserCircle, CreditCard, Calendar, RefreshCw, AlertTriangle, UserCog, Share2, X, LogOut, IndianRupee, TrendingUp, MessageCircle, Building2, Settings, ChevronDown, Check } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
 
 const navItems = [
   { path: '/', label: 'Command Center', icon: LayoutDashboard },
@@ -21,9 +24,48 @@ const navItems = [
   { path: '/settings', label: 'Integrations', icon: Settings }
 ]
 
+interface Gym {
+  gym_id: string
+  gym_name: string
+  branding?: { primary_color: string }
+}
+
 export default function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => void }) {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
+  const [gyms, setGyms] = useState<Gym[]>([])
+  const [currentGymId, setCurrentGymId] = useState(localStorage.getItem('gym_os_gym_id') || 'gym_oxigen')
+  const [gymDropdownOpen, setGymDropdownOpen] = useState(false)
+
+  useEffect(() => {
+    fetchGyms()
+  }, [])
+
+  const fetchGyms = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/getAllGyms`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      })
+      const data = await res.json()
+      if (data.success && data.gyms) {
+        setGyms(data.gyms.map((g: any) => ({ gym_id: g.gym_id, gym_name: g.gym_name, branding: g.branding })))
+      }
+    } catch (err) {
+      // Silent fail — gym switcher is optional
+    }
+  }
+
+  const currentGym = gyms.find(g => g.gym_id === currentGymId) || { gym_id: currentGymId, gym_name: 'Select Gym' }
+
+  const handleGymSwitch = (gymId: string, gymName: string) => {
+    localStorage.setItem('gym_os_gym_id', gymId)
+    setCurrentGymId(gymId)
+    setGymDropdownOpen(false)
+    // Reload the page to refresh all data with new gym_id
+    window.location.reload()
+  }
 
   const handleLogout = () => {
     logout()
@@ -51,6 +93,46 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; 
             <X size={20} />
           </button>
         </div>
+
+        {/* Gym Switcher */}
+        {gyms.length > 0 && (
+          <div className="relative border-b border-brand-800">
+            <button
+              onClick={() => setGymDropdownOpen(!gymDropdownOpen)}
+              className="w-full flex items-center gap-2 px-5 py-3 text-left hover:bg-brand-900 transition-colors"
+            >
+              <Building2 size={16} className="text-brand-300 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] text-brand-400 uppercase tracking-wide">Current Gym</p>
+                <p className="text-sm font-semibold truncate">{currentGym.gym_name}</p>
+              </div>
+              <ChevronDown size={16} className={`text-brand-400 transition-transform ${gymDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {gymDropdownOpen && (
+              <div className="absolute left-0 right-0 top-full bg-brand-900 border border-brand-700 rounded-b-lg shadow-xl z-50 max-h-60 overflow-y-auto">
+                {gyms.map(gym => (
+                  <button
+                    key={gym.gym_id}
+                    onClick={() => handleGymSwitch(gym.gym_id, gym.gym_name)}
+                    className="w-full flex items-center gap-2 px-5 py-2.5 text-left text-sm hover:bg-brand-800 transition-colors"
+                  >
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: gym.branding?.primary_color || '#0066FF' }} />
+                    <span className="flex-1 truncate text-brand-100">{gym.gym_name}</span>
+                    {gym.gym_id === currentGymId && <Check size={14} className="text-brand-300" />}
+                  </button>
+                ))}
+                <NavLink
+                  to="/super-admin"
+                  onClick={() => setGymDropdownOpen(false)}
+                  className="w-full flex items-center gap-2 px-5 py-2.5 text-xs text-brand-400 hover:bg-brand-800 border-t border-brand-700"
+                >
+                  <Building2 size={12} /> Manage All Gyms
+                </NavLink>
+              </div>
+            )}
+          </div>
+        )}
+
         <nav className="flex-1 py-3">
           {navItems.map(item => {
             const Icon = item.icon

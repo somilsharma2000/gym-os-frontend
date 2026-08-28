@@ -19,7 +19,7 @@ import {
 
 // Helper function to get current gym ID from localStorage
 const getCurrentGymId = (): string => {
-  return localStorage.getItem('gym_id') || 'gym_oxigen'
+  return localStorage.getItem('gym_os_gym_id') || 'gym_oxigen'
 }
 
 export interface IntegrationSettings {

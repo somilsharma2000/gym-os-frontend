@@ -1,14 +1,17 @@
 import { useState, useMemo, useEffect } from 'react'
-import { IndianRupee, Clock, CheckCircle, AlertCircle, Plus, Send } from 'lucide-react'
+import { IndianRupee, Clock, CheckCircle, AlertCircle, Plus, Send, FileText, Loader } from 'lucide-react'
 import { api } from '../api/client'
 import StatCard from '../components/StatCard'
 import StatusBadge from '../components/StatusBadge'
+
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
 
 export default function Payments() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [payments, setPayments] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [invoiceLoading, setInvoiceLoading] = useState<string | null>(null)
 
   useEffect(() => {
     api.getPayments().then(res => {
@@ -32,6 +35,34 @@ export default function Payments() {
   const collectedThisMonth = payments.filter(p => (p.status === 'paid' || p.status === 'Paid') && (p.date || '').startsWith(currentMonth)).reduce((s, p) => s + (p.amount || 0), 0)
 
   const formatINR = (amt: number) => `\u20B9${(amt || 0).toLocaleString('en-IN')}`
+
+  const handleGenerateInvoice = async (paymentId: string) => {
+    setInvoiceLoading(paymentId)
+    try {
+      const gymId = localStorage.getItem('gym_os_gym_id') || 'gym_oxigen'
+      const res = await fetch(`${API_BASE}/generateInvoice`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment_id: paymentId, gym_id: gymId })
+      })
+      const data = await res.json()
+      if (data.success && data.html) {
+        // Open invoice in new window for printing/saving as PDF
+        const w = window.open('', '_blank')
+        if (w) {
+          w.document.write(data.html)
+          w.document.close()
+        } else {
+          alert('Please allow popups to view the invoice')
+        }
+      } else {
+        alert('Failed to generate invoice: ' + (data.error || 'Unknown error'))
+      }
+    } catch (err) {
+      alert('Error generating invoice')
+    }
+    setInvoiceLoading(null)
+  }
 
   if (loading) {
     return <div className="flex items-center justify-center py-20 text-slate-500 dark:text-slate-400">Loading payments...</div>
@@ -114,7 +145,12 @@ export default function Payments() {
                           Mark Paid
                         </button>
                       )}
-                      <button className="text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors">
+                      <button
+                        onClick={() => handleGenerateInvoice(p.id)}
+                        disabled={invoiceLoading === p.id}
+                        className="text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors flex items-center gap-1 disabled:opacity-50"
+                      >
+                        {invoiceLoading === p.id ? <Loader size={12} className="animate-spin" /> : <FileText size={12} />}
                         Invoice
                       </button>
                     </div>
