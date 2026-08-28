@@ -42,7 +42,7 @@ export default function CheckIn() {
   }
 
   const reset = () => { setToken(''); setValidation(null); setCheckInResult(null); setError('') }
-  const config = validation?.result ? resultConfig[validation.result] : null
+  const config = validation?.result ? (resultConfig[validation.result] || { color: 'gray', label: 'Unknown', icon: 'help' }) : null
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">

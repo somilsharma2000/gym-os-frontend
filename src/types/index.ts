@@ -1,4 +1,5 @@
 export interface DashboardData {
+  stats?: any;
   success: boolean
   metrics: {
     total_leads: number

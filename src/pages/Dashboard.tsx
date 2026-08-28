@@ -45,7 +45,7 @@ export default function Dashboard() {
   )
   if (!data) return <div className="flex items-center justify-center h-96 text-slate-400 dark:text-slate-500">No data</div>
 
-  const m = data.metrics
+  const m = data.metrics || data.stats || {}
 
   return (
     <div className="space-y-6">

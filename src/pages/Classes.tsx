@@ -15,7 +15,7 @@ export default function Classes() {
   if (loading) return <LoadingScreen message="Loading classes..." />
   const total = classes.length
   const active = classes.filter(c => c.status === 'active' || c.status === 'scheduled').length
-  const full = classes.filter(c => c.booked_count >= c.capacity).length
+  const full = classes.filter(c => (c.booked_count || c.enrolled || 0) >= (c.capacity || 0)).length
 
   return (
     <div className="space-y-4">
@@ -55,7 +55,7 @@ export default function Classes() {
             </thead>
             <tbody className="divide-y divide-slate-50 dark:divide-slate-700/50">
               {classes.map(c => {
-                const pct = c.capacity > 0 ? Math.round((c.booked_count / c.capacity) * 100) : 0
+                const pct = (c.capacity || 0) > 0 ? Math.round(((c.booked_count || c.enrolled || 0) / (c.capacity || 1)) * 100) : 0
                 return (
                   <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
                     <td className="px-4 py-2.5 font-medium text-slate-700 dark:text-slate-200">{c.title}</td>

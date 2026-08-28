@@ -241,6 +241,10 @@ export const api = {
         }
       }
     } catch {}
+    // Ensure metrics exists (fallback to stats)
+    if (!res.metrics && res.stats) res.metrics = res.stats
+    if (!res.metrics && !res.stats) res.metrics = {}
+    if (!res.stats) res.stats = res.metrics
     return res
   },
 
