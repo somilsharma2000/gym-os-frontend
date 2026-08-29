@@ -145,7 +145,7 @@ export function getGymId(): string {
     return user.gym_id
   }
   // SUPER ADMIN can switch gyms — use localStorage selection
-  return localStorage.getItem(GYM_KEY) || import.meta.env.VITE_DEFAULT_GYM_ID || 'gym_oxigen'
+  return localStorage.getItem(GYM_KEY) || import.meta.env.VITE_DEFAULT_GYM_ID || 'gym_ironforge'
 }
 
 export function setGymId(gymId: string): void {

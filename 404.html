@@ -1,20 +1,19 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title>GYM OS</title>
-    <script>
-      // SPA redirect for GitHub Pages
-      var pathSegmentsToKeep = 1; // /gym-os-frontend/
-      var l = window.location;
-      l.replace(
-        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?' +
-        (l.pathname ? '&p=' + l.pathname.split('/').slice(1 + pathSegmentsToKeep).join('/') : '') +
-        (l.search ? '&s=' + l.search.slice(1) : '') +
-        (l.hash ? '&h=' + l.hash.slice(1) : '')
-      );
-    </script>
-  </head>
-  <body></body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>GYM OS — Gym Management Software by Beyond Pixells</title>
+  <script>
+    // Save the original path and redirect to index.html
+    // The app uses HashRouter, so we need to convert path to hash
+    var path = location.pathname;
+    var base = '/gym-os-frontend';
+    var route = path.replace(base, '') || '/';
+    sessionStorage.redirect = route;
+    location.replace(base + '/');
+  </script>
+</head>
+<body>
+  <p>Redirecting...</p>
+</body>
 </html>

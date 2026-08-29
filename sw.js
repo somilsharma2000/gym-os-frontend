@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gym-os-v2.3';
+const CACHE_NAME = 'gym-os-v2.8.0';
 const STATIC_ASSETS = [
   './',
   './index.html',
