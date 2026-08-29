@@ -16,9 +16,14 @@
   <body>
     <div id="root"></div>
     <script>
+      // Kill any old service workers that are caching stale content
       if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("./sw.js").catch(() => {});
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for (var registration of registrations) {
+            registration.unregister();
+          }
+          // After unregistering, register the fresh one
+          navigator.serviceWorker.register("./sw.js").catch(function() {});
         });
       }
     </script>
