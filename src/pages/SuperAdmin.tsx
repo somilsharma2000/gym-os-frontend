@@ -241,9 +241,14 @@ export default function SuperAdmin() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-slate-500">Website</span>
                   {gym.website_url ? (
-                    <a href={gym.website_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-brand-500 hover:text-brand-600 font-medium">
-                      <Globe size={14} /> Connected
-                    </a>
+                    <div className="flex items-center gap-2">
+                      <a href={gym.website_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-brand-500 hover:text-brand-600 font-medium">
+                        <Globe size={14} /> Connected
+                      </a>
+                      <button onClick={() => { setConnectModal({ gymId: gym.gym_id, gymName: gym.gym_name }); setConnectUrl(gym.website_url) }} className="text-xs text-slate-400 hover:text-brand-500 font-medium">
+                        Update
+                      </button>
+                    </div>
                   ) : (
                     <button onClick={() => { setConnectModal({ gymId: gym.gym_id, gymName: gym.gym_name }); setConnectUrl('') }} className="flex items-center gap-1 text-slate-400 hover:text-brand-500 font-medium">
                       <Link2 size={14} /> Connect
@@ -353,8 +358,8 @@ export default function SuperAdmin() {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
                   <Link2 size={14} className="text-brand-500" /> Connect Live Website (Optional)
                 </label>
-                <input type="url" value={formData.website_url} onChange={e => setFormData({...formData, website_url: e.target.value})} placeholder="https://mygym.com or https://username.github.io/gym-website/" className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500" />
-                <p className="text-xs text-slate-400 mt-1">Connect an existing gym website to enable QR check-in, lead capture, and data sync with Gym OS backend.</p>
+                <input type="text" value={formData.website_url} onChange={e => setFormData({...formData, website_url: e.target.value})} placeholder="https://golds-vaishali-prime.base44.app/ or https://mygym.com or https://username.github.io/gym-site/" className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                <p className="text-xs text-slate-400 mt-1">Connect ANY website — Base44 app, GitHub Pages, custom domain, or WordPress. Enables QR check-in, lead capture, and data sync.</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -383,7 +388,7 @@ export default function SuperAdmin() {
           <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-md w-full">
             <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-700">
               <div>
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2"><Link2 size={18} className="text-brand-500" /> Connect Website</h2>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2"><Link2 size={18} className="text-brand-500" /> {connectUrl ? "Update Website" : "Connect Website"}</h2>
                 <p className="text-xs text-slate-500 mt-0.5">{connectModal.gymName}</p>
               </div>
               <button onClick={() => setConnectModal(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><X size={20} /></button>
@@ -391,8 +396,8 @@ export default function SuperAdmin() {
             <div className="p-5 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Website URL</label>
-                <input type="url" value={connectUrl} onChange={e => setConnectUrl(e.target.value)} placeholder="https://mygym.com" autoFocus className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500" />
-                <p className="text-xs text-slate-400 mt-1.5">Connect your gym's live website. This enables:</p>
+                <input type="text" value={connectUrl} onChange={e => setConnectUrl(e.target.value)} placeholder="https://golds-vaishali-prime.base44.app/ or https://mygym.com" autoFocus className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                <p className="text-xs text-slate-400 mt-1.5">Connect ANY website — Base44 app, GitHub Pages, custom domain, or WordPress. This enables:</p>
                 <ul className="text-xs text-slate-500 mt-1.5 space-y-1 ml-4">
                   <li>• QR code check-in for members</li>
                   <li>• Lead capture from website forms</li>
@@ -405,7 +410,7 @@ export default function SuperAdmin() {
                 <button onClick={() => setConnectModal(null)} className="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-semibold">Cancel</button>
                 <button onClick={() => handleConnectWebsite(connectModal.gymId)} disabled={connectingGym === connectModal.gymId} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold">
                   {connectingGym === connectModal.gymId ? <Loader size={16} className="animate-spin" /> : <Link2 size={16} />}
-                  {connectingGym === connectModal.gymId ? 'Connecting...' : 'Connect Website'}
+                  {connectingGym === connectModal.gymId ? 'Connecting...' : connectUrl ? 'Update Website' : 'Connect Website'}
                 </button>
               </div>
             </div>
