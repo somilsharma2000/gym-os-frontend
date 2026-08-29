@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Building2, Plus, Globe, Settings as SettingsIcon, Users, Search, X, TrendingUp, CheckCircle, AlertCircle, Loader, IndianRupee, Calendar, ArrowRight } from 'lucide-react'
+import { Building2, Plus, Globe, Settings as SettingsIcon, Users, Search, X, TrendingUp, CheckCircle, AlertCircle, Loader, IndianRupee, ArrowRight, Link2, Key } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
-import { isSuperAdmin } from '../api/client'
 
 const API_BASE = 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
 
@@ -18,16 +17,15 @@ interface Gym {
   website_generated: boolean
   website_url: string
   branding?: { primary_color: string; accent_color: string; bg_color: string }
-  social?: { instagram: string; facebook: string }
   stats?: {
-    total_leads: number
-    recent_leads: number
-    total_members: number
+    leads_count: number
+    members_count: number
     active_members: number
     active_memberships: number
     total_revenue: number
-    total_checkins: number
-    active_trainers: number
+    checkins_today: number
+    won_leads: number
+    conversion_rate: number
   }
 }
 
@@ -39,10 +37,13 @@ export default function SuperAdmin() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
-  const [generatingId, setGeneratingId] = useState<string | null>(null)
+  const [connectingGym, setConnectingGym] = useState<string | null>(null)
+  const [connectModal, setConnectModal] = useState<{ gymId: string; gymName: string } | null>(null)
+  const [connectUrl, setConnectUrl] = useState('')
   const [formData, setFormData] = useState({
-    gym_name: '', subdomain: '', owner_name: '', owner_email: '', owner_phone: '',
-    address: '', description: '', primary_color: '#0066FF', accent_color: '#3B82F6', plan: 'starter'
+    gym_name: '', owner_name: '', owner_email: '', owner_phone: '',
+    address: '', primary_color: '#0066FF', accent_color: '#3B82F6',
+    plan: 'starter', password: '', website_url: ''
   })
 
   const fetchGyms = async () => {
@@ -53,7 +54,7 @@ export default function SuperAdmin() {
       })
       const data = await res.json()
       if (data.success) setGyms(data.gyms)
-    } catch (err) {
+    } catch {
       setMessage({ type: 'error', text: 'Failed to load gyms' })
     }
     setLoading(false)
@@ -67,64 +68,58 @@ export default function SuperAdmin() {
     g.owner_name?.toLowerCase().includes(search.toLowerCase())
   )
 
-  // Platform-wide stats
-  const totalLeads = gyms.reduce((s, g) => s + (g.stats?.total_leads || 0), 0)
-  const totalMembers = gyms.reduce((s, g) => s + (g.stats?.total_members || 0), 0)
+  const totalLeads = gyms.reduce((s, g) => s + (g.stats?.leads_count || 0), 0)
+  const totalMembers = gyms.reduce((s, g) => s + (g.stats?.members_count || 0), 0)
   const totalRevenue = gyms.reduce((s, g) => s + (g.stats?.total_revenue || 0), 0)
-  const totalCheckins = gyms.reduce((s, g) => s + (g.stats?.total_checkins || 0), 0)
+  const totalCheckins = gyms.reduce((s, g) => s + (g.stats?.checkins_today || 0), 0)
 
   const handleAddGym = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitting(true)
     try {
-      const gymId = `gym_${formData.gym_name.toLowerCase().replace(/[^a-z0-9]/g, '_')}`
       const res = await fetch(`${API_BASE}/createGym`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, gym_id: gymId })
+        body: JSON.stringify(formData)
       })
       const data = await res.json()
       if (data.success) {
-        setMessage({ type: 'success', text: `Gym "${formData.gym_name}" created! Owner login: ${formData.owner_email}` })
+        setMessage({ type: 'success', text: `Gym "${formData.gym_name}" created! Login: ${data.owner_email} / ${data.owner_password}` })
         setShowAddModal(false)
-        setFormData({ gym_name: '', subdomain: '', owner_name: '', owner_email: '', owner_phone: '', address: '', description: '', primary_color: '#0066FF', accent_color: '#3B82F6', plan: 'starter' })
+        setFormData({ gym_name: '', owner_name: '', owner_email: '', owner_phone: '', address: '', primary_color: '#0066FF', accent_color: '#3B82F6', plan: 'starter', password: '', website_url: '' })
         fetchGyms()
       } else {
         setMessage({ type: 'error', text: data.error || 'Failed to create gym' })
       }
-    } catch (err) {
+    } catch {
       setMessage({ type: 'error', text: 'Network error' })
     }
     setSubmitting(false)
   }
 
-  const handleGenerateWebsite = async (gymId: string, gymName: string) => {
-    setGeneratingId(gymId)
+  const handleConnectWebsite = async (gymId: string) => {
+    if (!connectUrl.trim()) return
+    setConnectingGym(gymId)
     try {
-      const res = await fetch(`${API_BASE}/generateGymWebsite`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gym_id: gymId })
+      const res = await fetch(`${API_BASE}/updateGymProfile`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gym_id: gymId, website_url: connectUrl, website_generated: true })
       })
       const data = await res.json()
-      if (data.success && data.html) {
-        const blob = new Blob([data.html], { type: "text/html" })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement("a")
-        a.href = url
-        a.download = `${gymName.toLowerCase().replace(/[^a-z0-9]/g, "-")}-website.html`
-        a.click()
-        URL.revokeObjectURL(url)
-        setMessage({ type: "success", text: `Website generated for ${gymName}! HTML downloaded.` })
+      if (data.success) {
+        setMessage({ type: 'success', text: 'Website connected! QR check-in, lead capture, and automations are now linked.' })
+        setConnectModal(null)
+        setConnectUrl('')
         fetchGyms()
       } else {
-        setMessage({ type: "error", text: data.error || "Failed to generate website" })
+        setMessage({ type: 'error', text: data.error || 'Failed to connect website' })
       }
-    } catch (err) {
-      setMessage({ type: "error", text: "Network error" })
+    } catch {
+      setMessage({ type: 'error', text: 'Network error' })
     }
-    setGeneratingId(null)
+    setConnectingGym(null)
   }
 
-  const switchToGym = (gymId: string, gymName: string) => {
+  const switchToGym = (gymId: string) => {
     localStorage.setItem('gym_os_gym_id', gymId)
     navigate('/')
     setTimeout(() => window.location.reload(), 100)
@@ -158,7 +153,6 @@ export default function SuperAdmin() {
         </div>
       )}
 
-      {/* Platform Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-3">
@@ -186,13 +180,11 @@ export default function SuperAdmin() {
         </div>
       </div>
 
-      {/* Search */}
       <div className="relative max-w-md">
         <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
         <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search gyms by name, ID, or owner..." className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500" />
       </div>
 
-      {/* Gyms Grid */}
       {loading ? (
         <div className="flex items-center justify-center py-20"><Loader size={24} className="animate-spin text-brand-500" /><span className="ml-3 text-slate-500">Loading gyms...</span></div>
       ) : filteredGyms.length === 0 ? (
@@ -213,7 +205,6 @@ export default function SuperAdmin() {
                   <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${planColors[gym.plan] || 'bg-slate-500/20 text-slate-400'}`}>{gym.plan?.toUpperCase()}</span>
                 </div>
               </div>
-
               <div className="p-5 space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-slate-500">Owner</span>
@@ -223,28 +214,34 @@ export default function SuperAdmin() {
                   <span className="text-slate-500">Location</span>
                   <span className="font-medium text-slate-900 dark:text-white truncate ml-2">{gym.address || '—'}</span>
                 </div>
-
-                {/* Real Stats */}
-                <div className="grid grid-cols-4 gap-2 pt-3 border-t border-slate-100 dark:border-slate-700">
-                  <div className="text-center"><p className="text-lg font-bold text-slate-900 dark:text-white">{gym.stats?.total_leads || 0}</p><p className="text-[10px] text-slate-500">Leads</p></div>
-                  <div className="text-center"><p className="text-lg font-bold text-slate-900 dark:text-white">{gym.stats?.total_members || 0}</p><p className="text-[10px] text-slate-500">Members</p></div>
-                  <div className="text-center"><p className="text-lg font-bold text-green-600">{formatINR(gym.stats?.total_revenue || 0).replace('₹', '₹')}</p><p className="text-[10px] text-slate-500">Revenue</p></div>
-                  <div className="text-center"><p className="text-lg font-bold text-slate-900 dark:text-white">{gym.stats?.total_checkins || 0}</p><p className="text-[10px] text-slate-500">Check-ins</p></div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500">Website</span>
+                  {gym.website_url ? (
+                    <a href={gym.website_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-brand-500 hover:text-brand-600 font-medium">
+                      <Globe size={14} /> Connected
+                    </a>
+                  ) : (
+                    <button onClick={() => { setConnectModal({ gymId: gym.gym_id, gymName: gym.gym_name }); setConnectUrl('') }} className="flex items-center gap-1 text-slate-400 hover:text-brand-500 font-medium">
+                      <Link2 size={14} /> Connect
+                    </button>
+                  )}
                 </div>
-
-                {/* Actions */}
+                <div className="grid grid-cols-4 gap-2 pt-3 border-t border-slate-100 dark:border-slate-700">
+                  <div className="text-center"><p className="text-lg font-bold text-slate-900 dark:text-white">{gym.stats?.leads_count || 0}</p><p className="text-[10px] text-slate-500">Leads</p></div>
+                  <div className="text-center"><p className="text-lg font-bold text-slate-900 dark:text-white">{gym.stats?.members_count || 0}</p><p className="text-[10px] text-slate-500">Members</p></div>
+                  <div className="text-center"><p className="text-lg font-bold text-green-600">{formatINR(gym.stats?.total_revenue || 0)}</p><p className="text-[10px] text-slate-500">Revenue</p></div>
+                  <div className="text-center"><p className="text-lg font-bold text-slate-900 dark:text-white">{gym.stats?.checkins_today || 0}</p><p className="text-[10px] text-slate-500">Check-ins</p></div>
+                </div>
                 <div className="flex gap-2 pt-3">
-                  <button
-                    onClick={() => switchToGym(gym.gym_id, gym.gym_name)}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold transition-colors"
-                  >
-                    Switch to Gym <ArrowRight size={12} />
+                  <button onClick={() => switchToGym(gym.gym_id)} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold transition-colors">
+                    Open Dashboard <ArrowRight size={12} />
                   </button>
-                  <Link
-                    to="/settings"
-                    onClick={() => localStorage.setItem('gym_os_gym_id', gym.gym_id)}
-                    className="flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-semibold transition-colors"
-                  >
+                  {!gym.website_url && (
+                    <button onClick={() => { setConnectModal({ gymId: gym.gym_id, gymName: gym.gym_name }); setConnectUrl('') }} className="flex items-center justify-center gap-1.5 px-3 py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 rounded-lg text-xs font-semibold" title="Connect Website">
+                      <Link2 size={14} />
+                    </button>
+                  )}
+                  <Link to="/settings" onClick={() => localStorage.setItem('gym_os_gym_id', gym.gym_id)} className="flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-semibold">
                     <SettingsIcon size={14} />
                   </Link>
                 </div>
@@ -254,11 +251,10 @@ export default function SuperAdmin() {
         </div>
       )}
 
-      {/* Add Gym Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-lg w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-700">
+            <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-800 z-10">
               <h2 className="text-lg font-bold text-slate-900 dark:text-white">Add New Gym</h2>
               <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><X size={20} /></button>
             </div>
@@ -287,13 +283,26 @@ export default function SuperAdmin() {
                   <input type="email" required value={formData.owner_email} onChange={e => setFormData({...formData, owner_email: e.target.value})} className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500" />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Owner Phone</label>
-                <input type="tel" value={formData.owner_phone} onChange={e => setFormData({...formData, owner_phone: e.target.value})} placeholder="+91 XXXXX XXXXX" className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Owner Phone</label>
+                  <input type="tel" value={formData.owner_phone} onChange={e => setFormData({...formData, owner_phone: e.target.value})} placeholder="+91 XXXXX XXXXX" className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Login Password</label>
+                  <input type="text" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} placeholder="Auto-generated if empty" className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Address</label>
                 <input type="text" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1.5">
+                  <Link2 size={14} className="text-brand-500" /> Connect Live Website (Optional)
+                </label>
+                <input type="url" value={formData.website_url} onChange={e => setFormData({...formData, website_url: e.target.value})} placeholder="https://mygym.com or https://username.github.io/gym-website/" className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                <p className="text-xs text-slate-400 mt-1">Connect an existing gym website to enable QR check-in, lead capture, and data sync with Gym OS backend.</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -313,6 +322,41 @@ export default function SuperAdmin() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {connectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-md w-full">
+            <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-700">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2"><Link2 size={18} className="text-brand-500" /> Connect Website</h2>
+                <p className="text-xs text-slate-500 mt-0.5">{connectModal.gymName}</p>
+              </div>
+              <button onClick={() => setConnectModal(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><X size={20} /></button>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Website URL</label>
+                <input type="url" value={connectUrl} onChange={e => setConnectUrl(e.target.value)} placeholder="https://mygym.com" autoFocus className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500" />
+                <p className="text-xs text-slate-400 mt-1.5">Connect your gym's live website. This enables:</p>
+                <ul className="text-xs text-slate-500 mt-1.5 space-y-1 ml-4">
+                  <li>• QR code check-in for members</li>
+                  <li>• Lead capture from website forms</li>
+                  <li>• WhatsApp automations</li>
+                  <li>• Real-time data sync with Gym OS</li>
+                  <li>• Payment processing</li>
+                </ul>
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => setConnectModal(null)} className="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-semibold">Cancel</button>
+                <button onClick={() => handleConnectWebsite(connectModal.gymId)} disabled={connectingGym === connectModal.gymId} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold">
+                  {connectingGym === connectModal.gymId ? <Loader size={16} className="animate-spin" /> : <Link2 size={16} />}
+                  {connectingGym === connectModal.gymId ? 'Connecting...' : 'Connect Website'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
