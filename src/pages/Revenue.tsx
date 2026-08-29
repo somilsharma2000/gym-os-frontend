@@ -3,7 +3,7 @@ import { TrendingUp, TrendingDown, Wallet, Target, Plus, X, Loader, Trash2 } fro
 import { api } from '../api/client'
 import StatCard from '../components/StatCard'
 
-const API_BASE = 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
+const API_BASE = 'https://base44.app/api/apps/6a8949954092729194579577/functions'
 
 export default function Revenue() {
   const [data, setData] = useState<any>(null)

@@ -5,7 +5,7 @@ import type { TrialPass, Lead } from '../types'
 import StatusBadge from '../components/StatusBadge'
 import DataTable, { type Column } from '../components/DataTable'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://base44.app/api/apps/6a8949954092729194579577/functions'
 
 const statusOptions = ['all', 'active', 'checked_in', 'completed', 'expired']
 

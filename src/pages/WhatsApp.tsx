@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Send, Users, Clock, MessageSquare, X, Loader, Check, AlertCircle, Zap, Calendar, Filter, BarChart3, Mail, Bell, TrendingUp } from 'lucide-react'
 import { api } from '../api/client'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://base44.app/api/apps/6a8949954092729194579577/functions'
 
 type Broadcast = {
   id: string

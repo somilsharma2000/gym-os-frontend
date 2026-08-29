@@ -4,7 +4,7 @@ import { api } from '../api/client'
 import { exportToCSV } from '../utils/csvExport'
 import StatusBadge from '../components/StatusBadge'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://base44.app/api/apps/6a8949954092729194579577/functions'
 
 const sourceConfig: Record<string, { icon: any; color: string; label: string }> = {
   instagram: { icon: Instagram, color: 'text-pink-600 bg-pink-50 dark:bg-pink-900/30', label: 'Instagram' },

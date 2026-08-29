@@ -179,7 +179,7 @@ export function getGymId(): string {
     return user.gym_id
   }
   // SUPER ADMIN can switch gyms — use localStorage selection
-  return localStorage.getItem(GYM_KEY) || import.meta.env.VITE_DEFAULT_GYM_ID || 'gym_ironforge'
+  return localStorage.getItem(GYM_KEY) || import.meta.env.VITE_DEFAULT_GYM_ID || 'gym_oxigen'
 }
 
 export function setGymId(gymId: string): void {
@@ -234,11 +234,12 @@ async function apiCall<T = any>(functionName: string, payload?: Record<string, u
 
   let res: Response
   const apiBase = getApiBase(functionName)
+  const effectiveGymId = (gym_id === 'ALL' || !gym_id) && GYMOS_FUNCTIONS.has(functionName) ? 'gym_oxigen' : gym_id
   try {
     res = await fetch(`${apiBase}/${functionName}`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ gym_id, ...payload }),
+      body: JSON.stringify({ gym_id: effectiveGymId, ...payload }),
     })
   } catch {
     throw new ApiRequestError('Network error — unable to reach the server. Please check your connection.', 0)

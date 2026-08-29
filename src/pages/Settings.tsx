@@ -120,7 +120,7 @@ export default function Settings() {
     setLoadingInitial(true)
     setErrorInitial('')
     try {
-      const response = await fetch('https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions/getIntegrations', {
+      const response = await fetch('https://base44.app/api/apps/6a8949954092729194579577/functions/getIntegrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ gym_id: getCurrentGymId() })
@@ -169,7 +169,7 @@ export default function Settings() {
     setSavingTab(tabId)
     setTabFeedback(null)
     try {
-      const response = await fetch('https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions/updateIntegrations', {
+      const response = await fetch('https://base44.app/api/apps/6a8949954092729194579577/functions/updateIntegrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -211,7 +211,7 @@ export default function Settings() {
     setGeneratingWebsite(true)
     setTabFeedback(null)
     try {
-      const response = await fetch('https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions/generateGymWebsite', {
+      const response = await fetch('https://base44.app/api/apps/6a8949954092729194579577/functions/connectGymWebsite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ gym_id: getCurrentGymId() })

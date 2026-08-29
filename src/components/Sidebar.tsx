@@ -4,7 +4,8 @@ import { LayoutDashboard, Users, Ticket, QrCode, UserCircle, CreditCard, Calenda
 import { useAuth } from '../contexts/AuthContext'
 import { canSwitchGym, isSuperAdmin, getAuthUser } from '../api/client'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
+// GYMOS app for gym data, Superagent app for auth
+const GYMOS_API = 'https://base44.app/api/apps/6a8949954092729194579577/functions'
 
 // Full nav — super admin sees everything including Super Admin
 const allNavItems = [
@@ -61,14 +62,15 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; 
 
   const fetchGyms = async () => {
     try {
-      const res = await fetch(`${API_BASE}/getAllGyms`, {
+      const res = await fetch(`${GYMOS_API}/getGymTenants`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ gym_id: 'ALL' })
       })
       const data = await res.json()
-      if (data.success && data.gyms) {
-        setGyms(data.gyms.map((g: any) => ({ gym_id: g.gym_id, gym_name: g.gym_name, branding: g.branding })))
+      if (data.success && (data.tenants || data.gyms)) {
+        const list = data.tenants || data.gyms
+        setGyms(list.map((g: any) => ({ gym_id: g.gym_code || g.gym_id, gym_name: g.gym_name, branding: g.branding })))
       }
     } catch (err) {
       // Silent fail

@@ -17,7 +17,7 @@ const resultConfig: Record<string, { color: string; icon: any; label: string }> 
   ALREADY_USED: { color: 'border-orange-300 bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800', icon: Repeat, label: 'ALREADY CHECKED IN' }
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://base44.app/api/apps/6a8949954092729194579577/functions'
 
 export default function CheckIn() {
   const [token, setToken] = useState('')
