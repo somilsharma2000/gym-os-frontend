@@ -14,8 +14,42 @@ import {
   demoRenewals
 } from '../data/demoData'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
-const AUTH_API_BASE = import.meta.env.VITE_AUTH_API_BASE || 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
+// GYMOS app (6a8949954092729194579577) — has real data: leads, members, memberships, check-ins, classes
+const GYMOS_API_BASE = 'https://base44.app/api/apps/6a8949954092729194579577/functions'
+// Superagent app (6a700b150c8d8b8e923580a1) — auth, gym management, settings, integrations
+const ADMIN_API_BASE = 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
+// Legacy aliases (for backward compat)
+const API_BASE = GYMOS_API_BASE
+const AUTH_API_BASE = ADMIN_API_BASE
+
+// Functions that live on the GYMOS app (data operations)
+const GYMOS_FUNCTIONS = new Set([
+  'getDashboardData', 'getLeads', 'getTrialPasses', 'getMembers', 'getRecentCheckIns',
+  'getMemberships', 'getReferrals', 'getStaff', 'getRenewals', 'getGymTenants',
+  'getCommandCenterMetrics', 'getClassSchedule', 'createLeadWithConsent', 'createLead',
+  'createTrialPass', 'createClassBooking', 'checkIn', 'validateQR', 'validateQRPass',
+  'checkInWithAttendance', 'connectGymWebsite', 'setupGymProfile', 'detectAtRiskMembers',
+  'expireTrialPasses', 'autoFollowUpTask', 'sendDailySummary', 'updateRenewalPipeline',
+  'seedGymData', 'createTrialBooking'
+])
+
+// Functions that live on the Superagent/Admin app (auth, settings, gym management)
+const ADMIN_FUNCTIONS = new Set([
+  'login', 'getGymSettings', 'updateGymSettings', 'getAllGyms', 'createGym', 'deleteGym',
+  'updateGymProfile', 'getIntegrations', 'updateIntegrations', 'getExpenses', 'addExpense',
+  'deleteExpense', 'getRevenue', 'getPayments', 'recordPayment', 'createPayment',
+  'addMember', 'updateMember', 'convertLeadToMember', 'activateTrial', 'getAtRiskMembers',
+  'getNotifications', 'sendWhatsAppMessage', 'updateLeadStatus', 'qrCheckIn', 'getGymProfile',
+  'enrollInClass', 'publicGymAPI'
+])
+
+// Route to the correct API based on function name
+function getApiBase(functionName: string): string {
+  if (GYMOS_FUNCTIONS.has(functionName)) return GYMOS_API_BASE
+  if (ADMIN_FUNCTIONS.has(functionName)) return ADMIN_API_BASE
+  // Default: try GYMOS first (most data functions live there)
+  return GYMOS_API_BASE
+}
 
 // --- Token Management ---
 
@@ -199,8 +233,9 @@ async function apiCall<T = any>(functionName: string, payload?: Record<string, u
   }
 
   let res: Response
+  const apiBase = getApiBase(functionName)
   try {
-    res = await fetch(`${API_BASE}/${functionName}`, {
+    res = await fetch(`${apiBase}/${functionName}`, {
       method: 'POST',
       headers,
       body: JSON.stringify({ gym_id, ...payload }),

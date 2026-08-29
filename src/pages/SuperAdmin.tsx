@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Building2, Plus, Globe, Settings as SettingsIcon, Users, Search, X, TrendingUp, CheckCircle, AlertCircle, Loader, IndianRupee, ArrowRight, Link2, Key, Trash2, AlertTriangle } from 'lucide-react'
+import { Building2, Plus, Globe, Settings as SettingsIcon, Users, Search, X, TrendingUp, CheckCircle, AlertCircle, Loader, IndianRupee, ArrowRight, Link2, Key, Trash2, AlertTriangle, Code, Copy } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 
 const API_BASE = 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
@@ -42,6 +42,8 @@ export default function SuperAdmin() {
   const [connectUrl, setConnectUrl] = useState('')
   const [deleteModal, setDeleteModal] = useState<{ gymId: string; gymName: string } | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [embedModal, setEmbedModal] = useState<{ gymId: string; gymName: string } | null>(null)
+  const [copied, setCopied] = useState(false)
   const [formData, setFormData] = useState({
     gym_name: '', owner_name: '', owner_email: '', owner_phone: '',
     address: '', primary_color: '#0066FF', accent_color: '#3B82F6',
@@ -264,6 +266,11 @@ export default function SuperAdmin() {
                 <div className="flex gap-2 pt-3">
                   <button onClick={() => switchToGym(gym.gym_id)} className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-xs font-semibold transition-colors">
                     Open Dashboard <ArrowRight size={12} />
+                  {gym.website_url && (
+                    <button onClick={() => setEmbedModal({ gymId: gym.gym_id, gymName: gym.gym_name })} className="flex items-center justify-center gap-1.5 px-3 py-2 bg-green-500/10 hover:bg-green-500/20 text-green-600 rounded-lg text-xs font-semibold" title="Get Embed Code">
+                      <Code size={14} />
+                    </button>
+                  )}
                   </button>
                   {!gym.website_url && (
                     <button onClick={() => { setConnectModal({ gymId: gym.gym_id, gymName: gym.gym_name }); setConnectUrl('') }} className="flex items-center justify-center gap-1.5 px-3 py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 rounded-lg text-xs font-semibold" title="Connect Website">
@@ -413,6 +420,48 @@ export default function SuperAdmin() {
                   {connectingGym === connectModal.gymId ? 'Connecting...' : connectUrl ? 'Update Website' : 'Connect Website'}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {embedModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-lg w-full">
+            <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-700">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2"><Code size={18} className="text-green-500" /> Embed Code</h2>
+                <p className="text-xs text-slate-500 mt-0.5">{embedModal.gymName} — Add this to any website (.app, .com, .in, anything)</p>
+              </div>
+              <button onClick={() => setEmbedModal(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><X size={20} /></button>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-sm text-slate-600 dark:text-slate-400">Add this script tag to your website's <code className="px-1 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-xs">&lt;head&gt;</code> or before <code className="px-1 py-0.5 bg-slate-100 dark:bg-slate-700 rounded text-xs">&lt;/body&gt;</code>:</p>
+              <div className="relative">
+                <pre className="bg-slate-900 text-green-400 p-4 rounded-xl text-xs overflow-x-auto font-mono"><code>&lt;script src="https://somilsharma2000.github.io/gym-os-frontend/gymos-widget.js" data-gym-id="{embedModal.gymId}"&gt;&lt;/script&gt;</code></pre>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText('<script src="https://somilsharma2000.github.io/gym-os-frontend/gymos-widget.js" data-gym-id="' + embedModal.gymId + '"></' + 'script>')
+                    setCopied(true)
+                    setTimeout(() => setCopied(false), 2000)
+                  }}
+                  className="absolute top-2 right-2 p-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white"
+                  title="Copy"
+                >
+                  {copied ? <CheckCircle size={14} className="text-green-400" /> : <Copy size={14} />}
+                </button>
+              </div>
+              <div className="bg-blue-500/10 rounded-xl p-4 space-y-2">
+                <p className="text-sm font-semibold text-blue-600">What this adds to your website:</p>
+                <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-1 ml-4">
+                  <li>• <span className="font-medium">Floating Gym OS button</span> — opens a panel with trial pass, lead capture, QR check-in, and class schedule</li>
+                  <li>• <span className="font-medium">Real-time sync</span> — all leads, trials, and check-ins flow directly into Gym OS dashboard</li>
+                  <li>• <span className="font-medium">48-hour trial pass</span> — visitors can sign up for a trial directly from your website</li>
+                  <li>• <span className="font-medium">QR check-in</span> — members scan in/out using their QR token</li>
+                  <li>• <span className="font-medium">Branded UI</span> — matches Beyond Pixels navy/blue design</li>
+                </ul>
+              </div>
+              <p className="text-xs text-slate-400">Works with Base44 apps, WordPress, Wix, Squarespace, custom HTML, GitHub Pages — any website that supports script tags.</p>
+              <button onClick={() => setEmbedModal(null)} className="w-full px-4 py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-semibold">Close</button>
             </div>
           </div>
         </div>
