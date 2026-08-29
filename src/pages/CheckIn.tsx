@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Search, UserCheck, AlertCircle, Clock, Ban, MapPin, Repeat, Camera, CameraOff, QrCode, Loader, Download, Plus, X, Copy, Check } from 'lucide-react'
 import { api } from '../api/client'
+import { exportToCSV } from '../utils/csvExport'
 import type { ValidationResult, CheckInResult, CheckIn } from '../types'
 
 declare global {

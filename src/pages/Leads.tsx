@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, X, Loader, Phone, MessageCircle, Mail, Instagram, Facebook, Globe, Users as UsersIcon, FileSpreadsheet, Zap, Check, Calendar, TrendingUp, Star } from 'lucide-react'
+import { Plus, X, Loader, Phone, MessageCircle, Mail, Instagram, Facebook, Globe, Users as UsersIcon, FileSpreadsheet, Zap, Check, Calendar, TrendingUp, Star, Download } from 'lucide-react'
 import { api } from '../api/client'
 import { exportToCSV } from '../utils/csvExport'
 import StatusBadge from '../components/StatusBadge'
@@ -88,7 +88,10 @@ export default function Leads() {
           <button onClick={() => setShowImport(true)} className="px-3 py-1.5 text-sm text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-1.5">
             <FileSpreadsheet size={14} /> Import
           </button>
-          <button onClick={() => setShowAdd(true)} className="px-3 py-1.5 text-sm text-white bg-brand-600 rounded-md hover:bg-brand-700 flex items-center gap-1.5">
+          <button onClick={() => exportToCSV('leads.csv', ['Name', 'Phone', 'Email', 'Source', 'Status', 'Interest', 'Fitness Goal', 'Date', 'Notes'], leads.map(l => [l.name || '', l.phone || '', l.email || '', l.source || '', l.status || '', l.interest || '', l.fitness_goal || '', l.created_date || '', l.notes || '']))} className="px-3 py-1.5 text-sm text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 rounded-md hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors flex items-center gap-1.5 mr-2">
+            <Download size={14} /> Export CSV
+          </button>
+          <button onClick={() => setShowAdd(true)} className="px-3 py-1.5 text-sm text-white bg-brand-600 rounded-md hover:bg-brand-700 transition-colors flex items-center gap-1.5">
             <Plus size={14} /> Add Lead
           </button>
         </div>
@@ -220,17 +223,19 @@ function AddLeadModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
   const [fitnessGoal, setFitnessGoal] = useState('')
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [consent, setConsent] = useState(false)
   const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!name || !phone) { setError('Name and phone are required'); return }
+    if (!consent) { setError('Consent is required to add a lead (GDPR compliance)'); return }
     setSubmitting(true)
     try {
       const gymId = localStorage.getItem('gym_os_gym_id') || 'gym_oxigen'
-      const res = await fetch(`${API_BASE}/createLead`, {
+      const res = await fetch(`${API_BASE}/createLeadWithConsent`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gym_id: gymId, name, phone, email, source, interest, fitness_goal: fitnessGoal, notes, status: 'new' })
+        body: JSON.stringify({ gym_id: gymId, name, phone, email, source, interest, fitness_goal: fitnessGoal, notes, status: 'new', consent_status: 'granted' })
       })
       const data = await res.json()
       if (data.success) onAdded()
@@ -263,6 +268,10 @@ function AddLeadModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
             <input type="text" placeholder="Fitness Goal" value={fitnessGoal} onChange={e => setFitnessGoal(e.target.value)} className="px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md" />
           </div>
           <textarea placeholder="Notes..." value={notes} onChange={e => setNotes(e.target.value)} rows={2} className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md resize-none" />
+          <label className="flex items-start gap-2 text-xs text-slate-600 dark:text-slate-400">
+            <input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} className="mt-0.5" required />
+            <span>I consent to having this contact information collected and stored by this gym for follow-up communication, in accordance with the gym's privacy policy (GDPR/CCPA compliant).</span>
+          </label>
           <button type="submit" disabled={submitting} className="w-full py-2.5 text-sm font-medium text-white bg-brand-600 rounded-md hover:bg-brand-700 disabled:opacity-50">
             {submitting ? 'Adding...' : 'Add Lead'}
           </button>

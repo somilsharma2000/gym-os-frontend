@@ -336,6 +336,69 @@ export const api = {
     return apiCall('createTrialPass', { lead_id, preferred_visit_time, validity_days: validity_days || 3 })
   },
 
+  // Class enrollment
+  enrollInClass: async (gym_id: string, member_id: string, class_id: string): Promise<any> => {
+    if (DEMO_MODE) return { success: true }
+    return apiCall('enrollInClass', { gym_id, member_id, class_id })
+  },
+
+  // Payments
+  createPayment: async (data: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) return { success: true, invoice_number: 'DEMO-' + Date.now() }
+    return apiCall('createPayment', data)
+  },
+
+  // Members
+  addMember: async (data: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) return { success: true, member_id: 'demo_' + Date.now(), qr_code: 'demo_qr' }
+    return apiCall('addMember', data)
+  },
+  updateMember: async (member_id: string, data: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) return { success: true }
+    return apiCall('updateMember', { member_id, ...data })
+  },
+
+  // Lead conversion
+  convertLeadToMember: async (gym_id: string, lead_id: string, data?: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) return { success: true, member_id: 'demo_' + Date.now() }
+    return apiCall('convertLeadToMember', { gym_id, lead_id, ...data })
+  },
+
+  // Trial activation
+  activateTrial: async (gym_id: string, lead_id: string): Promise<any> => {
+    if (DEMO_MODE) return { success: true, qr_token: 'trial_demo', trial_end: new Date(Date.now() + 48*3600000).toISOString() }
+    return apiCall('activateTrial', { gym_id, lead_id })
+  },
+
+  // At-risk members
+  getAtRiskMembers: async (gym_id: string, days_threshold?: number): Promise<any> => {
+    if (DEMO_MODE) return { success: true, at_risk_members: [], count: 0 }
+    return apiCall('getAtRiskMembers', { gym_id, days_threshold })
+  },
+
+  // Gym settings
+  getGymSettings: async (gym_id: string): Promise<any> => {
+    if (DEMO_MODE) return { success: true, settings: {} }
+    return apiCall('getGymSettings', { gym_id })
+  },
+  updateGymSettings: async (gym_id: string, settings: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) return { success: true }
+    return apiCall('updateGymSettings', { gym_id, ...settings })
+  },
+
+  // Expenses
+  getExpenses: async (gym_id: string): Promise<any> => {
+    if (DEMO_MODE) return { success: true, expenses: [], count: 0 }
+    return apiCall('getExpenses', { gym_id })
+  },
+  addExpense: async (data: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) return { success: true }
+    return apiCall('addExpense', data)
+  },
+  deleteExpense: async (expense_id: string): Promise<any> => {
+    if (DEMO_MODE) return { success: true }
+    return apiCall('deleteExpense', { expense_id })
+  },
   // Check-in
   getCheckIns: async (): Promise<any> => {
     if (DEMO_MODE) return { success: true, check_ins: demoCheckIns }
@@ -346,11 +409,6 @@ export const api = {
   getMembers: async (filters?: Record<string, unknown>): Promise<any> => {
     if (DEMO_MODE) return { success: true, members: demoMembers }
     return apiCall("getMembers", filters || {})
-  },
-
-  addMember: async (data: Record<string, unknown>): Promise<any> => {
-    if (DEMO_MODE) return { success: true }
-    return apiCall('addMember', data)
   },
 
   // Memberships
@@ -371,16 +429,6 @@ export const api = {
   },
 
   // Expenses
-  getExpenses: async (): Promise<any> => {
-    if (DEMO_MODE) return { success: true, expenses: [] }
-    return apiCall('getExpenses')
-  },
-
-  createExpense: async (data: Record<string, unknown>): Promise<any> => {
-    if (DEMO_MODE) return { success: true }
-    return apiCall('createExpense', data)
-  },
-
   // Revenue
   getRevenue: async (): Promise<any> => {
     if (DEMO_MODE) return { success: true, revenue: { monthly: [], breakdown: {} } }
@@ -412,11 +460,6 @@ export const api = {
   },
 
   // At-Risk
-  getAtRiskMembers: async (): Promise<any> => {
-    if (DEMO_MODE) return { success: true, members: [] }
-    return apiCall('fetchAtRiskMembers')
-  },
-
   // Notifications
   getNotifications: async (): Promise<any> => {
     if (DEMO_MODE) return { success: true, notifications: [] }
@@ -453,16 +496,6 @@ export const api = {
   },
 
   // Gym Settings
-  getGymSettings: async (): Promise<any> => {
-    if (DEMO_MODE) return { success: true, settings: {} }
-    return apiCall('getGymSettings')
-  },
-
-  updateGymSettings: async (data: Record<string, unknown>): Promise<any> => {
-    if (DEMO_MODE) return { success: true }
-    return apiCall('updateGymSettings', data)
-  },
-
   getGymProfile: async (): Promise<any> => {
     if (DEMO_MODE) return { success: true, profile: {} }
     return apiCall('getGymProfile')
