@@ -49,8 +49,9 @@ export default function SuperAdmin() {
   const fetchGyms = async () => {
     setLoading(true)
     try {
+      const token = localStorage.getItem('gym_os_auth_token') || ''
       const res = await fetch(`${API_BASE}/getAllGyms`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({})
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': token }, body: JSON.stringify({})
       })
       const data = await res.json()
       if (data.success) setGyms(data.gyms)

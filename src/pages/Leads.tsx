@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Plus, X, Loader, Phone, MessageCircle, Mail, Instagram, Facebook, Globe, Users as UsersIcon, FileSpreadsheet, Zap, Check, Calendar, TrendingUp, Star } from 'lucide-react'
 import { api } from '../api/client'
+import { exportToCSV } from '../utils/csvExport'
 import StatusBadge from '../components/StatusBadge'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'

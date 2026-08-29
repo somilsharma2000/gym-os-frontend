@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Search, X, Phone, MessageCircle, Bell, Edit, Loader, IndianRupee, Check } from 'lucide-react'
+import { Search, X, Phone, MessageCircle, Bell, Edit, Loader, IndianRupee, Check, Download } from 'lucide-react'
 import { api } from '../api/client'
+import { exportToCSV } from '../utils/csvExport'
 import type { Member } from '../types'
 import StatusBadge from '../components/StatusBadge'
 import DataTable, { type Column } from '../components/DataTable'

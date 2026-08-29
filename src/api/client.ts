@@ -56,13 +56,22 @@ export function isTokenExpired(token: string): boolean {
   if (token.startsWith('demo_') || token.startsWith('gymos_')) return false
   try {
     const parts = token.split('.')
-    if (parts.length !== 2) return true
-    const payload = atob(parts[0])
-    const [accountId, gymId, expiryStr] = payload.split(':')
-    if (!expiryStr) return true
-    const expiryTimestamp = parseInt(expiryStr, 10)
-    if (isNaN(expiryTimestamp)) return true
-    return Math.floor(Date.now() / 1000) > expiryTimestamp
+    // JWT format: header.payload.signature (3 parts)
+    if (parts.length === 3) {
+      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')))
+      if (payload.exp) return Math.floor(Date.now() / 1000) > payload.exp
+      return false
+    }
+    // Legacy base64 format: payload.signature (2 parts)
+    if (parts.length === 2) {
+      const payload = atob(parts[0])
+      const [accountId, gymId, expiryStr] = payload.split(':')
+      if (!expiryStr) return true
+      const expiryTimestamp = parseInt(expiryStr, 10)
+      if (isNaN(expiryTimestamp)) return true
+      return Math.floor(Date.now() / 1000) > expiryTimestamp
+    }
+    return true
   } catch {
     return false
   }
@@ -76,6 +85,32 @@ export function isAuthenticated(): boolean {
     return false
   }
   return true
+}
+
+export function getGymIdFromToken(): string | null {
+  const token = getToken()
+  if (!token) return null
+  try {
+    const parts = token.split('.')
+    if (parts.length === 3) {
+      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')))
+      return payload.gym_id || null
+    }
+  } catch {}
+  return null
+}
+
+export function getRoleFromToken(): string | null {
+  const token = getToken()
+  if (!token) return null
+  try {
+    const parts = token.split('.')
+    if (parts.length === 3) {
+      const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')))
+      return payload.role || null
+    }
+  } catch {}
+  return null
 }
 
 // --- Types ---
