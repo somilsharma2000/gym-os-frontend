@@ -23,7 +23,7 @@ const allNavItems = [
   { path: '/staff', label: 'Staff', icon: UserCog },
   { path: '/referrals', label: 'Referrals', icon: Share2 },
   { path: '/super-admin', label: 'Super Admin', icon: Building2, superAdminOnly: true },
-  { path: '/settings', label: 'Integrations', icon: Settings }
+  { path: '/settings', label: 'Integrations', icon: Settings, superAdminOnly: true }
 ]
 
 // Gym owner nav — no Super Admin

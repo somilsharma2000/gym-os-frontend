@@ -50,7 +50,7 @@ function AppShell() {
             <Route path="/staff" element={<Staff />} />
             <Route path="/referrals" element={<Referrals />} />
             <Route path="/super-admin" element={<SuperAdminRoute><SuperAdmin /></SuperAdminRoute>} />
-            <Route path="/settings" element={<Settings />} />
+            <Route path="/settings" element={<SuperAdminRoute><Settings /></SuperAdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>
