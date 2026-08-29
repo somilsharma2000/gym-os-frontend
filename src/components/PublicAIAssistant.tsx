@@ -104,7 +104,7 @@ export default function PublicAIAssistant() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3.5 rounded-full bg-gradient-to-r from-blue-600 to-emerald-600 text-white font-medium shadow-xl hover:scale-105 transition-all"
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3.5 rounded-full bg-gradient-to-r from-blue-600 to-brand-600 text-white font-medium shadow-xl hover:scale-105 transition-all"
       >
         <Sparkles size={22} />
         <span>Ask AI</span>
@@ -114,7 +114,7 @@ export default function PublicAIAssistant() {
 
   return (
     <div className="fixed bottom-6 right-6 z-50 w-[360px] max-w-[calc(100vw-3rem)] h-[480px] max-h-[calc(100vh-3rem)] flex flex-col rounded-2xl overflow-hidden bg-white border border-slate-200 shadow-2xl">
-      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-600 to-emerald-600">
+      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-600 to-brand-600">
         <div className="flex items-center gap-2.5">
           <Sparkles size={18} className="text-white" />
           <p className="text-sm font-semibold text-white">Gym Assistant</p>

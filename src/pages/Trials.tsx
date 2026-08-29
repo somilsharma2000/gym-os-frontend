@@ -145,8 +145,8 @@ export default function Trials() {
           <p className="text-2xl font-bold text-blue-600">{checkedInCount}</p>
         </div>
         <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
-          <div className="flex items-center gap-2 mb-2"><Check size={16} className="text-purple-600" /><span className="text-xs text-slate-500 dark:text-slate-400">Completed</span></div>
-          <p className="text-2xl font-bold text-purple-600">{completedCount}</p>
+          <div className="flex items-center gap-2 mb-2"><Check size={16} className="text-brand-600" /><span className="text-xs text-slate-500 dark:text-slate-400">Completed</span></div>
+          <p className="text-2xl font-bold text-brand-600">{completedCount}</p>
         </div>
         <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4">
           <div className="flex items-center gap-2 mb-2"><AlertCircle size={16} className="text-red-600" /><span className="text-xs text-slate-500 dark:text-slate-400">Expired</span></div>

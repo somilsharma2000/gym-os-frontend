@@ -8,11 +8,10 @@ import Header from './components/Header'
 import Footer from './components/Footer'
 import NotFound from './components/NotFound'
 import AIAssistant from './components/AIAssistant'
-import TrainerNotifications from './components/TrainerNotifications'
 import Login from './pages/Login'
-import Demo from './pages/Demo'
 import Dashboard from './pages/Dashboard'
 import Leads from './pages/Leads'
+import FollowUps from './pages/FollowUps'
 import Trials from './pages/Trials'
 import CheckIn from './pages/CheckIn'
 import Members from './pages/Members'
@@ -20,8 +19,11 @@ import Memberships from './pages/Memberships'
 import Payments from './pages/Payments'
 import Revenue from './pages/Revenue'
 import RevenueEngine from './pages/RevenueEngine'
+import Analytics from './pages/Analytics'
+import Socials from './pages/Socials'
 import WhatsApp from './pages/WhatsApp'
 import Classes from './pages/Classes'
+import Trainers from './pages/Trainers'
 import Renewals from './pages/Renewals'
 import AtRisk from './pages/AtRisk'
 import Staff from './pages/Staff'
@@ -41,6 +43,7 @@ function AppShell() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/leads" element={<Leads />} />
+            <Route path="/follow-ups" element={<FollowUps />} />
             <Route path="/trials" element={<Trials />} />
             <Route path="/check-in" element={<CheckIn />} />
             <Route path="/members" element={<Members />} />
@@ -48,8 +51,11 @@ function AppShell() {
             <Route path="/payments" element={<Payments />} />
             <Route path="/revenue" element={<Revenue />} />
             <Route path="/revenue-engine" element={<RevenueEngine />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/socials" element={<Socials />} />
             <Route path="/whatsapp" element={<WhatsApp />} />
             <Route path="/classes" element={<Classes />} />
+            <Route path="/trainers" element={<Trainers />} />
             <Route path="/renewals" element={<Renewals />} />
             <Route path="/at-risk" element={<AtRisk />} />
             <Route path="/staff" element={<Staff />} />
@@ -72,7 +78,6 @@ export default function App() {
       <HashRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/demo" element={<Demo />} />
           <Route
             path="/*"
             element={

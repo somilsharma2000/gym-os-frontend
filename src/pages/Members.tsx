@@ -195,7 +195,7 @@ export default function Members() {
             </a>
             <button
               onClick={() => handleWhatsApp(m)}
-              className="p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-md transition-colors"
+              className="p-1.5 text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-900/30 rounded-md transition-colors"
               title="Send WhatsApp Message"
             >
               {actionLoading === m.id ? <Loader size={14} className="animate-spin" /> : <MessageCircle size={14} />}
@@ -238,7 +238,7 @@ export default function Members() {
                       }}
                       className="w-full text-left px-3 py-2 font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 flex items-center gap-2.5 transition-colors"
                     >
-                      <Eye size={14} className="text-indigo-500" />
+                      <Eye size={14} className="text-brand-500" />
                       View Profile
                     </button>
                   </div>
@@ -260,7 +260,7 @@ export default function Members() {
                       onClick={() => setOpenMenuId(null)}
                       className="w-full text-left px-3 py-2 font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 flex items-center gap-2.5 transition-colors"
                     >
-                      <MessageCircle size={14} className="text-emerald-500" />
+                      <MessageCircle size={14} className="text-brand-500" />
                       WhatsApp (wa.me)
                     </a>
 
@@ -281,7 +281,7 @@ export default function Members() {
                         onClick={() => setOpenMenuId(null)}
                         className="w-full text-left px-3 py-2 font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 flex items-center gap-2.5 transition-colors"
                       >
-                        <Mail size={14} className="text-purple-500" />
+                        <Mail size={14} className="text-brand-500" />
                         Email ({m.email})
                       </a>
                     ) : (
@@ -322,7 +322,7 @@ export default function Members() {
           {/* Bulk Member Upload Button */}
           <button
             onClick={() => setShowBulkUpload(true)}
-            className="px-3.5 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-lg transition-all flex items-center gap-2 shadow-sm"
+            className="px-3.5 py-2 text-xs font-semibold text-white bg-brand-700 hover:bg-brand-800 active:bg-brand-800 rounded-lg transition-all flex items-center gap-2 shadow-sm"
           >
             <Upload size={14} /> Bulk Upload
           </button>
@@ -332,7 +332,7 @@ export default function Members() {
               <span className="text-sm text-slate-500">{bulkSelect.size} selected</span>
               <button
                 onClick={() => setShowBulkWhatsapp(true)}
-                className="px-3 py-1.5 text-sm text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-1.5"
+                className="px-3 py-1.5 text-sm text-white bg-brand-700 rounded-md hover:bg-brand-800 transition-colors flex items-center gap-1.5"
               >
                 <MessageCircle size={14} /> Bulk WhatsApp
               </button>
@@ -424,14 +424,14 @@ function WhatsAppModal({ member, onClose, onSend }: { member: Member; onClose: (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-md w-full">
         <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2"><MessageCircle size={20} className="text-emerald-600" /> WhatsApp: {member.name}</h2>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2"><MessageCircle size={20} className="text-brand-600" /> WhatsApp: {member.name}</h2>
           <button onClick={onClose} className="text-slate-400"><X size={20} /></button>
         </div>
         <div className="p-5 space-y-3">
           <p className="text-sm text-slate-500">To: {member.phone}</p>
           <textarea value={message} onChange={e => setMessage(e.target.value)} rows={4}
-            className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none" />
-          <button onClick={() => onSend(member, message)} className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
+            className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none" />
+          <button onClick={() => onSend(member, message)} className="w-full py-2.5 bg-brand-700 hover:bg-brand-800 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
             <MessageCircle size={16} /> Send Message
           </button>
         </div>
@@ -499,15 +499,15 @@ function BulkWhatsAppModal({ count, onClose, onSend, loading }: { count: number;
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-md w-full">
         <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2"><MessageCircle size={20} className="text-emerald-600" /> Bulk WhatsApp</h2>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2"><MessageCircle size={20} className="text-brand-600" /> Bulk WhatsApp</h2>
           <button onClick={onClose} className="text-slate-400"><X size={20} /></button>
         </div>
         <div className="p-5 space-y-3">
           <p className="text-sm text-slate-600 dark:text-slate-300">Sending to <strong>{count}</strong> members</p>
           <textarea value={message} onChange={e => setMessage(e.target.value)} rows={4}
-            className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none" />
+            className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none" />
           <p className="text-xs text-slate-400">Use {'{name}'} for personalized recipient name</p>
-          <button onClick={() => onSend(message)} disabled={loading} className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
+          <button onClick={() => onSend(message)} disabled={loading} className="w-full py-2.5 bg-brand-700 hover:bg-brand-800 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
             {loading ? <Loader size={16} className="animate-spin" /> : <MessageCircle size={16} />} Send to {count} Members
           </button>
         </div>

@@ -1,6 +1,21 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Mail, Lock, Eye, EyeOff, AlertCircle, Loader2, Sparkles, HelpCircle } from 'lucide-react'
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  Loader2,
+  Sparkles,
+  HelpCircle,
+  UserCheck,
+  Target,
+  TrendingUp,
+  MessageCircle,
+  QrCode,
+  Bot
+} from 'lucide-react'
 import { api, isTokenExpired } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -67,21 +82,26 @@ export default function Login() {
     }
   }
 
+  const handleTrySampleGym = () => {
+    setEmail('owner@oxigenfitness.com')
+    setPassword('gym_oxigen_2026')
+    setError('')
+  }
+
   return (
-    <div className="min-h-screen bg-[#0A0E27] flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0b1120] text-slate-100 flex flex-col items-center justify-center p-4 sm:p-8">
       {/* Logo Header */}
       <div className="flex items-center gap-3 mb-8">
         <img
           src={`${import.meta.env.BASE_URL}brand/beyond-pixells-logo.png`}
           alt="Beyond Pixells"
-          className="w-12 h-12 rounded-full object-cover"
+          className="w-12 h-12 rounded-full object-cover ring-2 ring-blue-500/30"
         />
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">GYM OS</h1>
           <p className="text-xs text-slate-400">by Beyond Pixells</p>
         </div>
       </div>
-
 
       {/* Login Card */}
       <div className="bg-[#111827] border border-slate-800 rounded-xl shadow-2xl w-full max-w-md p-8">
@@ -98,8 +118,8 @@ export default function Login() {
         )}
 
         {forgotMsg && (
-          <div className="mb-4 flex items-start gap-2 p-3 bg-brand-900/40 border border-brand-700/50 rounded-lg text-sm text-brand-200">
-            <HelpCircle size={16} className="flex-shrink-0 mt-0.5 text-brand-400" />
+          <div className="mb-4 flex items-start gap-2 p-3 bg-blue-950/60 border border-blue-800/60 rounded-lg text-sm text-blue-200">
+            <HelpCircle size={16} className="flex-shrink-0 mt-0.5 text-blue-400" />
             <span>Contact support at beyondpixells@gmail.com</span>
           </div>
         )}
@@ -120,7 +140,7 @@ export default function Login() {
                 autoComplete="email"
                 autoFocus
                 required
-                className="w-full pl-10 pr-3 py-2.5 text-sm border border-slate-700 rounded-lg bg-slate-900 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 transition-colors"
+                className="w-full pl-10 pr-3 py-2.5 text-sm border border-slate-700 rounded-lg bg-slate-900 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
           </div>
@@ -132,7 +152,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => setForgotMsg(!forgotMsg)}
-                className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
+                className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
               >
                 Forgot Password?
               </button>
@@ -148,7 +168,7 @@ export default function Login() {
                 placeholder="Enter your password"
                 autoComplete="current-password"
                 required
-                className="w-full pl-10 pr-10 py-2.5 text-sm border border-slate-700 rounded-lg bg-slate-900 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500 transition-colors"
+                className="w-full pl-10 pr-10 py-2.5 text-sm border border-slate-700 rounded-lg bg-slate-900 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
               />
               <button
                 type="button"
@@ -165,7 +185,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 text-sm font-semibold text-white bg-brand-600 rounded-lg hover:bg-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            className="w-full py-2.5 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             {loading ? (
               <>
@@ -176,21 +196,86 @@ export default function Login() {
               'Sign In'
             )}
           </button>
-
         </form>
 
-        {/* Book Demo Link */}
+        {/* Try With Sample Gym Button */}
         <div className="mt-6 pt-6 border-t border-slate-800 text-center">
-          <a
-            href="https://somilsharma2000.github.io/beyond-pixells/"
-            className="text-xs font-medium text-slate-400 hover:text-brand-300 transition-colors"
+          <button
+            type="button"
+            onClick={handleTrySampleGym}
+            className="w-full py-2 px-3 text-xs font-medium text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
-            New to Gym OS? <span className="text-brand-400 underline">Book a demo</span>
-          </a>
+            <Sparkles size={14} className="text-blue-400" />
+            <span>Try with sample gym</span>
+          </button>
         </div>
       </div>
 
-      <p className="text-xs text-slate-500 mt-6">Beyond Pixells Gym OS — Gym Management Platform</p>
+      {/* Psychological Marketing Content — Feature Highlight Cards */}
+      <div className="mt-12 w-full max-w-4xl">
+        <div className="text-center mb-8">
+          <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight">Everything your gym needs to scale</h2>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">Built to automate daily operations, boost retention, and drive revenue</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Feature 1 */}
+          <div className="bg-[#111827] border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-all shadow-lg">
+            <div className="w-10 h-10 rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-3.5">
+              <UserCheck size={20} />
+            </div>
+            <h3 className="text-sm font-bold text-white mb-1.5">Members that actually retain</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">Automated engagement tracking and smart renewal nudges keep member churn low.</p>
+          </div>
+
+          {/* Feature 2 */}
+          <div className="bg-[#111827] border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-all shadow-lg">
+            <div className="w-10 h-10 rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-3.5">
+              <Target size={20} />
+            </div>
+            <h3 className="text-sm font-bold text-white mb-1.5">Leads that close themselves</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">Instant digital trial passes and self-service booking convert cold leads effortlessly.</p>
+          </div>
+
+          {/* Feature 3 */}
+          <div className="bg-[#111827] border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-all shadow-lg">
+            <div className="w-10 h-10 rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-3.5">
+              <TrendingUp size={20} />
+            </div>
+            <h3 className="text-sm font-bold text-white mb-1.5">Revenue you can see growing</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">Live dashboards tracking MRR, collectables, renewals, and revenue trends.</p>
+          </div>
+
+          {/* Feature 4 */}
+          <div className="bg-[#111827] border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-all shadow-lg">
+            <div className="w-10 h-10 rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-3.5">
+              <MessageCircle size={20} />
+            </div>
+            <h3 className="text-sm font-bold text-white mb-1.5">WhatsApp automations that work while you sleep</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">Automated payment reminders, birthday wishes, and fee follow-ups via WhatsApp.</p>
+          </div>
+
+          {/* Feature 5 */}
+          <div className="bg-[#111827] border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-all shadow-lg">
+            <div className="w-10 h-10 rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-3.5">
+              <QrCode size={20} />
+            </div>
+            <h3 className="text-sm font-bold text-white mb-1.5">QR check-in in 2 seconds</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">Fast front desk scanning with real-time occupancy logging and instant access control.</p>
+          </div>
+
+          {/* Feature 6 */}
+          <div className="bg-[#111827] border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-all shadow-lg">
+            <div className="w-10 h-10 rounded-lg bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 mb-3.5">
+              <Bot size={20} />
+            </div>
+            <h3 className="text-sm font-bold text-white mb-1.5">AI assistant that knows your gym</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">Instant insights on attendance, pending dues, and member health powered by AI.</p>
+          </div>
+        </div>
+      </div>
+
+      <p className="text-xs text-slate-500 mt-10">Beyond Pixells Gym OS — Gym Management Platform</p>
     </div>
   )
 }

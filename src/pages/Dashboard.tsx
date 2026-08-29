@@ -63,14 +63,14 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
         <StatCard label="Total Leads" value={m.total_leads} icon={<Users size={16} />} onClick={() => navigate('/leads')} />
         <StatCard label="New Leads" value={m.new_leads} icon={<UserPlus size={16} />} color="text-blue-600" onClick={() => navigate('/leads')} />
-        <StatCard label="Trial Passes Active" value={m.trial_passes_active} icon={<Ticket size={16} />} color="text-purple-600" onClick={() => navigate('/trials')} />
-        <StatCard label="Trial Visitors Checked In" value={m.trial_visitors_checked_in} icon={<UserCheck size={16} />} color="text-cyan-600" onClick={() => navigate('/trials')} />
+        <StatCard label="Trial Passes Active" value={m.trial_passes_active} icon={<Ticket size={16} />} color="text-brand-600" onClick={() => navigate('/trials')} />
+        <StatCard label="Trial Visitors Checked In" value={m.trial_visitors_checked_in} icon={<UserCheck size={16} />} color="text-brand-600" onClick={() => navigate('/trials')} />
         <StatCard label="Pending Follow-ups" value={m.pending_followups} icon={<ClipboardList size={16} />} color="text-amber-600" onClick={() => navigate('/leads')} />
         <StatCard label="Active Memberships" value={m.active_memberships} icon={<CreditCard size={16} />} color="text-green-600" onClick={() => navigate('/members')} />
         <StatCard label="Expiring Memberships" value={m.expiring_memberships} icon={<AlertTriangle size={16} />} color="text-orange-600" onClick={() => navigate('/members')} />
         <StatCard label="At-Risk Members" value={m.at_risk_members} icon={<AlertTriangle size={16} />} color="text-red-600" onClick={() => navigate('/members')} />
         <StatCard label="Today's Attendance" value={m.today_attendance} icon={<Calendar size={16} />} color="text-teal-600" onClick={() => navigate('/check-in')} />
-        <StatCard label="Pending Referrals" value={m.pending_referrals} icon={<Users size={16} />} color="text-indigo-600" onClick={() => navigate('/referrals')} />
+        <StatCard label="Pending Referrals" value={m.pending_referrals} icon={<Users size={16} />} color="text-brand-600" onClick={() => navigate('/referrals')} />
       </div>
 
       {/* Recent Activity Sections */}

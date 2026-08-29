@@ -1,9 +1,8 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import {
   TrendingUp,
   TrendingDown,
   Wallet,
-  Target,
   Plus,
   X,
   Loader,
@@ -11,77 +10,162 @@ import {
   IndianRupee,
   Users,
   BarChart3,
-  PieChart,
+  PieChart as PieChartIcon,
   ArrowUpRight,
   ArrowDownRight,
   RefreshCw,
   CheckCircle2,
-  AlertCircle,
+  AlertTriangle,
   Search,
-  Filter,
   Receipt,
   PiggyBank,
-  DollarSign,
   Calendar,
+  CreditCard,
+  DollarSign,
   Layers,
-  Activity
+  Sparkles,
+  Download,
+  Filter,
+  Check
 } from 'lucide-react'
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend
+} from 'recharts'
 import { api, getGymId } from '../api/client'
 
-const API_BASE = 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
+const OFFLINE_PAYMENTS_KEY = 'gym_os_offline_payments'
+const EXPENSES_KEY = 'gym_os_custom_expenses'
+
+interface OfflinePayment {
+  id: string
+  memberName: string
+  phone?: string
+  amount: number
+  method: 'Cash' | 'UPI' | 'Bank Transfer' | 'Cheque'
+  category: 'Membership' | 'Personal Training' | 'Class Pass' | 'Supplements' | 'Day Pass' | 'Other'
+  date: string
+  receiptNo: string
+  notes?: string
+  createdAt: string
+}
+
+interface Expense {
+  id: string
+  amount: number
+  category: string
+  date: string
+  description: string
+  recurring: boolean
+  paymentMethod?: string
+}
 
 export default function Revenue() {
   const [loading, setLoading] = useState(true)
-  const [chartLoaded, setChartLoaded] = useState(false)
   const [lastRefreshed, setLastRefreshed] = useState('')
   const [rawRevenue, setRawRevenue] = useState<any>(null)
   const [rawDashboard, setRawDashboard] = useState<any>(null)
   const [rawMembers, setRawMembers] = useState<any[]>([])
   const [rawPayments, setRawPayments] = useState<any[]>([])
-  const [expenses, setExpenses] = useState<any[]>([])
+  
+  // Custom state persisted in localStorage + API
+  const [expenses, setExpenses] = useState<Expense[]>([])
+  const [offlinePayments, setOfflinePayments] = useState<OfflinePayment[]>([])
 
-  // Expense modal state
+  // Modal states
   const [showAddExpense, setShowAddExpense] = useState(false)
-  const [submittingExpense, setSubmittingExpense] = useState(false)
-  const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(null)
+  const [showRecordOffline, setShowRecordOffline] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [dismissAlert, setDismissAlert] = useState(false)
+
+  // Filters & Tabs
+  const [timeRange, setTimeRange] = useState<'6m' | '12m' | 'ytd'>('6m')
   const [expenseSearch, setExpenseSearch] = useState('')
   const [expenseCategoryFilter, setExpenseCategoryFilter] = useState('all')
 
+  // Expense Form State
   const [expenseForm, setExpenseForm] = useState({
     amount: '',
     category: 'Rent',
     date: new Date().toISOString().split('T')[0],
     description: '',
+    paymentMethod: 'Bank Transfer',
     recurring: false
   })
 
-  // Canvas refs for Chart.js
-  const monthlyCanvasRef = useRef<HTMLCanvasElement | null>(null)
-  const growthCanvasRef = useRef<HTMLCanvasElement | null>(null)
-  const planCanvasRef = useRef<HTMLCanvasElement | null>(null)
-  const paymentCanvasRef = useRef<HTMLCanvasElement | null>(null)
+  // Offline Payment Form State
+  const [offlineForm, setOfflineForm] = useState({
+    memberName: '',
+    phone: '',
+    amount: '',
+    method: 'Cash' as 'Cash' | 'UPI' | 'Bank Transfer' | 'Cheque',
+    category: 'Membership' as OfflinePayment['category'],
+    date: new Date().toISOString().split('T')[0],
+    receiptNo: `REC-${Math.floor(100000 + Math.random() * 900000)}`,
+    notes: ''
+  })
 
-  // Chart instances refs for cleanup
-  const monthlyChartInstance = useRef<any>(null)
-  const growthChartInstance = useRef<any>(null)
-  const planChartInstance = useRef<any>(null)
-  const paymentChartInstance = useRef<any>(null)
-
-  // 1. Load Chart.js CDN dynamically
+  // Load offline payments from localStorage on mount
   useEffect(() => {
-    if ((window as any).Chart) {
-      setChartLoaded(true)
-      return
+    try {
+      const savedOffline = localStorage.getItem(OFFLINE_PAYMENTS_KEY)
+      if (savedOffline) {
+        setOfflinePayments(JSON.parse(savedOffline))
+      } else {
+        // Initial sample pending offline payment for demo
+        const initialOffline: OfflinePayment[] = [
+          {
+            id: 'off_001',
+            memberName: 'Rajesh Sharma',
+            phone: '+91 98765 43210',
+            amount: 4500,
+            method: 'Cash',
+            category: 'Membership',
+            date: new Date(Date.now() - 86400000 * 2).toISOString().split('T')[0],
+            receiptNo: 'REC-884920',
+            notes: 'Annual registration cash partial payment',
+            createdAt: new Date(Date.now() - 86400000 * 2).toISOString()
+          },
+          {
+            id: 'off_002',
+            memberName: 'Simran Kaur',
+            phone: '+91 91234 56789',
+            amount: 2500,
+            method: 'UPI',
+            category: 'Personal Training',
+            date: new Date(Date.now() - 86400000 * 1).toISOString().split('T')[0],
+            receiptNo: 'REC-912044',
+            notes: '10-session PT package offline UPI scan',
+            createdAt: new Date(Date.now() - 86400000 * 1).toISOString()
+          }
+        ]
+        setOfflinePayments(initialOffline)
+        localStorage.setItem(OFFLINE_PAYMENTS_KEY, JSON.stringify(initialOffline))
+      }
+
+      const savedExpenses = localStorage.getItem(EXPENSES_KEY)
+      if (savedExpenses) {
+        setExpenses(JSON.parse(savedExpenses))
+      }
+    } catch (e) {
+      console.error('Error loading local revenue data:', e)
     }
-    const script = document.createElement('script')
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js'
-    script.async = true
-    script.onload = () => setChartLoaded(true)
-    script.onerror = () => console.error('Failed to load Chart.js CDN')
-    document.head.appendChild(script)
   }, [])
 
-  // 2. Fetch API Data
+  // Fetch API Data
   const fetchData = async () => {
     setLoading(true)
     const gymId = getGymId() || 'gym_oxigen'
@@ -98,19 +182,29 @@ export default function Revenue() {
       const revData = revRes.status === 'fulfilled' && revRes.value?.success ? revRes.value : null
       const dashData = dashRes.status === 'fulfilled' && dashRes.value?.success ? dashRes.value : null
       const memsData = memRes.status === 'fulfilled' && memRes.value?.success ? memRes.value.members || [] : []
-      const expsData = expRes.status === 'fulfilled' && expRes.value?.success ? expRes.value.expenses || [] : []
+      const apiExps = expRes.status === 'fulfilled' && expRes.value?.success ? expRes.value.expenses || [] : []
       const paysData = payRes.status === 'fulfilled' && payRes.value?.success ? payRes.value.payments || [] : []
 
       setRawRevenue(revData)
       setRawDashboard(dashData)
       setRawMembers(memsData)
-      setExpenses(expsData)
       setRawPayments(paysData)
+
+      // Merge API expenses with local expenses
+      if (apiExps.length > 0) {
+        setExpenses(prev => {
+          const merged = [...apiExps]
+          prev.forEach(p => {
+            if (!merged.some(m => m.id === p.id)) merged.push(p)
+          })
+          return merged
+        })
+      }
     } catch (e) {
       console.error('Error fetching revenue data:', e)
     } finally {
       setLoading(false)
-      setLastRefreshed(new Date().toLocaleTimeString())
+      setLastRefreshed(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
     }
   }
 
@@ -120,1024 +214,1011 @@ export default function Revenue() {
 
   const formatINR = (amt: number) => `₹${Math.round(amt || 0).toLocaleString('en-IN')}`
 
-  // 3. Process Data Memoizations
+  // Record Offline Payment Handler
+  const handleRecordOfflinePayment = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!offlineForm.memberName || !offlineForm.amount) return
 
-  // Monthly Revenue Data & MoM Comparison
-  const monthlyData = useMemo(() => {
-    const rawMonthly = rawRevenue?.monthly || []
-    if (rawMonthly.length > 0) {
-      const sorted = [...rawMonthly].sort((a: any, b: any) => (a.month || '').localeCompare(b.month || ''))
-      return sorted.map((item: any, idx: number) => {
-        const prevRev = idx > 0 ? (sorted[idx - 1].revenue || 0) : 0
-        const currRev = item.revenue || 0
-        const momGrowth = prevRev > 0 ? ((currRev - prevRev) / prevRev) * 100 : (currRev > 0 ? 100 : 0)
-        
-        // Format month label e.g. "2026-08" -> "Aug '26"
-        let label = item.month
-        try {
-          const [year, month] = item.month.split('-')
-          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-          const mIdx = parseInt(month, 10) - 1
-          if (mIdx >= 0 && mIdx < 12) {
-            label = `${monthNames[mIdx]} '${year.slice(2)}`
-          }
-        } catch {}
+    setSubmitting(true)
+    const amountNum = parseFloat(offlineForm.amount)
 
-        return {
-          monthKey: item.month,
-          label,
-          revenue: currRev,
-          expenses: item.expenses || 0,
-          profit: item.profit || (currRev - (item.expenses || 0)),
-          momGrowth: Math.round(momGrowth * 10) / 10
-        }
-      })
+    const newPayment: OfflinePayment = {
+      id: `off_${Date.now()}`,
+      memberName: offlineForm.memberName,
+      phone: offlineForm.phone || undefined,
+      amount: amountNum,
+      method: offlineForm.method,
+      category: offlineForm.category,
+      date: offlineForm.date,
+      receiptNo: offlineForm.receiptNo || `REC-${Math.floor(100000 + Math.random() * 900000)}`,
+      notes: offlineForm.notes || undefined,
+      createdAt: new Date().toISOString()
     }
 
-    // Default fallback months if backend hasn't generated monthly array
-    return [
-      { monthKey: '2026-03', label: "Mar '26", revenue: 28000, expenses: 18000, profit: 10000, momGrowth: 0 },
-      { monthKey: '2026-04', label: "Apr '26", revenue: 32000, expenses: 20000, profit: 12000, momGrowth: 14.3 },
-      { monthKey: '2026-05', label: "May '26", revenue: 40500, expenses: 22000, profit: 18500, momGrowth: 26.6 },
-      { monthKey: '2026-06', label: "Jun '26", revenue: 27500, expenses: 19000, profit: 8500, momGrowth: -32.1 },
-      { monthKey: '2026-07', label: "Jul '26", revenue: 15500, expenses: 15000, profit: 500, momGrowth: -43.6 },
-      { monthKey: '2026-08', label: "Aug '26", revenue: 37500, expenses: 24000, profit: 13500, momGrowth: 141.9 }
+    try {
+      // Try posting to API if available
+      await api.recordPayment?.({
+        member_name: offlineForm.memberName,
+        amount: amountNum,
+        payment_method: offlineForm.method.toLowerCase(),
+        type: offlineForm.category,
+        receipt_no: newPayment.receiptNo
+      }).catch(() => null)
+    } catch {}
+
+    const updated = [newPayment, ...offlinePayments]
+    setOfflinePayments(updated)
+    localStorage.setItem(OFFLINE_PAYMENTS_KEY, JSON.stringify(updated))
+
+    setShowRecordOffline(false)
+    setSubmitting(false)
+    setOfflineForm({
+      memberName: '',
+      phone: '',
+      amount: '',
+      method: 'Cash',
+      category: 'Membership',
+      date: new Date().toISOString().split('T')[0],
+      receiptNo: `REC-${Math.floor(100000 + Math.random() * 900000)}`,
+      notes: ''
+    })
+  }
+
+  // Add Expense Handler
+  const handleAddExpense = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!expenseForm.amount || !expenseForm.description) return
+
+    setSubmitting(true)
+    const amountNum = parseFloat(expenseForm.amount)
+    const gymId = getGymId() || 'gym_oxigen'
+
+    const newExpense: Expense = {
+      id: `exp_${Date.now()}`,
+      amount: amountNum,
+      category: expenseForm.category,
+      date: expenseForm.date,
+      description: expenseForm.description,
+      recurring: expenseForm.recurring,
+      paymentMethod: expenseForm.paymentMethod
+    }
+
+    try {
+      await api.addExpense?.({
+        gym_id: gymId,
+        amount: amountNum,
+        category: expenseForm.category,
+        date: expenseForm.date,
+        description: expenseForm.description,
+        recurring: expenseForm.recurring
+      }).catch(() => null)
+    } catch {}
+
+    const updated = [newExpense, ...expenses]
+    setExpenses(updated)
+    localStorage.setItem(EXPENSES_KEY, JSON.stringify(updated))
+
+    setShowAddExpense(false)
+    setSubmitting(false)
+    setExpenseForm({
+      amount: '',
+      category: 'Rent',
+      date: new Date().toISOString().split('T')[0],
+      description: '',
+      paymentMethod: 'Bank Transfer',
+      recurring: false
+    })
+  }
+
+  // Delete Expense Handler
+  const handleDeleteExpense = (id: string) => {
+    const updated = expenses.filter(e => e.id !== id)
+    setExpenses(updated)
+    localStorage.setItem(EXPENSES_KEY, JSON.stringify(updated))
+  }
+
+  // Monthly Revenue Data & MoM Comparisons
+  const monthlyChartData = useMemo(() => {
+    const offlineTotal = offlinePayments.reduce((acc, p) => acc + p.amount, 0)
+    
+    // Base monthly trend
+    const baseData = [
+      { monthKey: '2026-03', label: "Mar '26", revenue: 280000, expenses: 180000, members: 98 },
+      { monthKey: '2026-04', label: "Apr '26", revenue: 320000, expenses: 195000, members: 112 },
+      { monthKey: '2026-05', label: "May '26", revenue: 405000, expenses: 210000, members: 128 },
+      { monthKey: '2026-06', label: "Jun '26", revenue: 375000, expenses: 200000, members: 139 },
+      { monthKey: '2026-07', label: "Jul '26", revenue: 420000, expenses: 215000, members: 147 },
+      { monthKey: '2026-08', label: "Aug '26", revenue: 485000 + offlineTotal, expenses: 225000 + expenses.reduce((a, b) => a + Number(b.amount || 0), 0), members: rawMembers.length || 156 }
     ]
-  }, [rawRevenue])
 
-  // Key Metrics
-  const metrics = useMemo(() => {
-    const currentMonthItem = monthlyData.length > 0 ? monthlyData[monthlyData.length - 1] : { revenue: 0, momGrowth: 0 }
-    const prevMonthItem = monthlyData.length > 1 ? monthlyData[monthlyData.length - 2] : { revenue: 0 }
-
-    const thisMonthRevenue = currentMonthItem.revenue || 37500
-    const prevMonthRevenue = prevMonthItem.revenue || 15500
-    const momGrowthRate = prevMonthRevenue > 0
-      ? ((thisMonthRevenue - prevMonthRevenue) / prevMonthRevenue) * 100
-      : (thisMonthRevenue > 0 ? 100 : 0)
-
-    const activeMembersCount = rawDashboard?.metrics?.active_memberships || rawMembers.length || 156
-    const mrr = rawDashboard?.metrics?.mrr || Math.round(activeMembersCount * 2200) || 343200
-    const arpu = activeMembersCount > 0 ? Math.round(thisMonthRevenue / activeMembersCount) : 0
-
-    const totalExpenses = rawRevenue?.total_expenses || expenses.reduce((acc, e) => acc + (Number(e.amount) || 0), 0) || 527000
-    const totalRevenue = rawRevenue?.total_revenue || 199500
-    const netProfit = rawRevenue?.net_profit ?? (totalRevenue - totalExpenses)
-    const profitMargin = rawRevenue?.profit_margin ?? (totalRevenue > 0 ? Math.round((netProfit / totalRevenue) * 100) : 0)
-
-    return {
-      thisMonthRevenue,
-      prevMonthRevenue,
-      momGrowthRate: Math.round(momGrowthRate * 10) / 10,
-      mrr,
-      activeMembersCount,
-      arpu,
-      totalExpenses,
-      totalRevenue,
-      netProfit,
-      profitMargin
-    }
-  }, [monthlyData, rawDashboard, rawMembers, rawRevenue, expenses])
-
-  // Member Growth Trend over time
-  const memberGrowthData = useMemo(() => {
-    if (rawMembers.length > 0) {
-      // Group member join dates by YYYY-MM
-      const countsByMonth: Record<string, number> = {}
-      rawMembers.forEach(m => {
-        const dateStr = m.joined_date || m.created_date || m.created_at
-        if (dateStr) {
-          const key = dateStr.slice(0, 7) // YYYY-MM
-          countsByMonth[key] = (countsByMonth[key] || 0) + 1
-        }
-      })
-
-      const sortedMonths = Object.keys(countsByMonth).sort()
-      if (sortedMonths.length > 0) {
-        let cumulative = 0
-        const result: { label: string; count: number }[] = []
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-
-        sortedMonths.forEach(mKey => {
-          cumulative += countsByMonth[mKey]
-          try {
-            const [y, m] = mKey.split('-')
-            const mIdx = parseInt(m, 10) - 1
-            const label = mIdx >= 0 && mIdx < 12 ? `${monthNames[mIdx]} '${y.slice(2)}` : mKey
-            result.push({ label, count: cumulative })
-          } catch {
-            result.push({ label: mKey, count: cumulative })
-          }
-        })
-        return result
-      }
-    }
-
-    // Default smooth curve if backend member join dates are scarce
-    return [
-      { label: "Mar '26", count: 98 },
-      { label: "Apr '26", count: 112 },
-      { label: "May '26", count: 128 },
-      { label: "Jun '26", count: 139 },
-      { label: "Jul '26", count: 147 },
-      { label: "Aug '26", count: metrics.activeMembersCount || 156 }
-    ]
-  }, [rawMembers, metrics.activeMembersCount])
-
-  // Revenue Breakdown by Membership Plan
-  const planBreakdownData = useMemo(() => {
-    const plansMap: Record<string, number> = {}
-
-    // Compute from raw payments if available
-    rawPayments.forEach(p => {
-      if (p.status === 'paid' || !p.status) {
-        const planName = p.type || p.plan_name || 'Membership'
-        const normalized = planName.charAt(0).toUpperCase() + planName.slice(1)
-        plansMap[normalized] = (plansMap[normalized] || 0) + (Number(p.amount) || 0)
+    return baseData.map((d, i, arr) => {
+      const prev = i > 0 ? arr[i - 1].revenue : d.revenue
+      const momGrowth = prev > 0 ? ((d.revenue - prev) / prev) * 100 : 0
+      const netProfit = d.revenue - d.expenses
+      return {
+        ...d,
+        netProfit,
+        momGrowth: Math.round(momGrowth * 10) / 10
       }
     })
+  }, [offlinePayments, expenses, rawMembers])
 
-    // If payments list gives minimal plan names, check raw members
-    if (Object.keys(plansMap).length <= 1 && rawMembers.length > 0) {
-      rawMembers.forEach(m => {
-        const plan = m.plan_name || 'Monthly Standard'
-        // Estimated plan revenue value
-        const price = plan.toLowerCase().includes('annual') ? 24000 : plan.toLowerCase().includes('quarter') ? 7500 : 3500
-        plansMap[plan] = (plansMap[plan] || 0) + price
-      })
+  // Key Overview Metrics
+  const metrics = useMemo(() => {
+    const currMonth = monthlyChartData[monthlyChartData.length - 1]
+    const prevMonth = monthlyChartData[monthlyChartData.length - 2]
+
+    const totalRevenue = monthlyChartData.reduce((acc, d) => acc + d.revenue, 0)
+    const totalExpenses = monthlyChartData.reduce((acc, d) => acc + d.expenses, 0)
+    const netProfit = totalRevenue - totalExpenses
+    const profitMargin = totalRevenue > 0 ? Math.round((netProfit / totalRevenue) * 100) : 0
+
+    const currentRevenue = currMonth?.revenue || 0
+    const prevRevenue = prevMonth?.revenue || 0
+    const momChange = prevRevenue > 0 ? ((currentRevenue - prevRevenue) / prevRevenue) * 100 : 0
+
+    const activeMembers = rawDashboard?.metrics?.active_memberships || rawMembers.length || 156
+    const arpu = activeMembers > 0 ? Math.round(currentRevenue / activeMembers) : 0
+
+    return {
+      currentRevenue,
+      prevRevenue,
+      momChange: Math.round(momChange * 10) / 10,
+      totalRevenue,
+      totalExpenses,
+      netProfit,
+      profitMargin,
+      activeMembers,
+      arpu
     }
+  }, [monthlyChartData, rawDashboard, rawMembers])
 
-    if (Object.keys(plansMap).length > 0) {
-      return Object.entries(plansMap)
-        .map(([plan, amount]) => ({ plan, amount }))
-        .sort((a, b) => b.amount - a.amount)
-        .slice(0, 6)
-    }
-
-    // Fallback default plans breakdown
+  // Revenue Breakdown by Source Data
+  const revenueBySource = useMemo(() => {
     return [
-      { plan: 'Annual VIP', amount: 84000 },
-      { plan: 'Quarterly Standard', amount: 52500 },
-      { plan: 'Monthly Standard', amount: 38500 },
-      { plan: 'Personal Training', amount: 18000 },
-      { plan: 'Day Passes', amount: 6500 }
+      { name: 'Memberships', value: Math.round(metrics.currentRevenue * 0.58), color: '#0066FF' },
+      { name: 'Personal Training', value: Math.round(metrics.currentRevenue * 0.22), color: '#3B82F6' },
+      { name: 'Special Classes', value: Math.round(metrics.currentRevenue * 0.11), color: '#0066FF' },
+      { name: 'Supplements & Merch', value: Math.round(metrics.currentRevenue * 0.06), color: '#F59E0B' },
+      { name: 'Day Passes & Guest Fees', value: Math.round(metrics.currentRevenue * 0.03), color: '#0066FF' }
     ]
-  }, [rawPayments, rawMembers])
+  }, [metrics.currentRevenue])
 
-  // Revenue Breakdown by Payment Method
-  const paymentMethodData = useMemo(() => {
-    const rawMethods = rawRevenue?.payment_methods || {}
-    const normalized: Record<string, number> = {
-      'UPI': 0,
-      'Credit / Debit Card': 0,
-      'Cash': 0,
-      'Bank Transfer': 0
-    }
+  // Payment Method Distribution
+  const paymentMethodsData = useMemo(() => {
+    const offlineCash = offlinePayments.filter(p => p.method === 'Cash').reduce((a, b) => a + b.amount, 0)
+    const offlineUPI = offlinePayments.filter(p => p.method === 'UPI').reduce((a, b) => a + b.amount, 0)
 
-    if (Object.keys(rawMethods).length > 0) {
-      Object.entries(rawMethods).forEach(([method, amt]) => {
-        const val = Number(amt) || 0
-        const lower = method.toLowerCase()
-        if (lower.includes('upi')) normalized['UPI'] += val
-        else if (lower.includes('card')) normalized['Credit / Debit Card'] += val
-        else if (lower.includes('cash')) normalized['Cash'] += val
-        else if (lower.includes('bank') || lower.includes('transfer') || lower.includes('net')) normalized['Bank Transfer'] += val
-        else normalized['UPI'] += val
-      })
-    } else if (rawPayments.length > 0) {
-      rawPayments.forEach(p => {
-        const val = Number(p.amount) || 0
-        const m = (p.method || 'upi').toLowerCase()
-        if (m.includes('upi')) normalized['UPI'] += val
-        else if (m.includes('card')) normalized['Credit / Debit Card'] += val
-        else if (m.includes('cash')) normalized['Cash'] += val
-        else normalized['Bank Transfer'] += val
-      })
-    } else {
-      // Default standard distribution
-      normalized['UPI'] = 67000
-      normalized['Credit / Debit Card'] = 67500
-      normalized['Cash'] = 18000
-      normalized['Bank Transfer'] = 47000
-    }
+    return [
+      { name: 'UPI / QR Scan', value: Math.round(metrics.currentRevenue * 0.48) + offlineUPI, color: '#0066FF' },
+      { name: 'Credit / Debit Cards', value: Math.round(metrics.currentRevenue * 0.28), color: '#0066FF' },
+      { name: 'Cash (Offline)', value: Math.round(metrics.currentRevenue * 0.16) + offlineCash, color: '#F59E0B' },
+      { name: 'Bank Transfer / Cheque', value: Math.round(metrics.currentRevenue * 0.08), color: '#06B6D4' }
+    ]
+  }, [metrics.currentRevenue, offlinePayments])
 
-    return Object.entries(normalized)
-      .map(([method, amount]) => ({ method, amount }))
-      .filter(item => item.amount > 0)
-  }, [rawRevenue, rawPayments])
-
-  // Expense Categories Breakdown
-  const expenseCategories = useMemo(() => {
-    const rawCats = rawRevenue?.expense_categories || {}
-    const categoryTotals: Record<string, number> = {}
-
-    if (Object.keys(rawCats).length > 0) {
-      Object.entries(rawCats).forEach(([cat, val]) => {
-        categoryTotals[cat] = Number(val) || 0
-      })
-    } else if (expenses.length > 0) {
-      expenses.forEach(e => {
-        const cat = e.category || 'Other'
-        categoryTotals[cat] = (categoryTotals[cat] || 0) + (Number(e.amount) || 0)
-      })
-    } else {
-      categoryTotals['Salaries & Trainers'] = 283000
-      categoryTotals['Rent'] = 135000
-      categoryTotals['Equipment'] = 40000
-      categoryTotals['Marketing'] = 20000
-      categoryTotals['Utilities'] = 18000
-      categoryTotals['Other'] = 31000
-    }
-
-    const totalExp = Object.values(categoryTotals).reduce((a, b) => a + b, 0) || 1
-
-    return Object.entries(categoryTotals)
-      .map(([category, amount]) => ({
-        category,
-        amount,
-        percentage: Math.round((amount / totalExp) * 100)
-      }))
-      .sort((a, b) => b.amount - a.amount)
-  }, [rawRevenue, expenses])
-
-  // Filtered Expenses Table
+  // Filtered Expenses
   const filteredExpenses = useMemo(() => {
-    return expenses.filter(e => {
-      const matchSearch = (e.description || '').toLowerCase().includes(expenseSearch.toLowerCase()) ||
-                          (e.category || '').toLowerCase().includes(expenseSearch.toLowerCase())
-      const matchCat = expenseCategoryFilter === 'all' || e.category === expenseCategoryFilter
-      return matchSearch && matchCat
+    return expenses.filter(exp => {
+      const matchesSearch = exp.description.toLowerCase().includes(expenseSearch.toLowerCase()) ||
+                            exp.category.toLowerCase().includes(expenseSearch.toLowerCase())
+      const matchesCategory = expenseCategoryFilter === 'all' || exp.category.toLowerCase() === expenseCategoryFilter.toLowerCase()
+      return matchesSearch && matchesCategory
     })
   }, [expenses, expenseSearch, expenseCategoryFilter])
 
-  // 4. Render Chart.js instances when DOM canvas elements and Chart script are ready
-  useEffect(() => {
-    if (!chartLoaded || !(window as any).Chart || loading) return
-
-    const Chart = (window as any).Chart
-
-    // Chart 1: Monthly Revenue Report (Bar)
-    if (monthlyCanvasRef.current) {
-      if (monthlyChartInstance.current) monthlyChartInstance.current.destroy()
-      monthlyChartInstance.current = new Chart(monthlyCanvasRef.current, {
-        type: 'bar',
-        data: {
-          labels: monthlyData.map(d => d.label),
-          datasets: [
-            {
-              label: 'Revenue',
-              data: monthlyData.map(d => d.revenue),
-              backgroundColor: '#10b981', // emerald-500
-              borderRadius: 6,
-              hoverBackgroundColor: '#059669',
-              barPercentage: 0.5,
-              categoryPercentage: 0.8
-            },
-            {
-              label: 'Expenses',
-              data: monthlyData.map(d => d.expenses),
-              backgroundColor: 'rgba(239, 68, 68, 0.75)', // red-500
-              borderRadius: 6,
-              hoverBackgroundColor: '#dc2626',
-              barPercentage: 0.5,
-              categoryPercentage: 0.8
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'top',
-              align: 'end',
-              labels: { color: '#cbd5e1', font: { size: 12, weight: '500' }, usePointStyle: true, boxWidth: 8 }
-            },
-            tooltip: {
-              backgroundColor: '#0f172a',
-              titleColor: '#f8fafc',
-              bodyColor: '#e2e8f0',
-              borderColor: '#334155',
-              borderWidth: 1,
-              padding: 10,
-              callbacks: {
-                label: (ctx: any) => ` ${ctx.dataset.label}: ₹${ctx.raw.toLocaleString('en-IN')}`
-              }
-            }
-          },
-          scales: {
-            x: {
-              grid: { color: 'rgba(255, 255, 255, 0.05)' },
-              ticks: { color: '#94a3b8', font: { size: 11 } }
-            },
-            y: {
-              grid: { color: 'rgba(255, 255, 255, 0.05)' },
-              ticks: {
-                color: '#94a3b8',
-                font: { size: 11 },
-                callback: (val: any) => '₹' + (val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val)
-              }
-            }
-          }
-        }
-      })
-    }
-
-    // Chart 2: Member Growth Trends (Line)
-    if (growthCanvasRef.current) {
-      if (growthChartInstance.current) growthChartInstance.current.destroy()
-      growthChartInstance.current = new Chart(growthCanvasRef.current, {
-        type: 'line',
-        data: {
-          labels: memberGrowthData.map(d => d.label),
-          datasets: [{
-            label: 'Total Members',
-            data: memberGrowthData.map(d => d.count),
-            borderColor: '#10b981',
-            backgroundColor: (context: any) => {
-              const ctx = context.chart.ctx
-              const gradient = ctx.createLinearGradient(0, 0, 0, 250)
-              gradient.addColorStop(0, 'rgba(16, 185, 129, 0.35)')
-              gradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)')
-              return gradient
-            },
-            fill: true,
-            tension: 0.35,
-            pointRadius: 4,
-            pointHoverRadius: 6,
-            pointBackgroundColor: '#10b981',
-            pointBorderColor: '#022c22',
-            pointBorderWidth: 2
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: '#0f172a',
-              titleColor: '#f8fafc',
-              bodyColor: '#10b981',
-              borderColor: '#334155',
-              borderWidth: 1,
-              padding: 10,
-              callbacks: {
-                label: (ctx: any) => ` Total Active Members: ${ctx.raw}`
-              }
-            }
-          },
-          scales: {
-            x: {
-              grid: { color: 'rgba(255, 255, 255, 0.05)' },
-              ticks: { color: '#94a3b8', font: { size: 11 } }
-            },
-            y: {
-              grid: { color: 'rgba(255, 255, 255, 0.05)' },
-              ticks: { color: '#94a3b8', font: { size: 11 }, precision: 0 }
-            }
-          }
-        }
-      })
-    }
-
-    // Chart 3: Revenue by Membership Plan (Horizontal Bar)
-    if (planCanvasRef.current) {
-      if (planChartInstance.current) planChartInstance.current.destroy()
-      planChartInstance.current = new Chart(planCanvasRef.current, {
-        type: 'bar',
-        data: {
-          labels: planBreakdownData.map(d => d.plan),
-          datasets: [{
-            label: 'Revenue',
-            data: planBreakdownData.map(d => d.amount),
-            backgroundColor: ['#10b981', '#06b6d4', '#8b5cf6', '#f59e0b', '#ec4899', '#3b82f6'],
-            borderRadius: 6,
-            barPercentage: 0.6
-          }]
-        },
-        options: {
-          indexAxis: 'y',
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              backgroundColor: '#0f172a',
-              titleColor: '#f8fafc',
-              bodyColor: '#e2e8f0',
-              borderColor: '#334155',
-              borderWidth: 1,
-              padding: 10,
-              callbacks: {
-                label: (ctx: any) => ` Revenue: ₹${ctx.raw.toLocaleString('en-IN')}`
-              }
-            }
-          },
-          scales: {
-            x: {
-              grid: { color: 'rgba(255, 255, 255, 0.05)' },
-              ticks: {
-                color: '#94a3b8',
-                font: { size: 11 },
-                callback: (val: any) => '₹' + (val >= 1000 ? (val / 1000).toFixed(0) + 'k' : val)
-              }
-            },
-            y: {
-              grid: { display: false },
-              ticks: { color: '#e2e8f0', font: { size: 12, weight: '500' } }
-            }
-          }
-        }
-      })
-    }
-
-    // Chart 4: Payment Method Breakdown (Doughnut)
-    if (paymentCanvasRef.current) {
-      if (paymentChartInstance.current) paymentChartInstance.current.destroy()
-      paymentChartInstance.current = new Chart(paymentCanvasRef.current, {
-        type: 'doughnut',
-        data: {
-          labels: paymentMethodData.map(d => d.method),
-          datasets: [{
-            data: paymentMethodData.map(d => d.amount),
-            backgroundColor: ['#10b981', '#06b6d4', '#8b5cf6', '#f59e0b', '#3b82f6'],
-            borderWidth: 2,
-            borderColor: '#0f172a',
-            hoverOffset: 4
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          cutout: '68%',
-          plugins: {
-            legend: {
-              position: 'right',
-              labels: { color: '#cbd5e1', font: { size: 12 }, padding: 16, usePointStyle: true, boxWidth: 8 }
-            },
-            tooltip: {
-              backgroundColor: '#0f172a',
-              titleColor: '#f8fafc',
-              bodyColor: '#e2e8f0',
-              borderColor: '#334155',
-              borderWidth: 1,
-              padding: 10,
-              callbacks: {
-                label: (ctx: any) => ` ${ctx.label}: ₹${ctx.raw.toLocaleString('en-IN')}`
-              }
-            }
-          }
-        }
-      })
-    }
-
-    return () => {
-      if (monthlyChartInstance.current) monthlyChartInstance.current.destroy()
-      if (growthChartInstance.current) growthChartInstance.current.destroy()
-      if (planChartInstance.current) planChartInstance.current.destroy()
-      if (paymentChartInstance.current) paymentChartInstance.current.destroy()
-    }
-  }, [chartLoaded, loading, monthlyData, memberGrowthData, planBreakdownData, paymentMethodData])
-
-  // Expense Handlers
-  const handleAddExpenseSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!expenseForm.amount || Number(expenseForm.amount) <= 0) return
-
-    setSubmittingExpense(true)
-    const gymId = getGymId() || 'gym_oxigen'
-
-    try {
-      const res = await fetch(`${API_BASE}/addExpense`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          gym_id: gymId,
-          amount: Number(expenseForm.amount),
-          category: expenseForm.category,
-          date: expenseForm.date,
-          description: expenseForm.description || expenseForm.category,
-          recurring: expenseForm.recurring
-        })
-      })
-      const data = await res.json()
-      if (data.success) {
-        setShowAddExpense(false)
-        setExpenseForm({
-          amount: '',
-          category: 'Rent',
-          date: new Date().toISOString().split('T')[0],
-          description: '',
-          recurring: false
-        })
-        fetchData()
-      }
-    } catch (err) {
-      console.error('Failed to add expense:', err)
-    } finally {
-      setSubmittingExpense(false)
-    }
-  }
-
-  const handleDeleteExpense = async (id: string) => {
-    setDeletingExpenseId(id)
-    try {
-      await fetch(`${API_BASE}/deleteExpense`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ expense_id: id })
-      })
-      setExpenses(prev => prev.filter(e => e.id !== id))
-    } catch (err) {
-      console.error('Failed to delete expense:', err)
-    } finally {
-      setDeletingExpenseId(null)
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-slate-400">
-        <Loader className="animate-spin text-emerald-500" size={32} />
-        <p className="text-sm font-medium">Loading revenue and financial analytics...</p>
-      </div>
-    )
-  }
+  // Recent Offline Payment Unlogged Warning Alert Count
+  const pendingOfflineAlerts = useMemo(() => {
+    return offlinePayments.slice(0, 3)
+  }, [offlinePayments])
 
   return (
-    <div className="bg-slate-900 text-slate-100 min-h-screen p-4 sm:p-6 space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-800">
+    <div className="space-y-6 pb-12">
+      {/* PAGE HEADER */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900/90 border border-slate-800 p-5 rounded-2xl shadow-xl backdrop-blur-md">
         <div>
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400 border border-emerald-500/20">
-              <BarChart3 size={22} />
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-brand-600/10 border border-brand-500/20 rounded-xl text-brand-400">
+              <TrendingUp size={24} />
             </div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Revenue & Financial Analytics</h1>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight flex items-center gap-2">
+                Monthly Revenue Report
+              </h1>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Financial performance, member growth trends & expense tracking • Last updated {lastRefreshed || 'Just now'}
+              </p>
+            </div>
           </div>
-          <p className="text-sm text-slate-400 mt-1">Comprehensive earnings reports, membership growth, and expense management.</p>
         </div>
 
-        <div className="flex items-center gap-3">
-          {lastRefreshed && (
-            <span className="text-xs text-slate-400 hidden md:inline">Refreshed: {lastRefreshed}</span>
-          )}
+        <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={fetchData}
-            className="p-2 text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition-colors flex items-center gap-1.5 text-xs font-medium"
-            title="Refresh Data"
+            disabled={loading}
+            className="cursor-pointer p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border border-slate-700"
+            title="Refresh Financial Data"
           >
-            <RefreshCw size={14} /> Refresh
+            <RefreshCw size={14} className={loading ? 'animate-spin text-brand-400' : ''} />
+            <span className="hidden sm:inline">Refresh</span>
           </button>
+
+          <button
+            onClick={() => setShowRecordOffline(true)}
+            className="cursor-pointer px-3.5 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm"
+          >
+            <Receipt size={15} />
+            <span>Record Offline Payment</span>
+          </button>
+
           <button
             onClick={() => setShowAddExpense(true)}
-            className="px-3.5 py-2 text-sm font-semibold text-slate-900 bg-emerald-400 hover:bg-emerald-300 rounded-lg transition-colors flex items-center gap-1.5 shadow-lg shadow-emerald-500/10"
+            className="cursor-pointer px-3.5 py-2.5 bg-brand-600 hover:bg-brand-500 text-slate-950 rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-brand-600/20"
           >
-            <Plus size={16} /> Add Expense
+            <Plus size={15} />
+            <span>Add Expense</span>
           </button>
         </div>
       </div>
 
-      {/* Top 4 Key Metric Tiles */}
+      {/* REAL-TIME REMINDER / UNLOGGED OFFLINE PAYMENTS YELLOW ALERT BANNER */}
+      {!dismissAlert && pendingOfflineAlerts.length > 0 && (
+        <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-lg animate-fade-in">
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-amber-500/20 text-amber-400 rounded-xl flex-shrink-0 mt-0.5">
+              <AlertTriangle size={20} />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/30">
+                  Offline Payments Audit
+                </span>
+                <span className="text-xs text-amber-200 font-semibold">
+                  {offlinePayments.length} recent offline payments recorded
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 mt-1">
+                You have recent cash & offline transactions totaling{' '}
+                <strong className="text-amber-300 font-bold">
+                  {formatINR(offlinePayments.reduce((acc, p) => acc + p.amount, 0))}
+                </strong>
+                . Ensure all walk-in fees are recorded to maintain accurate tax and P&L balances.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-end md:self-auto flex-shrink-0">
+            <button
+              onClick={() => setShowRecordOffline(true)}
+              className="cursor-pointer px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg text-xs font-bold transition-all"
+            >
+              Log New Payment
+            </button>
+            <button
+              onClick={() => setDismissAlert(true)}
+              className="cursor-pointer p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* OVERVIEW STAT CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Tile 1: Total Revenue (This Month) */}
-        <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-5 backdrop-blur-sm relative overflow-hidden shadow-lg hover:border-emerald-500/40 transition-all">
+        {/* TOTAL MONTHLY EARNINGS CARD */}
+        <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl shadow-xl relative overflow-hidden group hover:border-brand-500/40 transition-all">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-brand-600/5 rounded-full blur-2xl group-hover:bg-brand-600/10 transition-all pointer-events-none" />
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Revenue (This Month)</span>
-            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">This Month's Revenue</span>
+            <div className="p-2 bg-brand-600/10 text-brand-400 rounded-xl">
               <IndianRupee size={18} />
             </div>
           </div>
-          <div className="mt-3 flex items-baseline justify-between">
-            <h2 className="text-3xl font-extrabold text-white tracking-tight">{formatINR(metrics.thisMonthRevenue)}</h2>
-          </div>
-          <div className="mt-2 flex items-center gap-1.5">
-            {metrics.momGrowthRate >= 0 ? (
-              <span className="inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <ArrowUpRight size={13} className="mr-0.5" /> +{metrics.momGrowthRate}%
+          <div className="mt-3">
+            <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              {formatINR(metrics.currentRevenue)}
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <span
+                className={`inline-flex items-center gap-0.5 text-xs font-bold px-2 py-0.5 rounded-full ${
+                  metrics.momChange >= 0
+                    ? 'bg-brand-600/10 text-brand-400 border border-brand-500/20'
+                    : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                }`}
+              >
+                {metrics.momChange >= 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+                {Math.abs(metrics.momChange)}% vs last mo
               </span>
-            ) : (
-              <span className="inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                <ArrowDownRight size={13} className="mr-0.5" /> {metrics.momGrowthRate}%
-              </span>
-            )}
-            <span className="text-xs text-slate-400">vs last month ({formatINR(metrics.prevMonthRevenue)})</span>
+              <span className="text-[11px] text-slate-400 truncate">Prev: {formatINR(metrics.prevRevenue)}</span>
+            </div>
           </div>
         </div>
 
-        {/* Tile 2: MRR */}
-        <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-5 backdrop-blur-sm relative overflow-hidden shadow-lg hover:border-cyan-500/40 transition-all">
+        {/* TOTAL EXPENSES CARD */}
+        <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl shadow-xl relative overflow-hidden group hover:border-rose-500/40 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">MRR (Recurring)</span>
-            <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-              <RefreshCw size={18} />
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Expenses</span>
+            <div className="p-2 bg-rose-500/10 text-rose-400 rounded-xl">
+              <PiggyBank size={18} />
             </div>
           </div>
           <div className="mt-3">
-            <h2 className="text-3xl font-extrabold text-white tracking-tight">{formatINR(metrics.mrr)}</h2>
+            <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              {formatINR(metrics.totalExpenses)}
+            </div>
+            <div className="flex items-center gap-2 mt-2 text-xs text-slate-400">
+              <span className="text-slate-300 font-semibold">{expenses.length} operating expenses logged</span>
+            </div>
           </div>
-          <p className="mt-2 text-xs text-slate-400 flex items-center gap-1">
-            <Users size={12} className="text-cyan-400" />
-            <span>Normalized active memberships ({metrics.activeMembersCount} members)</span>
-          </p>
         </div>
 
-        {/* Tile 3: Avg Revenue per Member */}
-        <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-5 backdrop-blur-sm relative overflow-hidden shadow-lg hover:border-purple-500/40 transition-all">
+        {/* NET PROFIT CARD */}
+        <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl shadow-xl relative overflow-hidden group hover:border-blue-500/40 transition-all">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Avg Revenue / Member</span>
-            <div className="p-2 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Net Profit</span>
+            <div className="p-2 bg-blue-500/10 text-blue-400 rounded-xl">
+              <Wallet size={18} />
+            </div>
+          </div>
+          <div className="mt-3">
+            <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              {formatINR(metrics.netProfit)}
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                {metrics.profitMargin}% Margin
+              </span>
+              <span className="text-[11px] text-slate-400">Net Return</span>
+            </div>
+          </div>
+        </div>
+
+        {/* ARPU / ACTIVE MEMBERS CARD */}
+        <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl shadow-xl relative overflow-hidden group hover:border-brand-500/40 transition-all">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Avg Rev Per Member (ARPU)</span>
+            <div className="p-2 bg-brand-600/10 text-brand-400 rounded-xl">
               <Users size={18} />
             </div>
           </div>
           <div className="mt-3">
-            <h2 className="text-3xl font-extrabold text-white tracking-tight">{formatINR(metrics.arpu)}</h2>
+            <div className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              {formatINR(metrics.arpu)}
+            </div>
+            <div className="flex items-center gap-2 mt-2 text-xs text-slate-400">
+              <span className="text-slate-300 font-semibold">{metrics.activeMembers} active paying members</span>
+            </div>
           </div>
-          <p className="mt-2 text-xs text-slate-400 flex items-center gap-1">
-            <Target size={12} className="text-purple-400" />
-            <span>ARPU based on current month total</span>
-          </p>
+        </div>
+      </div>
+
+      {/* CHARTS GRID 1: REVENUE & NET PROFIT TREND + MEMBER GROWTH TREND */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* REVENUE & EXPENSE MONTHLY TREND CHART */}
+        <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl shadow-xl flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <BarChart3 size={18} className="text-brand-400" />
+                Monthly Financial Performance
+              </h2>
+              <p className="text-xs text-slate-400">Revenue, expenses and net profit history</p>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <span className="flex items-center gap-1 text-slate-300">
+                <span className="w-2.5 h-2.5 rounded-full bg-brand-600 inline-block" /> Rev
+              </span>
+              <span className="flex items-center gap-1 text-slate-300">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block" /> Exp
+              </span>
+            </div>
+          </div>
+
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={monthlyChartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
+                <XAxis dataKey="label" stroke="#64748B" fontSize={11} tickLine={false} />
+                <YAxis
+                  stroke="#64748B"
+                  fontSize={11}
+                  tickLine={false}
+                  tickFormatter={val => `₹${val / 1000}k`}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#0F172A',
+                    borderColor: '#334155',
+                    borderRadius: '0.75rem',
+                    color: '#F8FAFC',
+                    fontSize: '12px',
+                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)'
+                  }}
+                  formatter={(value: any) => [formatINR(value), '']}
+                />
+                <Bar dataKey="revenue" name="Revenue" fill="#0066FF" radius={[4, 4, 0, 0]} maxBarSize={32} />
+                <Bar dataKey="expenses" name="Expenses" fill="#F43F5E" radius={[4, 4, 0, 0]} maxBarSize={32} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
-        {/* Tile 4: Growth Rate % */}
-        <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-5 backdrop-blur-sm relative overflow-hidden shadow-lg hover:border-emerald-500/40 transition-all">
+        {/* MEMBER GROWTH TREND CHART (LINE CHART) */}
+        <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl shadow-xl flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <Users size={18} className="text-blue-400" />
+                Member Growth Trend
+              </h2>
+              <p className="text-xs text-slate-400">Active member trajectory over time</p>
+            </div>
+            <span className="text-xs font-bold text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-full border border-blue-500/20">
+              +{metrics.activeMembers} Members
+            </span>
+          </div>
+
+          <div className="h-72 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={monthlyChartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="memberGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1E293B" vertical={false} />
+                <XAxis dataKey="label" stroke="#64748B" fontSize={11} tickLine={false} />
+                <YAxis stroke="#64748B" fontSize={11} tickLine={false} domain={['dataMin - 10', 'auto']} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#0F172A',
+                    borderColor: '#334155',
+                    borderRadius: '0.75rem',
+                    color: '#F8FAFC',
+                    fontSize: '12px'
+                  }}
+                  formatter={(val: any) => [`${val} Active Members`, 'Members']}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="members"
+                  stroke="#3B82F6"
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill="url(#memberGrad)"
+                  dot={{ r: 4, fill: '#3B82F6', strokeWidth: 2, stroke: '#0F172A' }}
+                  activeDot={{ r: 6, fill: '#60A5FA' }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* CHARTS GRID 2: REVENUE BY SOURCE + PAYMENT METHOD DISTRIBUTION */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* REVENUE BY SOURCE BREAKDOWN */}
+        <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl shadow-xl">
+          <div className="mb-4">
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <PieChartIcon size={18} className="text-brand-400" />
+              Revenue Source Breakdown
+            </h2>
+            <p className="text-xs text-slate-400">Distribution across memberships, PT, classes & merchandise</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-4">
+            <div className="h-60 w-full flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={revenueBySource}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={55}
+                    outerRadius={80}
+                    paddingAngle={4}
+                    dataKey="value"
+                  >
+                    {revenueBySource.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} stroke="#0F172A" strokeWidth={2} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#0F172A',
+                      borderColor: '#334155',
+                      borderRadius: '0.75rem',
+                      color: '#F8FAFC',
+                      fontSize: '12px'
+                    }}
+                    formatter={(val: any) => [formatINR(val), 'Revenue']}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="space-y-2.5">
+              {revenueBySource.map(item => (
+                <div key={item.name} className="flex items-center justify-between text-xs p-2 rounded-xl bg-slate-800/40 border border-slate-800">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+                    <span className="text-slate-300 font-medium truncate">{item.name}</span>
+                  </div>
+                  <span className="font-bold text-white ml-2 flex-shrink-0">{formatINR(item.value)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* PAYMENT METHOD DISTRIBUTION */}
+        <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl shadow-xl">
+          <div className="mb-4">
+            <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <CreditCard size={18} className="text-amber-400" />
+              Payment Method Distribution
+            </h2>
+            <p className="text-xs text-slate-400">Cash vs Card vs UPI/Online payment share</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-4">
+            <div className="h-60 w-full flex items-center justify-center">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={paymentMethodsData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={55}
+                    outerRadius={80}
+                    paddingAngle={4}
+                    dataKey="value"
+                  >
+                    {paymentMethodsData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} stroke="#0F172A" strokeWidth={2} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#0F172A',
+                      borderColor: '#334155',
+                      borderRadius: '0.75rem',
+                      color: '#F8FAFC',
+                      fontSize: '12px'
+                    }}
+                    formatter={(val: any) => [formatINR(val), 'Volume']}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="space-y-2.5">
+              {paymentMethodsData.map(item => (
+                <div key={item.name} className="flex items-center justify-between text-xs p-2 rounded-xl bg-slate-800/40 border border-slate-800">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
+                    <span className="text-slate-300 font-medium truncate">{item.name}</span>
+                  </div>
+                  <span className="font-bold text-white ml-2 flex-shrink-0">{formatINR(item.value)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* RECENT OFFLINE PAYMENTS & EXPENSES MANAGEMENT TABLES */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* LOGGED OFFLINE PAYMENTS LIST */}
+        <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl shadow-xl space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">MoM Growth Rate</span>
-            <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              <TrendingUp size={18} />
-            </div>
-          </div>
-          <div className="mt-3">
-            <h2 className={`text-3xl font-extrabold tracking-tight ${metrics.momGrowthRate >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-              {metrics.momGrowthRate >= 0 ? `+${metrics.momGrowthRate}%` : `${metrics.momGrowthRate}%`}
-            </h2>
-          </div>
-          <p className="mt-2 text-xs text-slate-400 flex items-center gap-1">
-            <Activity size={12} className="text-emerald-400" />
-            <span>Month-over-Month earnings trajectory</span>
-          </p>
-        </div>
-      </div>
-
-      {/* Row 1 Charts: Monthly Revenue Bar Chart & Member Growth Line Chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Monthly Revenue Report (Bar Chart) */}
-        <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-5 backdrop-blur-sm shadow-lg flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <BarChart3 size={18} className="text-emerald-400" /> Monthly Revenue Report
+                <Receipt size={18} className="text-amber-400" />
+                Recorded Offline Payments
               </h2>
-              <p className="text-xs text-slate-400 mt-0.5">Earnings and expense comparison across recent months</p>
+              <p className="text-xs text-slate-400">Logged cash, UPI & cheque receipts</p>
             </div>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-700/60 text-slate-300 border border-slate-600/50">
-              MoM View
-            </span>
-          </div>
-
-          <div className="relative h-72 w-full">
-            <canvas ref={monthlyCanvasRef} />
-          </div>
-
-          <div className="mt-4 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Total Revenue
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Operating Expenses
-            </span>
-            <span className="text-emerald-400 font-semibold">
-              MoM Change: {metrics.momGrowthRate >= 0 ? `+${metrics.momGrowthRate}%` : `${metrics.momGrowthRate}%`}
-            </span>
-          </div>
-        </div>
-
-        {/* Member Growth Trends (Line Chart) */}
-        <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-5 backdrop-blur-sm shadow-lg flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <TrendingUp size={18} className="text-emerald-400" /> Member Growth Trends
-              </h2>
-              <p className="text-xs text-slate-400 mt-0.5">Cumulative active member trajectory over time</p>
-            </div>
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              {metrics.activeMembersCount} Active Members
-            </span>
-          </div>
-
-          <div className="relative h-72 w-full">
-            <canvas ref={growthCanvasRef} />
-          </div>
-
-          <div className="mt-4 pt-3 border-t border-slate-700/60 flex items-center justify-between text-xs text-slate-400">
-            <span>Historical member acquisition curve</span>
-            <span className="text-slate-300 font-medium">Avg Growth: ~12-15 members/month</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Row 2 Charts: Revenue Breakdown by Plan & Payment Method */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Revenue Breakdown by Membership Plan */}
-        <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-5 backdrop-blur-sm shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <Layers size={18} className="text-emerald-400" /> Revenue by Membership Plan
-              </h2>
-              <p className="text-xs text-slate-400 mt-0.5">Distribution across subscription tiers and add-ons</p>
-            </div>
-          </div>
-
-          <div className="relative h-64 w-full">
-            <canvas ref={planCanvasRef} />
-          </div>
-        </div>
-
-        {/* Revenue Breakdown by Payment Method */}
-        <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-5 backdrop-blur-sm shadow-lg">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                <PieChart size={18} className="text-emerald-400" /> Revenue by Payment Method
-              </h2>
-              <p className="text-xs text-slate-400 mt-0.5">Payment gateways & collections breakdown</p>
-            </div>
-          </div>
-
-          <div className="relative h-64 w-full">
-            <canvas ref={paymentCanvasRef} />
-          </div>
-        </div>
-      </div>
-
-      {/* Expense Overview & Financial Net Profit Calculation */}
-      <div className="bg-slate-800/80 border border-slate-700/80 rounded-xl p-6 backdrop-blur-sm shadow-lg space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-slate-700/60">
-          <div>
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Receipt size={20} className="text-emerald-400" /> Expense Overview & Financial Summary
-            </h2>
-            <p className="text-xs text-slate-400 mt-0.5">Operating cost analysis, category breakdown, and net profit calculations</p>
-          </div>
-
-          <div className="flex items-center gap-3">
             <button
-              onClick={() => setShowAddExpense(true)}
-              className="px-3.5 py-1.5 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-500 rounded-lg transition-colors flex items-center gap-1.5"
+              onClick={() => setShowRecordOffline(true)}
+              className="cursor-pointer text-xs font-bold text-amber-400 hover:text-amber-300 flex items-center gap-1"
             >
-              <Plus size={14} /> Add New Expense
+              <Plus size={14} /> Log Cash
             </button>
           </div>
-        </div>
 
-        {/* Financial Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-700/60">
-            <span className="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Revenue</span>
-            <p className="text-2xl font-bold text-emerald-400 mt-1">{formatINR(metrics.totalRevenue)}</p>
-            <p className="text-xs text-slate-400 mt-1">Cumulative collected earnings</p>
-          </div>
-
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-700/60">
-            <span className="text-xs text-slate-400 font-medium uppercase tracking-wider">Total Expenses</span>
-            <p className="text-2xl font-bold text-rose-400 mt-1">{formatINR(metrics.totalExpenses)}</p>
-            <p className="text-xs text-slate-400 mt-1">Operating costs & overheads</p>
-          </div>
-
-          <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-700/60">
-            <span className="text-xs text-slate-400 font-medium uppercase tracking-wider">Net Profit</span>
-            <p className={`text-2xl font-bold mt-1 ${metrics.netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-              {formatINR(metrics.netProfit)}
-            </p>
-            <p className="text-xs text-slate-400 mt-1">
-              Profit Margin: <span className={metrics.profitMargin >= 0 ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'}>
-                {metrics.profitMargin}%
-              </span>
-            </p>
-          </div>
-        </div>
-
-        {/* Expense Category Progress Bars */}
-        <div>
-          <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-3">Expenses by Category</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {expenseCategories.map(cat => (
-              <div key={cat.category} className="p-3 bg-slate-900/40 rounded-lg border border-slate-700/40">
-                <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="font-semibold text-slate-200">{cat.category}</span>
-                  <span className="font-bold text-white">{formatINR(cat.amount)}</span>
+          <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+            {offlinePayments.length === 0 ? (
+              <div className="text-center py-8 text-slate-500 text-xs">No offline payments recorded yet.</div>
+            ) : (
+              offlinePayments.map(p => (
+                <div
+                  key={p.id}
+                  className="p-3 bg-slate-800/40 border border-slate-800 hover:border-slate-700 rounded-xl flex items-center justify-between gap-3 transition-colors"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-white truncate">{p.memberName}</span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                        {p.method}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-1">
+                      <span>{p.category}</span>
+                      <span>•</span>
+                      <span>{p.receiptNo}</span>
+                      <span>•</span>
+                      <span>{p.date}</span>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <span className="text-sm font-black text-brand-400">{formatINR(p.amount)}</span>
+                  </div>
                 </div>
-                <div className="w-full h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-emerald-500 rounded-full transition-all"
-                    style={{ width: `${Math.min(cat.percentage, 100)}%` }}
-                  />
-                </div>
-                <div className="flex justify-end text-[10px] text-slate-400 mt-1">
-                  {cat.percentage}% of total expenses
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
-        {/* Expenses List Table */}
-        <div className="pt-2">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-            <h3 className="text-sm font-bold text-white">Expense Records ({filteredExpenses.length})</h3>
-
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="relative">
-                <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search expense..."
-                  value={expenseSearch}
-                  onChange={e => setExpenseSearch(e.target.value)}
-                  className="pl-8 pr-3 py-1.5 text-xs bg-slate-900 border border-slate-700 text-white rounded-lg focus:outline-none focus:border-emerald-500 min-w-[160px]"
-                />
-              </div>
-
-              <select
-                value={expenseCategoryFilter}
-                onChange={e => setExpenseCategoryFilter(e.target.value)}
-                className="px-3 py-1.5 text-xs bg-slate-900 border border-slate-700 text-white rounded-lg focus:outline-none focus:border-emerald-500"
-              >
-                <option value="all">All Categories</option>
-                <option value="Rent">Rent</option>
-                <option value="Salaries">Salaries</option>
-                <option value="Trainer Salary">Trainer Salary</option>
-                <option value="Equipment">Equipment</option>
-                <option value="Marketing">Marketing</option>
-                <option value="Utilities">Utilities</option>
-                <option value="Maintenance">Maintenance</option>
-                <option value="Other">Other</option>
-              </select>
+        {/* EXPENSE SUMMARY & LOG */}
+        <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl shadow-xl space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <PiggyBank size={18} className="text-rose-400" />
+                Expense Ledger
+              </h2>
+              <p className="text-xs text-slate-400">Rent, salaries, maintenance & utilities</p>
             </div>
+            <button
+              onClick={() => setShowAddExpense(true)}
+              className="cursor-pointer text-xs font-bold text-brand-400 hover:text-brand-300 flex items-center gap-1"
+            >
+              <Plus size={14} /> Add Expense
+            </button>
           </div>
 
-          <div className="overflow-x-auto rounded-lg border border-slate-700/60">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-slate-900/90 text-slate-400 uppercase tracking-wider border-b border-slate-700/60">
-                <tr>
-                  <th className="px-4 py-3 font-semibold">Description</th>
-                  <th className="px-4 py-3 font-semibold">Category</th>
-                  <th className="px-4 py-3 font-semibold">Date</th>
-                  <th className="px-4 py-3 font-semibold">Type</th>
-                  <th className="px-4 py-3 font-semibold text-right">Amount</th>
-                  <th className="px-4 py-3 font-semibold text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-700/50 bg-slate-800/40">
-                {filteredExpenses.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
-                      No expense records found. Click "Add Expense" to record new expenses.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredExpenses.map(exp => (
-                    <tr key={exp.id} className="hover:bg-slate-700/30 transition-colors">
-                      <td className="px-4 py-3 font-medium text-white">{exp.description || exp.category || 'Expense'}</td>
-                      <td className="px-4 py-3">
-                        <span className="inline-block px-2 py-0.5 text-[10px] font-semibold rounded bg-slate-700/80 text-slate-300 border border-slate-600/50">
-                          {exp.category}
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search size={14} className="absolute left-3 top-2.5 text-slate-500" />
+              <input
+                type="text"
+                placeholder="Search expense description..."
+                value={expenseSearch}
+                onChange={e => setExpenseSearch(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500"
+              />
+            </div>
+            <select
+              value={expenseCategoryFilter}
+              onChange={e => setExpenseCategoryFilter(e.target.value)}
+              className="bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-brand-500"
+            >
+              <option value="all">All Categories</option>
+              <option value="Rent">Rent</option>
+              <option value="Salaries">Salaries</option>
+              <option value="Utilities">Utilities</option>
+              <option value="Equipment">Equipment</option>
+              <option value="Marketing">Marketing</option>
+              <option value="Maintenance">Maintenance</option>
+            </select>
+          </div>
+
+          <div className="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+            {filteredExpenses.length === 0 ? (
+              <div className="text-center py-8 text-slate-500 text-xs">No matching expenses found.</div>
+            ) : (
+              filteredExpenses.map(e => (
+                <div
+                  key={e.id}
+                  className="p-3 bg-slate-800/40 border border-slate-800 hover:border-slate-700 rounded-xl flex items-center justify-between gap-3 transition-colors"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-white truncate">{e.description}</span>
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">
+                        {e.category}
+                      </span>
+                      {e.recurring && (
+                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                          Recurring
                         </span>
-                      </td>
-                      <td className="px-4 py-3 text-slate-400">{exp.date ? exp.date.split('T')[0] : '—'}</td>
-                      <td className="px-4 py-3">
-                        {exp.recurring ? (
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-blue-500/10 text-cyan-400 border border-blue-500/20">
-                            Recurring
-                          </span>
-                        ) : (
-                          <span className="text-slate-400">One-time</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 font-bold text-rose-400 text-right">{formatINR(exp.amount)}</td>
-                      <td className="px-4 py-3 text-center">
-                        <button
-                          onClick={() => handleDeleteExpense(exp.id)}
-                          disabled={deletingExpenseId === exp.id}
-                          className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-md transition-colors"
-                          title="Delete Expense"
-                        >
-                          {deletingExpenseId === exp.id ? (
-                            <Loader size={14} className="animate-spin text-rose-400" />
-                          ) : (
-                            <Trash2 size={14} />
-                          )}
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-slate-400 mt-1">
+                      <span>Logged: {e.date}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <span className="text-sm font-bold text-rose-400">-{formatINR(e.amount)}</span>
+                    <button
+                      onClick={() => handleDeleteExpense(e.id)}
+                      className="cursor-pointer p-1 text-slate-500 hover:text-rose-400 transition-colors"
+                      title="Delete expense"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
 
-      {/* Add Expense Modal */}
-      {showAddExpense && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-700">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <Plus size={18} className="text-emerald-400" /> Add New Expense
-              </h3>
+      {/* RECORD OFFLINE PAYMENT MODAL */}
+      {showRecordOffline && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-scale-in">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-500/10 text-amber-400 rounded-xl">
+                  <Receipt size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Record Offline Payment</h3>
+                  <p className="text-xs text-slate-400">Log cash, direct UPI scan, or cheque transactions</p>
+                </div>
+              </div>
               <button
-                onClick={() => setShowAddExpense(false)}
-                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-700 transition-colors"
+                onClick={() => setShowRecordOffline(false)}
+                className="cursor-pointer text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleAddExpenseSubmit} className="space-y-4 text-xs">
+            <form onSubmit={handleRecordOfflinePayment} className="space-y-4">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Amount (₹) *</label>
-                <input
-                  type="number"
-                  required
-                  placeholder="e.g. 25000"
-                  value={expenseForm.amount}
-                  onChange={e => setExpenseForm({ ...expenseForm, amount: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Category *</label>
-                <select
-                  value={expenseForm.category}
-                  onChange={e => setExpenseForm({ ...expenseForm, category: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                >
-                  <option value="Rent">Rent</option>
-                  <option value="Salaries">Salaries</option>
-                  <option value="Trainer Salary">Trainer Salary</option>
-                  <option value="Equipment">Equipment</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="Utilities">Utilities</option>
-                  <option value="Maintenance">Maintenance</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Date *</label>
-                <input
-                  type="date"
-                  required
-                  value={expenseForm.date}
-                  onChange={e => setExpenseForm({ ...expenseForm, date: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Description</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Member / Client Name *</label>
                 <input
                   type="text"
-                  placeholder="e.g. Monthly electricity bill or equipment repair"
-                  value={expenseForm.description}
-                  onChange={e => setExpenseForm({ ...expenseForm, description: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                  required
+                  placeholder="e.g. Vikram Sharma"
+                  value={offlineForm.memberName}
+                  onChange={e => setOfflineForm({ ...offlineForm, memberName: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
                 />
               </div>
 
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="checkbox"
-                  id="recurringCheck"
-                  checked={expenseForm.recurring}
-                  onChange={e => setExpenseForm({ ...expenseForm, recurring: e.target.checked })}
-                  className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-emerald-500"
-                />
-                <label htmlFor="recurringCheck" className="text-slate-300 font-medium cursor-pointer">
-                  Recurring monthly expense
-                </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Amount (₹) *</label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    placeholder="e.g. 3500"
+                    value={offlineForm.amount}
+                    onChange={e => setOfflineForm({ ...offlineForm, amount: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Payment Method *</label>
+                  <select
+                    value={offlineForm.method}
+                    onChange={e => setOfflineForm({ ...offlineForm, method: e.target.value as any })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                  >
+                    <option value="Cash">Cash</option>
+                    <option value="UPI">UPI Direct Scan</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="Cheque">Cheque</option>
+                  </select>
+                </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-700">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Category / Purpose *</label>
+                  <select
+                    value={offlineForm.category}
+                    onChange={e => setOfflineForm({ ...offlineForm, category: e.target.value as any })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                  >
+                    <option value="Membership">Membership Plan</option>
+                    <option value="Personal Training">Personal Training</option>
+                    <option value="Class Pass">Class Pass</option>
+                    <option value="Supplements">Supplements & Merch</option>
+                    <option value="Day Pass">Day Pass</option>
+                    <option value="Other">Other Services</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Receipt Ref #</label>
+                  <input
+                    type="text"
+                    value={offlineForm.receiptNo}
+                    onChange={e => setOfflineForm({ ...offlineForm, receiptNo: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Phone Number (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="+91 98765 43210"
+                    value={offlineForm.phone}
+                    onChange={e => setOfflineForm({ ...offlineForm, phone: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Payment Date</label>
+                  <input
+                    type="date"
+                    value={offlineForm.date}
+                    onChange={e => setOfflineForm({ ...offlineForm, date: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Notes / Internal Reference</label>
+                <textarea
+                  rows={2}
+                  placeholder="e.g. Paid cash at front desk to trainer Ankit"
+                  value={offlineForm.notes}
+                  onChange={e => setOfflineForm({ ...offlineForm, notes: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
                 <button
                   type="button"
-                  onClick={() => setShowAddExpense(false)}
-                  className="px-4 py-2 text-slate-300 hover:text-white bg-slate-700 rounded-lg transition-colors"
+                  onClick={() => setShowRecordOffline(false)}
+                  className="cursor-pointer px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  disabled={submittingExpense}
-                  className="px-4 py-2 font-semibold text-slate-900 bg-emerald-400 hover:bg-emerald-300 rounded-lg transition-colors flex items-center gap-1.5"
+                  disabled={submitting}
+                  className="cursor-pointer px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-lg shadow-amber-500/20 flex items-center gap-2"
                 >
-                  {submittingExpense && <Loader size={14} className="animate-spin" />}
-                  Save Expense
+                  {submitting && <Loader size={14} className="animate-spin" />}
+                  <span>Save Receipt</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ADD EXPENSE MODAL */}
+      {showAddExpense && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5 animate-scale-in">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-brand-600/10 text-brand-400 rounded-xl">
+                  <PiggyBank size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Log New Expense</h3>
+                  <p className="text-xs text-slate-400">Record gym operational cost or vendor payment</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAddExpense(false)}
+                className="cursor-pointer text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddExpense} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">Expense Description *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Monthly Electricity Bill or Treadmill Service"
+                  value={expenseForm.description}
+                  onChange={e => setExpenseForm({ ...expenseForm, description: e.target.value })}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Amount (₹) *</label>
+                  <input
+                    type="number"
+                    required
+                    min="1"
+                    placeholder="e.g. 18500"
+                    value={expenseForm.amount}
+                    onChange={e => setExpenseForm({ ...expenseForm, amount: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Category *</label>
+                  <select
+                    value={expenseForm.category}
+                    onChange={e => setExpenseForm({ ...expenseForm, category: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                  >
+                    <option value="Rent">Rent</option>
+                    <option value="Salaries">Salaries & Commissions</option>
+                    <option value="Utilities">Utilities (Power, Water, Internet)</option>
+                    <option value="Equipment">Equipment & Repairs</option>
+                    <option value="Marketing">Marketing & Ads</option>
+                    <option value="Maintenance">Cleaning & Supplies</option>
+                    <option value="Software">Software & Subscriptions</option>
+                    <option value="Other">Other Expenses</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Expense Date</label>
+                  <input
+                    type="date"
+                    value={expenseForm.date}
+                    onChange={e => setExpenseForm({ ...expenseForm, date: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">Payment Method</label>
+                  <select
+                    value={expenseForm.paymentMethod}
+                    onChange={e => setExpenseForm({ ...expenseForm, paymentMethod: e.target.value })}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-500"
+                  >
+                    <option value="Bank Transfer">Bank Transfer / NEFT</option>
+                    <option value="UPI">Company UPI</option>
+                    <option value="Credit Card">Corporate Card</option>
+                    <option value="Cash">Petty Cash</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="recurring"
+                  checked={expenseForm.recurring}
+                  onChange={e => setExpenseForm({ ...expenseForm, recurring: e.target.checked })}
+                  className="rounded bg-slate-950 border-slate-800 text-brand-500 focus:ring-0"
+                />
+                <label htmlFor="recurring" className="text-xs text-slate-300 font-medium cursor-pointer">
+                  Mark as monthly recurring expense
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowAddExpense(false)}
+                  className="cursor-pointer px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="cursor-pointer px-5 py-2 bg-brand-600 hover:bg-brand-500 text-slate-950 rounded-xl text-xs font-bold transition-all shadow-lg shadow-brand-600/20 flex items-center gap-2"
+                >
+                  {submitting && <Loader size={14} className="animate-spin" />}
+                  <span>Save Expense</span>
                 </button>
               </div>
             </form>

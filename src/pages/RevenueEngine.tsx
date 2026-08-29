@@ -323,7 +323,7 @@ export default function RevenueEngine() {
               </div>
               <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700">
                 <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-purple-500/10 rounded-xl"><Users size={20} className="text-purple-500" /></div>
+                  <div className="p-2.5 bg-brand-600/10 rounded-xl"><Users size={20} className="text-brand-500" /></div>
                   <div>
                     <p className="text-2xl font-bold text-slate-900 dark:text-white">{data.totals.members}</p>
                     <p className="text-xs text-slate-500">Total Members</p>
@@ -539,8 +539,8 @@ export default function RevenueEngine() {
       {/* Referrals Tab */}
       {activeTab === 'referrals' && (
         <div className="space-y-4">
-          <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4">
-            <h3 className="font-semibold text-purple-600 flex items-center gap-2">
+          <div className="bg-brand-600/10 border border-brand-500/20 rounded-xl p-4">
+            <h3 className="font-semibold text-brand-600 flex items-center gap-2">
               <Gift size={18} /> Automated Referral Program
             </h3>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
@@ -550,7 +550,7 @@ export default function RevenueEngine() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700">
-              <p className="text-3xl font-bold text-purple-500">{data.referrals.total}</p>
+              <p className="text-3xl font-bold text-brand-500">{data.referrals.total}</p>
               <p className="text-xs text-slate-500 mt-1">Total Referrals</p>
             </div>
             <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700">
@@ -573,7 +573,7 @@ export default function RevenueEngine() {
                       </span>
                       <span className="text-sm font-medium text-slate-900 dark:text-white">{ref.name}</span>
                     </div>
-                    <span className="text-sm font-bold text-purple-500">{ref.count} referrals</span>
+                    <span className="text-sm font-bold text-brand-500">{ref.count} referrals</span>
                   </div>
                 ))}
               </div>

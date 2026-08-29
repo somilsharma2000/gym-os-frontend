@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gym OS — Super Admin Guide | by Beyond Pixels</title>
+<style>
+:root { --bg:#0b1120; --card:#111827; --blue:#2563eb; --blue-light:#3b82f6; --text:#f1f5f9; --muted:#94a3b8; --border:#1e293b; --green:#10b981; --orange:#f59e0b; --red:#ef4444; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'Inter',-apple-system,sans-serif; line-height:1.6; }
+.container { max-width:900px; margin:0 auto; padding:40px 24px; }
+.cover { text-align:center; padding:60px 24px 50px; border-bottom:1px solid var(--border); margin-bottom:40px; }
+.cover-logo { width:64px; height:64px; border-radius:50%; background:white; display:inline-flex; align-items:center; justify-content:center; font-size:24px; font-weight:900; color:var(--blue); margin-bottom:20px; }
+.cover h1 { font-size:36px; font-weight:900; margin-bottom:8px; }
+.cover .subtitle { font-size:16px; color:var(--muted); margin-bottom:24px; }
+.cover .badge { display:inline-block; padding:6px 16px; background:var(--orange); color:white; border-radius:20px; font-size:13px; font-weight:600; }
+h2 { font-size:26px; font-weight:800; margin:40px 0 14px; border-left:4px solid var(--orange); padding-left:16px; }
+h3 { font-size:18px; font-weight:700; margin:24px 0 10px; color:var(--blue-light); }
+p { color:var(--muted); margin-bottom:10px; font-size:15px; }
+.card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px; margin:14px 0; }
+.card h3 { margin-top:0; }
+.step { display:flex; gap:14px; margin:14px 0; align-items:flex-start; }
+.step-num { width:28px; height:28px; border-radius:50%; background:var(--blue); color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; flex-shrink:0; }
+.step-content { flex:1; }
+.step-content h4 { font-size:15px; font-weight:700; margin-bottom:3px; }
+.step-content p { font-size:14px; margin:0; }
+table { width:100%; border-collapse:collapse; margin:14px 0; }
+th,td { padding:10px; text-align:left; border-bottom:1px solid var(--border); }
+th { color:var(--blue-light); font-weight:700; font-size:14px; }
+td { color:var(--muted); font-size:14px; }
+.tip { background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:10px; padding:14px; margin:14px 0; }
+.tip::before { content:"Pro Tip: "; font-weight:700; color:var(--green); }
+.warn { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:10px; padding:14px; margin:14px 0; }
+.warn::before { content:"Important: "; font-weight:700; color:var(--red); }
+code { background:var(--card); padding:2px 8px; border-radius:6px; font-size:13px; color:var(--green); }
+.footer { text-align:center; padding:30px 0; border-top:1px solid var(--border); margin-top:50px; }
+.footer p { font-size:13px; color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="cover">
+  <div class="cover-logo">bp</div>
+  <h1>Gym OS — Super Admin</h1>
+  <p class="subtitle">Platform Administration Guide</p>
+  <div class="badge">Internal Use Only</div>
+</div>
+
+<h2>1. Super Admin Overview</h2>
+<p>As Super Admin, you have full control over the entire Gym OS platform. You can add new gyms, connect integrations, manage all client accounts, and troubleshoot issues.</p>
+<div class="card">
+  <h3>Your Capabilities</h3>
+  <table>
+    <tr><th>Feature</th><th>Access</th></tr>
+    <tr><td>Gym Switcher</td><td>Switch between all client gyms</td></tr>
+    <tr><td>Super Admin Panel</td><td>Add/remove gyms, view all data</td></tr>
+    <tr><td>Integrations</td><td>WhatsApp, Payments, Social Media, API keys</td></tr>
+    <tr><td>Settings</td><td>Configure automations, notifications, branding</td></tr>
+    <tr><td>Gym Creation</td><td>Onboard new client gyms with seed data</td></tr>
+  </table>
+</div>
+
+<h2>2. Adding a New Gym</h2>
+<div class="card">
+  <h3>Step-by-Step Onboarding</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Create Gym Account</h4><p>Go to Super Admin panel. Click "Add New Gym". Enter: gym name, owner name, owner email, owner phone, gym ID (format: gym_<name>).</p></div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Set Password</h4><p>Create a password for the gym owner. Share it with them securely. They can change it later.</p></div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Seed Data</h4><p>Run the seed function to create sample members, classes, and trainers so the dashboard isn't empty on first login.</p></div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-content"><h4>Generate Website</h4><p>Go to Integrations > Website. Click "Generate Website" to create the gym's public-facing website with their branding.</p></div></div>
+  <div class="step"><div class="step-num">5</div><div class="step-content"><h4>Connect WhatsApp</h4><p>Go to Integrations > WhatsApp. Enter the gym's WhatsApp Business API credentials (WABA ID, Phone Number ID, Access Token).</p></div></div>
+  <div class="step"><div class="step-num">6</div><div class="step-content"><h4>Set Up Payments</h4><p>Go to Integrations > Payments. Enter Razorpay or Stripe API keys for the gym.</p></div></div>
+  <div class="step"><div class="step-num">7</div><div class="step-content"><h4>Test Login</h4><p>Switch to the new gym using the gym switcher. Verify the dashboard loads correctly with seeded data.</p></div></div>
+</div>
+
+<h2>3. Connecting Integrations</h2>
+<div class="card">
+  <h3>WhatsApp Business API</h3>
+  <p>Required: WABA ID, Phone Number ID, Access Token, Verify Token.</p>
+  <p>Setup: Meta Business Manager > WhatsApp Manager > API Setup. Copy credentials into Gym OS Integrations tab.</p>
+</div>
+<div class="card">
+  <h3>Payments (Razorpay/Stripe)</h3>
+  <p>Required: Key ID and Key Secret (Razorpay) or Secret Key (Stripe).</p>
+  <p>Setup: Create account at razorpay.com or stripe.com. Get API keys from dashboard. Enter in Gym OS Integrations.</p>
+</div>
+<div class="card">
+  <h3>Social Media</h3>
+  <p>Required: Facebook Page ID + Access Token, Instagram Account ID + Access Token, LinkedIn Org ID + Access Token.</p>
+  <p>Setup: Connect via Meta Business Manager for FB/IG. LinkedIn: Company Page > Admin > API.</p>
+</div>
+
+<h2>4. Automation Configuration</h2>
+<div class="card">
+  <h3>Available Automations</h3>
+  <table>
+    <tr><th>Automation</th><th>Trigger</th><th>Action</th></tr>
+    <tr><td>Welcome Lead</td><td>New lead created</td><td>WhatsApp welcome message</td></tr>
+    <tr><td>Trial Reminder</td><td>Trial expiring in 24h</td><td>WhatsApp reminder</td></tr>
+    <tr><td>Renewal Reminder</td><td>Membership expiring in 7 days</td><td>WhatsApp + dashboard alert</td></tr>
+    <tr><td>Low Attendance Alert</td><td>Member inactive X days</td><td>Flag as at-risk + notify owner</td></tr>
+    <tr><td>Daily Report</td><td>Configured time daily</td><td>Email/WhatsApp summary to owner</td></tr>
+    <tr><td>Payment Receipt</td><td>Payment recorded</td><td>WhatsApp receipt to member</td></tr>
+  </table>
+</div>
+
+<h2>5. Common Issues & Fixes</h2>
+<div class="card">
+  <h3>Login Failed</h3>
+  <p><strong>Cause:</strong> Wrong credentials or account suspended.</p>
+  <p><strong>Fix:</strong> Check GymAccount entity for the email. Verify password_hash matches. Check status field is "active".</p>
+</div>
+<div class="card">
+  <h3>Dashboard Empty</h3>
+  <p><strong>Cause:</strong> No seed data for the gym.</p>
+  <p><strong>Fix:</strong> Run seedGymData function with the gym_id. This creates sample members, leads, and classes.</p>
+</div>
+<div class="card">
+  <h3>WhatsApp Not Sending</h3>
+  <p><strong>Cause:</strong> Missing or expired API credentials.</p>
+  <p><strong>Fix:</strong> Go to Integrations > WhatsApp. Verify WABA ID, Phone Number ID, and Access Token are correct. Re-generate token in Meta Business Manager if expired.</p>
+</div>
+<div class="card">
+  <h3>Payments Not Recording</h3>
+  <p><strong>Cause:</strong> Payment gateway not connected or API key mismatch.</p>
+  <p><strong>Fix:</strong> Check Integrations > Payments. Verify Razorpay/Stripe keys. Test with a small amount.</p>
+</div>
+<div class="card">
+  <h3>Website Not Loading</h3>
+  <p><strong>Cause:</strong> Website not generated or gym profile incomplete.</p>
+  <p><strong>Fix:</strong> Go to Integrations > Website. Click "Generate Website". Ensure GymProfile has name, address, hours, and description filled.</p>
+</div>
+<div class="card">
+  <h3>403 Error on API Calls</h3>
+  <p><strong>Cause:</strong> Token expired or wrong API base URL.</p>
+  <p><strong>Fix:</strong> Check token format (JWT with exp field). Verify function routing in client.ts — GYMOS functions go to GYMOS app, admin functions go to Superagent app.</p>
+</div>
+
+<h2>6. Data Isolation</h2>
+<div class="card">
+  <h3>How Gym Data Stays Separate</h3>
+  <p>Every entity record has a <code>gym_id</code> field. All API calls filter by gym_id. Gym owners are locked to their gym_id. Super admin can switch between gyms.</p>
+  <div class="warn">Never hardcode gym_id in backend functions. Always read it from the request payload.</div>
+</div>
+
+<h2>7. Branding Guidelines</h2>
+<div class="card">
+  <h3>Colors</h3>
+  <table>
+    <tr><th>Element</th><th>Color</th></tr>
+    <tr><td>Background</td><td>#0b1120 (dark navy)</td></tr>
+    <tr><td>Card</td><td>#111827</td></tr>
+    <tr><td>Primary/Blue</td><td>#2563eb</td></tr>
+    <tr><td>Accent/Green</td><td>#10b981</td></tr>
+    <tr><td>Text Primary</td><td>#f1f5f9</td></tr>
+    <tr><td>Text Muted</td><td>#94a3b8</td></tr>
+  </table>
+</div>
+<div class="card">
+  <h3>Logo</h3>
+  <p>Use <code>brand/beyond-pixells-logo.png</code> in top-left of sidebar. Circular, 36px, with emerald ring.</p>
+</div>
+
+<div class="footer">
+  <p>Gym OS Super Admin Guide — by Beyond Pixels</p>
+  <p>Internal Use Only</p>
+</div>
+
+</div>
+</body>
+</html>

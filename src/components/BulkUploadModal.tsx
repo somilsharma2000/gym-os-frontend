@@ -261,7 +261,7 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }: BulkUplo
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-800 bg-slate-900/50">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+            <div className="p-2.5 rounded-xl bg-brand-600/10 text-brand-400 border border-brand-500/20">
               <Users size={22} />
             </div>
             <div>
@@ -285,7 +285,7 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }: BulkUplo
               {/* Template Banner */}
               <div className="flex items-center justify-between p-4 bg-slate-800/60 rounded-xl border border-slate-700/60">
                 <div className="flex items-center gap-3">
-                  <FileText className="text-emerald-400" size={20} />
+                  <FileText className="text-brand-400" size={20} />
                   <div>
                     <p className="text-sm font-semibold text-slate-200">Need the standard CSV format?</p>
                     <p className="text-xs text-slate-400">Download our sample template with required headers</p>
@@ -293,7 +293,7 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }: BulkUplo
                 </div>
                 <button
                   onClick={downloadTemplate}
-                  className="px-3.5 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all hover:scale-[1.02]"
+                  className="px-3.5 py-2 bg-brand-700/20 hover:bg-brand-700/30 text-brand-400 border border-brand-500/30 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all hover:scale-[1.02]"
                 >
                   <Download size={14} /> Download Template
                 </button>
@@ -308,8 +308,8 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }: BulkUplo
                 onClick={() => fileInputRef.current?.click()}
                 className={`border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-200 ${
                   dragActive
-                    ? 'border-emerald-500 bg-emerald-500/10 scale-[0.99]'
-                    : 'border-slate-700/80 hover:border-emerald-500/50 bg-slate-800/40 hover:bg-slate-800/80'
+                    ? 'border-brand-500 bg-brand-600/10 scale-[0.99]'
+                    : 'border-slate-700/80 hover:border-brand-500/50 bg-slate-800/40 hover:bg-slate-800/80'
                 }`}
               >
                 <input
@@ -319,14 +319,14 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }: BulkUplo
                   onChange={handleFileChange}
                   className="hidden"
                 />
-                <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto mb-4 border border-emerald-500/20 shadow-inner">
+                <div className="w-16 h-16 rounded-2xl bg-brand-600/10 text-brand-400 flex items-center justify-center mx-auto mb-4 border border-brand-500/20 shadow-inner">
                   <Upload size={28} />
                 </div>
                 <p className="text-base font-medium text-slate-200">
-                  <span className="text-emerald-400 font-semibold">Click to upload</span> or drag and drop CSV file here
+                  <span className="text-brand-400 font-semibold">Click to upload</span> or drag and drop CSV file here
                 </p>
                 <p className="text-xs text-slate-400 mt-1.5">
-                  Supported format: <code className="text-emerald-300 bg-slate-900 px-1.5 py-0.5 rounded">.csv</code> (Columns: name, phone, email, membership_type, join_date)
+                  Supported format: <code className="text-brand-300 bg-slate-900 px-1.5 py-0.5 rounded">.csv</code> (Columns: name, phone, email, membership_type, join_date)
                 </p>
               </div>
 
@@ -344,12 +344,12 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }: BulkUplo
             <div className="space-y-5">
               <div className="flex items-center justify-between flex-wrap gap-3 p-3 bg-slate-800/50 rounded-xl border border-slate-800">
                 <div className="flex items-center gap-2">
-                  <FileText className="text-emerald-400" size={18} />
+                  <FileText className="text-brand-400" size={18} />
                   <span className="text-sm font-medium text-slate-200">File: <span className="text-white font-semibold">{fileName}</span></span>
                 </div>
                 <div className="flex items-center gap-3 text-xs">
                   <span className="px-2.5 py-1 bg-slate-800 text-slate-300 rounded-md border border-slate-700">Total: {parsedMembers.length}</span>
-                  <span className="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 rounded-md font-medium">Valid: {validMembers.length}</span>
+                  <span className="px-2.5 py-1 bg-brand-600/10 text-brand-400 border border-brand-500/30 rounded-md font-medium">Valid: {validMembers.length}</span>
                   {parsedMembers.length - validMembers.length > 0 && (
                     <span className="px-2.5 py-1 bg-red-500/10 text-red-400 border border-red-500/30 rounded-md font-medium">
                       Invalid: {parsedMembers.length - validMembers.length}
@@ -376,7 +376,7 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }: BulkUplo
                         <tr key={m.id} className={m.isValid ? 'hover:bg-slate-800/40' : 'bg-red-950/20 hover:bg-red-950/30'}>
                           <td className="px-4 py-2.5 whitespace-nowrap">
                             {m.isValid ? (
-                              <span className="inline-flex items-center gap-1 text-emerald-400 font-medium">
+                              <span className="inline-flex items-center gap-1 text-brand-400 font-medium">
                                 <CheckCircle2 size={14} /> Ready
                               </span>
                             ) : (
@@ -389,7 +389,7 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }: BulkUplo
                           <td className="px-4 py-2.5 text-slate-300 font-mono">{m.phone || '—'}</td>
                           <td className="px-4 py-2.5 text-slate-400">{m.email || '—'}</td>
                           <td className="px-4 py-2.5">
-                            <span className="px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-300 border border-emerald-800/50 capitalize">
+                            <span className="px-2 py-0.5 rounded bg-brand-950/60 text-brand-300 border border-brand-800/50 capitalize">
                               {m.membership_type}
                             </span>
                           </td>
@@ -406,7 +406,7 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }: BulkUplo
           {/* STEP 3: UPLOADING PROGRESS */}
           {step === 'uploading' && (
             <div className="py-12 space-y-6 text-center">
-              <div className="w-20 h-20 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto animate-pulse">
+              <div className="w-20 h-20 rounded-full bg-brand-600/10 text-brand-400 border border-brand-500/30 flex items-center justify-center mx-auto animate-pulse">
                 <Loader2 size={36} className="animate-spin" />
               </div>
 
@@ -419,11 +419,11 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }: BulkUplo
               <div className="max-w-md mx-auto space-y-2">
                 <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden border border-slate-700 p-0.5">
                   <div
-                    className="bg-emerald-500 h-full rounded-full transition-all duration-300 ease-out shadow-[0_0_12px_rgba(16,185,129,0.5)]"
+                    className="bg-brand-600 h-full rounded-full transition-all duration-300 ease-out shadow-[0_0_12px_rgba(16,185,129,0.5)]"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
-                <p className="text-xs font-semibold text-emerald-400">{progress}% Completed</p>
+                <p className="text-xs font-semibold text-brand-400">{progress}% Completed</p>
               </div>
             </div>
           )}
@@ -432,7 +432,7 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }: BulkUplo
           {step === 'summary' && (
             <div className="space-y-6 py-2">
               <div className="text-center space-y-2">
-                <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center mx-auto">
+                <div className="w-16 h-16 rounded-2xl bg-brand-600/10 text-brand-400 border border-brand-500/20 flex items-center justify-center mx-auto">
                   <CheckCircle2 size={32} />
                 </div>
                 <h3 className="text-xl font-bold text-white">Import Completed</h3>
@@ -441,9 +441,9 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }: BulkUplo
 
               {/* Stat Cards */}
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-emerald-950/30 border border-emerald-800/40 rounded-xl text-center">
-                  <p className="text-xs text-emerald-400 font-medium">Successfully Imported</p>
-                  <p className="text-3xl font-extrabold text-emerald-400 mt-1">{results.success}</p>
+                <div className="p-4 bg-brand-950/30 border border-brand-800/40 rounded-xl text-center">
+                  <p className="text-xs text-brand-400 font-medium">Successfully Imported</p>
+                  <p className="text-3xl font-extrabold text-brand-400 mt-1">{results.success}</p>
                 </div>
                 <div className={`p-4 rounded-xl text-center border ${
                   results.failed > 0
@@ -499,7 +499,7 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }: BulkUplo
               <button
                 onClick={startUpload}
                 disabled={validMembers.length === 0}
-                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-emerald-900/30"
+                className="px-5 py-2.5 rounded-xl bg-brand-700 hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-brand-900/30"
               >
                 <Upload size={14} /> Confirm & Upload {validMembers.length} Members
               </button>
@@ -513,7 +513,7 @@ export default function BulkUploadModal({ isOpen, onClose, onSuccess }: BulkUplo
                   onSuccess()
                   handleClose()
                 }}
-                className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-lg shadow-emerald-900/30"
+                className="px-6 py-2.5 rounded-xl bg-brand-700 hover:bg-brand-600 text-white text-xs font-bold transition-all shadow-lg shadow-brand-900/30"
               >
                 Done
               </button>

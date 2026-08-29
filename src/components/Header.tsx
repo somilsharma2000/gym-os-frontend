@@ -10,10 +10,7 @@ import {
   Sun,
   Moon,
   Lock,
-  Sparkles,
-  Settings,
-  Eye,
-  User as UserIcon
+  Settings
 } from 'lucide-react'
 import { api, getGymId, setGymId, getBranchId, setBranchId, isSuperAdmin } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
@@ -32,16 +29,13 @@ interface BranchInfo {
 }
 
 const DEFAULT_GYMS: GymInfo[] = [
-  { gym_id: 'gym_oxigen', gym_name: 'Oxigen Fitness (Main)', branding: { primary_color: '#0066FF' } },
-  { gym_id: 'gym_powerhouse', gym_name: 'Powerhouse Fitness', branding: { primary_color: '#10B981' } },
-  { gym_id: 'gym_ironforge', gym_name: 'Iron Forge Gym', branding: { primary_color: '#F59E0B' } },
-  { gym_id: 'gym_golds', gym_name: "Gold's Fitness Club", branding: { primary_color: '#EF4444' } }
+  { gym_id: 'gym_oxigen', gym_name: 'Oxigen Fitness', branding: { primary_color: '#0066FF' } },
+  { gym_id: 'gym_powerhouse', gym_name: 'PowerHouse Fitness', branding: { primary_color: '#0066FF' } },
+  { gym_id: 'gym_ironforge', gym_name: 'IronForge Fitness', branding: { primary_color: '#0066FF' } }
 ]
 
 const SAMPLE_BRANCHES: BranchInfo[] = [
-  { id: 'branch_c_scheme', name: 'C-Scheme Main Branch', code: 'CS' },
-  { id: 'branch_vaishali', name: 'Vaishali Nagar Branch', code: 'VN' },
-  { id: 'branch_malviya', name: 'Malviya Nagar Branch', code: 'MN' }
+  { id: 'branch_c_scheme', name: 'C-Scheme Main Branch', code: 'CS' }
 ]
 
 export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
@@ -64,6 +58,15 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
   const userMenuRef = useRef<HTMLDivElement>(null)
 
   const _isSuperAdmin = isSuperAdmin() || user?.role === 'super_admin'
+  const _isGymOwner = user?.role === 'gym_owner'
+
+  // Determine visibility rules:
+  // Gym Switcher: Only shown for super_admin
+  const showGymSwitcher = _isSuperAdmin
+
+  // Branch Selector: Only shown for super_admin OR if gym_owner has > 1 branch.
+  // If gym_owner has <= 1 branch, hide entirely.
+  const showBranchSelector = _isSuperAdmin || (_isGymOwner && branches.length > 1)
 
   // Initialize selected branch from localStorage
   useEffect(() => {
@@ -91,7 +94,6 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
             const current = list.find((g: GymInfo) => g.gym_id === currentId) || list[0]
             setSelectedGym(current)
           } else {
-            // Use fallback DEFAULT_GYMS
             setGyms(DEFAULT_GYMS)
             const currentId = getGymId()
             const current = DEFAULT_GYMS.find((g: GymInfo) => g.gym_id === currentId) || DEFAULT_GYMS[0]
@@ -149,9 +151,10 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
   }
 
   return (
-    <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700/80 px-4 sm:px-6 py-2.5 flex items-center justify-between sticky top-0 z-50 transition-colors shadow-sm">
+    <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700/80 px-4 sm:px-6 py-2.5 flex items-center justify-between sticky top-0 z-40 transition-colors shadow-sm">
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         <button
+          type="button"
           onClick={onMenuClick}
           className="cursor-pointer lg:hidden text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors -ml-1"
           aria-label="Open Mobile Menu"
@@ -159,12 +162,13 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
           <Menu size={22} />
         </button>
 
-        {/* GYM SWITCHER DROPDOWN */}
+        {/* GYM SWITCHER (Super Admin only dropdown, static badge for gym owners) */}
         <div className="relative" ref={gymDropdownRef}>
-          {_isSuperAdmin ? (
+          {showGymSwitcher ? (
             <button
+              type="button"
               onClick={() => {
-                setGymDropdownOpen(!gymDropdownOpen)
+                setGymDropdownOpen(prev => !prev)
                 setBranchDropdownOpen(false)
                 setUserMenuOpen(false)
               }}
@@ -179,16 +183,16 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
           ) : (
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700/50 cursor-default">
               <Building2 size={16} className="text-brand-600 dark:text-brand-400 flex-shrink-0" />
-              <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 truncate max-w-[140px]">
+              <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 truncate max-w-[160px]">
                 {selectedGym?.gym_name || user?.gym_name || 'My Gym'}
               </span>
-              <span title="Locked to assigned gym"><Lock size={12} className="text-slate-400" /></span>
+              <span title="Assigned gym"><Lock size={12} className="text-slate-400" /></span>
             </div>
           )}
 
-          {/* Gym Dropdown Menu */}
-          {gymDropdownOpen && _isSuperAdmin && (
-            <div className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 py-1.5 z-[60] animate-in fade-in zoom-in-95">
+          {/* Gym Dropdown Menu (Super Admin only) */}
+          {gymDropdownOpen && showGymSwitcher && (
+            <div className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 py-1.5 z-50 animate-in fade-in zoom-in-95">
               <div className="px-3 py-1.5 border-b border-slate-100 dark:border-slate-700/60">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Select Gym Tenant</p>
               </div>
@@ -198,6 +202,7 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
                   return (
                     <button
                       key={gym.gym_id}
+                      type="button"
                       onClick={() => selectGym(gym)}
                       className={`cursor-pointer w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/70 flex items-center justify-between transition-colors ${
                         isSelected ? 'bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-300' : ''
@@ -219,70 +224,65 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
           )}
         </div>
 
-        {/* BRANCH SELECTOR DROPDOWN */}
-        <div className="relative hidden md:block" ref={branchDropdownRef}>
-          <button
-            onClick={() => {
-              setBranchDropdownOpen(!branchDropdownOpen)
-              setGymDropdownOpen(false)
-              setUserMenuOpen(false)
-            }}
-            className="cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700/80 hover:bg-slate-100 dark:hover:bg-slate-700/80 transition-all text-slate-800 dark:text-slate-100"
-          >
-            <MapPin size={15} className="text-emerald-500 flex-shrink-0" />
-            <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[150px]">
-              {selectedBranch.name}
-            </span>
-            <ChevronDown size={14} className={`text-slate-400 transition-transform ${branchDropdownOpen ? 'rotate-180' : ''}`} />
-          </button>
+        {/* BRANCH SELECTOR DROPDOWN (hidden if gym_owner has only 1 branch) */}
+        {showBranchSelector && (
+          <div className="relative hidden md:block" ref={branchDropdownRef}>
+            <button
+              type="button"
+              onClick={() => {
+                setBranchDropdownOpen(prev => !prev)
+                setGymDropdownOpen(false)
+                setUserMenuOpen(false)
+              }}
+              className="cursor-pointer flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700/80 hover:bg-slate-100 dark:hover:bg-slate-700/80 transition-all text-slate-800 dark:text-slate-100"
+            >
+              <MapPin size={15} className="text-brand-500 flex-shrink-0" />
+              <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[150px]">
+                {selectedBranch.name}
+              </span>
+              <ChevronDown size={14} className={`text-slate-400 transition-transform ${branchDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
 
-          {/* Branch Dropdown Menu */}
-          {branchDropdownOpen && (
-            <div className="absolute top-full left-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 py-1.5 z-[60] animate-in fade-in zoom-in-95">
-              <div className="px-3 py-1.5 border-b border-slate-100 dark:border-slate-700/60">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Select Gym Branch</p>
+            {/* Branch Dropdown Menu */}
+            {branchDropdownOpen && (
+              <div className="absolute top-full left-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 py-1.5 z-50 animate-in fade-in zoom-in-95">
+                <div className="px-3 py-1.5 border-b border-slate-100 dark:border-slate-700/60">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Select Gym Branch</p>
+                </div>
+                <div className="py-1">
+                  {branches.map(branch => {
+                    const isSelected = selectedBranch.id === branch.id
+                    return (
+                      <button
+                        key={branch.id}
+                        type="button"
+                        onClick={() => selectBranch(branch)}
+                        className={`cursor-pointer w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/70 flex items-center justify-between transition-colors ${
+                          isSelected ? 'bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400' : ''
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                            {branch.code}
+                          </span>
+                          <span className="text-xs font-medium text-slate-800 dark:text-slate-100 truncate">{branch.name}</span>
+                        </div>
+                        {isSelected && <Check size={14} className="text-brand-500 flex-shrink-0" />}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
-              <div className="py-1">
-                {branches.map(branch => {
-                  const isSelected = selectedBranch.id === branch.id
-                  return (
-                    <button
-                      key={branch.id}
-                      onClick={() => selectBranch(branch)}
-                      className={`cursor-pointer w-full text-left px-3.5 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/70 flex items-center justify-between transition-colors ${
-                        isSelected ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400' : ''
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 truncate">
-                        <span className="text-xs font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
-                          {branch.code}
-                        </span>
-                        <span className="text-xs font-medium text-slate-800 dark:text-slate-100 truncate">{branch.name}</span>
-                      </div>
-                      {isSelected && <Check size={14} className="text-emerald-500 flex-shrink-0" />}
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* RIGHT SIDE CONTROLS & PROFILE MENU */}
       <div className="flex items-center gap-2">
-        {/* DEMO MODE LINK BUTTON */}
-        <Link
-          to="/demo"
-          className="cursor-pointer hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold border border-emerald-500/30 transition-all"
-          title="Explore Interactive Demo Mode"
-        >
-          <Sparkles size={14} />
-          <span>Demo Mode</span>
-        </Link>
-
         {/* THEME TOGGLE BUTTON */}
         <button
+          type="button"
           onClick={toggleTheme}
           className="cursor-pointer p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-slate-600 dark:text-slate-300"
           title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
@@ -293,8 +293,9 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
         {/* PROFILE MENU DROPDOWN */}
         <div className="relative" ref={userMenuRef}>
           <button
+            type="button"
             onClick={() => {
-              setUserMenuOpen(!userMenuOpen)
+              setUserMenuOpen(prev => !prev)
               setGymDropdownOpen(false)
               setBranchDropdownOpen(false)
             }}
@@ -318,10 +319,10 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
 
           {/* Profile Dropdown Menu */}
           {userMenuOpen && (
-            <div className="absolute top-full right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 py-1.5 z-[60] animate-in fade-in zoom-in-95">
+            <div className="absolute top-full right-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 py-1.5 z-50 animate-in fade-in zoom-in-95">
               <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-700/60">
                 <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{user?.name || 'Gym Admin'}</p>
-                <p className="text-xs text-slate-400 truncate">{user?.email || 'admin@oxigen.fitness'}</p>
+                <p className="text-xs text-slate-400 truncate">{user?.email || 'owner@oxigenfitness.com'}</p>
                 <div className="mt-2 flex items-center justify-between">
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 uppercase tracking-wider">
                     {user?.role?.replace(/_/g, ' ') || 'Admin'}
@@ -330,16 +331,8 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
                 </div>
               </div>
 
-              <div className="py-1">
-                <Link
-                  to="/demo"
-                  onClick={() => setUserMenuOpen(false)}
-                  className="cursor-pointer flex items-center gap-2.5 px-4 py-2 text-xs text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 transition-colors"
-                >
-                  <Eye size={15} className="text-emerald-500" /> Switch to Demo Mode
-                </Link>
-
-                {_isSuperAdmin && (
+              {_isSuperAdmin && (
+                <div className="py-1">
                   <Link
                     to="/settings"
                     onClick={() => setUserMenuOpen(false)}
@@ -347,11 +340,12 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
                   >
                     <Settings size={15} className="text-slate-400" /> Gym Settings & Integrations
                   </Link>
-                )}
-              </div>
+                </div>
+              )}
 
               <div className="border-t border-slate-100 dark:border-slate-700/60 pt-1 mt-1">
                 <button
+                  type="button"
                   onClick={handleLogout}
                   className="cursor-pointer w-full text-left px-4 py-2.5 hover:bg-rose-50 dark:hover:bg-rose-950/30 flex items-center gap-2 text-xs font-semibold text-rose-600 dark:text-rose-400 transition-colors"
                 >

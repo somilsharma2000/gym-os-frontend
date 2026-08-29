@@ -108,9 +108,9 @@ export default function AtRisk() {
   const actionButtons = [
     { key: 'whatsapp', label: 'Send WhatsApp', icon: MessageCircle, color: 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800' },
     { key: 'call', label: 'Call Member', icon: Phone, color: 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800' },
-    { key: 'discount', label: 'Offer Discount', icon: Gift, color: 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800' },
+    { key: 'discount', label: 'Offer Discount', icon: Gift, color: 'bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 border-brand-200 dark:border-brand-800' },
     { key: 'followup', label: 'Schedule Follow-up', icon: Calendar, color: 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800' },
-    { key: 'assign_trainer', label: 'Assign Trainer', icon: UserPlus, color: 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800' },
+    { key: 'assign_trainer', label: 'Assign Trainer', icon: UserPlus, color: 'bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 border-brand-200 dark:border-brand-800' },
     { key: 'freeze', label: 'Freeze Membership', icon: Clock, color: 'bg-slate-50 dark:bg-slate-700/30 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-600' },
     { key: 'winback', label: 'Win-back Campaign', icon: Zap, color: 'bg-orange-50 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800' },
     { key: 'reminder', label: 'Send Reminder', icon: Bell, color: 'bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400 border-teal-200 dark:border-teal-800' },
@@ -192,7 +192,7 @@ export default function AtRisk() {
                       <div className="flex items-center gap-1">
                         <button onClick={() => handleAction(m, 'whatsapp')} className="p-1.5 bg-green-50 dark:bg-green-900/30 text-green-600 rounded border border-green-200 dark:border-green-800 hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors" title="Send WhatsApp"><MessageCircle size={13} /></button>
                         <button onClick={() => handleAction(m, 'call')} className="p-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors" title="Call"><Phone size={13} /></button>
-                        <button onClick={() => handleAction(m, 'discount')} className="p-1.5 bg-purple-50 dark:bg-purple-900/30 text-purple-600 rounded border border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors" title="Offer Discount"><Gift size={13} /></button>
+                        <button onClick={() => handleAction(m, 'discount')} className="p-1.5 bg-brand-50 dark:bg-brand-900/30 text-brand-600 rounded border border-brand-200 dark:border-brand-800 hover:bg-brand-100 dark:hover:bg-brand-900/50 transition-colors" title="Offer Discount"><Gift size={13} /></button>
                         <button onClick={() => setActionMember(m)} className="p-1.5 bg-slate-50 dark:bg-slate-700/30 text-slate-600 dark:text-slate-300 rounded border border-slate-200 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors" title="More actions"><Zap size={13} /></button>
                       </div>
                     </td>

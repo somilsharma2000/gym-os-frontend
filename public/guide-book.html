@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gym OS — Owner Guide | by Beyond Pixels</title>
+<style>
+:root {
+  --bg: #0b1120;
+  --card: #111827;
+  --card-light: #1a2332;
+  --blue: #2563eb;
+  --blue-light: #3b82f6;
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --border: #1e293b;
+  --green: #10b981;
+  --orange: #f59e0b;
+  --red: #ef4444;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: var(--bg); color: var(--text); font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; line-height: 1.6; }
+.container { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+.cover { text-align: center; padding: 80px 24px 60px; border-bottom: 1px solid var(--border); margin-bottom: 40px; }
+.cover-logo { width: 80px; height: 80px; border-radius: 50%; background: white; display: inline-flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 900; color: var(--blue); margin-bottom: 24px; }
+.cover h1 { font-size: 48px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; }
+.cover .subtitle { font-size: 18px; color: var(--muted); margin-bottom: 32px; }
+.cover .badge { display: inline-block; padding: 6px 16px; background: var(--blue); color: white; border-radius: 20px; font-size: 13px; font-weight: 600; }
+h2 { font-size: 28px; font-weight: 800; margin: 48px 0 16px; color: var(--text); border-left: 4px solid var(--blue); padding-left: 16px; }
+h3 { font-size: 20px; font-weight: 700; margin: 32px 0 12px; color: var(--blue-light); }
+p { color: var(--muted); margin-bottom: 12px; font-size: 15px; }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin: 16px 0; }
+.card h3 { margin-top: 0; }
+.feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 24px 0; }
+.feature-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+.feature-card .icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(37,99,235,0.15); display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 12px; }
+.feature-card h4 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+.feature-card p { font-size: 13px; margin: 0; }
+.step { display: flex; gap: 16px; margin: 16px 0; align-items: flex-start; }
+.step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--blue); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+.step-content { flex: 1; }
+.step-content h4 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.step-content p { font-size: 14px; margin: 0; }
+.tip { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 12px; padding: 16px; margin: 16px 0; }
+.tip::before { content: "Pro Tip: "; font-weight: 700; color: var(--green); }
+.warn { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); border-radius: 12px; padding: 16px; margin: 16px 0; }
+.warn::before { content: "Note: "; font-weight: 700; color: var(--orange); }
+.toc { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin: 24px 0; }
+.toc h3 { margin-top: 0; color: var(--text); }
+.toc ol { padding-left: 20px; }
+.toc li { margin: 8px 0; }
+.toc a { color: var(--blue-light); text-decoration: none; }
+.toc a:hover { text-decoration: underline; }
+table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
+th { color: var(--blue-light); font-weight: 700; font-size: 14px; }
+td { color: var(--muted); font-size: 14px; }
+.footer { text-align: center; padding: 40px 0; border-top: 1px solid var(--border); margin-top: 60px; }
+.footer p { font-size: 13px; color: var(--muted); }
+@media (max-width: 640px) {
+  .cover h1 { font-size: 32px; }
+  .feature-grid { grid-template-columns: 1fr; }
+  .container { padding: 20px 16px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="cover">
+  <div class="cover-logo">bp</div>
+  <h1>Gym OS</h1>
+  <p class="subtitle">The complete gym management platform by Beyond Pixels</p>
+  <div class="badge">Owner Guidebook</div>
+</div>
+
+<div class="toc">
+  <h3>What's Inside</h3>
+  <ol>
+    <li><a href="#welcome">Welcome to Gym OS</a></li>
+    <li><a href="#dashboard">Your Command Center</a></li>
+    <li><a href="#members">Managing Members</a></li>
+    <li><a href="#leads">Lead CRM & Follow-ups</a></li>
+    <li><a href="#classes">Classes & Scheduling</a></li>
+    <li><a href="#trainers">Trainers & Staff</a></li>
+    <li><a href="#revenue">Revenue & Payments</a></li>
+    <li><a href="#whatsapp">WhatsApp Automations</a></li>
+    <li><a href="#qr">QR Check-In System</a></li>
+    <li><a href="#socials">Social Media Management</a></li>
+    <li><a href="#assistant">Gym OS AI Assistant</a></li>
+    <li><a href="#website">Your Gym Website</a></li>
+    <li><a href="#diet">Diet Plans</a></li>
+    <li><a href="#renewals">Renewals & Retention</a></li>
+    <li><a href="#getting-started">Getting Started in 7 Days</a></li>
+  </ol>
+</div>
+
+<h2 id="welcome">Welcome to Gym OS</h2>
+<p>Gym OS is built for gym owners who want to run their entire business from one screen. No spreadsheets. No paper files. No missed follow-ups. Everything — your members, leads, payments, classes, trainers, and automations — lives in one place.</p>
+
+<div class="feature-grid">
+  <div class="feature-card"><div class="icon">&#128202;</div><h4>Real-time Dashboard</h4><p>See your revenue, member count, and what needs attention — all at a glance.</p></div>
+  <div class="feature-card"><div class="icon">&#128101;</div><h4>Lead CRM</h4><p>Never miss a follow-up. Leads tracked from first contact to membership.</p></div>
+  <div class="feature-card"><div class="icon">&#128179;</div><h4>Payment Tracking</h4><p>Every payment recorded. Offline or online. Know exactly what's coming in.</p></div>
+  <div class="feature-card"><div class="icon">&#128241;</div><h4>WhatsApp Automation</h4><p>Welcome messages, renewal reminders, and follow-ups sent automatically.</p></div>
+  <div class="feature-card"><div class="icon">&#128242;</div><h4>QR Check-In</h4><p>Members scan in with their phone. Attendance tracked automatically.</p></div>
+  <div class="feature-card"><div class="icon">&#129302;</div><h4>AI Assistant</h4><p>An AI that knows your gym data and helps you make better decisions.</p></div>
+</div>
+
+<h2 id="dashboard">Your Command Center</h2>
+<p>When you log in, you land on your dashboard. This is your gym's pulse — the most important numbers, all in one view.</p>
+<div class="card">
+  <h3>What You'll See</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Key Metrics</h4><p>Total members, active leads, monthly revenue, and check-ins today. Updated in real time.</p></div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Revenue Chart</h4><p>A line chart showing your earnings trend. Spot patterns before they become problems.</p></div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Member Growth</h4><p>See how your member base grows over time. New signups vs. churn at a glance.</p></div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-content"><h4>What Needs Attention</h4><p>Pending follow-ups, expiring memberships, at-risk members — all flagged here.</p></div></div>
+</div>
+<div class="tip">Check your dashboard first thing every morning. It takes 30 seconds and tells you exactly where to focus your day.</div>
+
+<h2 id="members">Managing Members</h2>
+<p>Your members are your business. Gym OS keeps everything organized.</p>
+<div class="card">
+  <h3>Member Profiles</h3>
+  <p>Click any member's name to see their complete profile: contact info, membership status, attendance history, payment records, and notes.</p>
+</div>
+<div class="card">
+  <h3>Adding Members</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Single Member</h4><p>Click "Add Member" and fill in their details. Takes 30 seconds.</p></div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Bulk Upload</h4><p>Have 100+ members? Upload a spreadsheet and import them all at once.</p></div></div>
+</div>
+<div class="card">
+  <h3>Member Options</h3>
+  <table>
+    <tr><th>Action</th><th>What it does</th></tr>
+    <tr><td>Call</td><td>Direct dial from the app</td></tr>
+    <tr><td>WhatsApp</td><td>Open WhatsApp chat with their number</td></tr>
+    <tr><td>View Profile</td><td>See full member details and history</td></tr>
+    <tr><td>Edit</td><td>Update their information</td></tr>
+    <tr><td>Assign Diet Plan</td><td>Link a diet plan created by a trainer</td></div>
+  </table>
+</div>
+<div class="tip">Members marked "At-Risk" haven't checked in recently. Reach out to them before they cancel.</div>
+
+<h2 id="leads">Lead CRM & Follow-ups</h2>
+<p>Every person who shows interest in your gym — from Instagram, WhatsApp, walk-ins, or referrals — goes here. Gym OS tracks them from first hello to signed membership.</p>
+<div class="card">
+  <h3>Lead Pipeline</h3>
+  <p>Leads move through stages: New, Contacted, Trial Booked, Trial Attended, Member. You see exactly where each lead is in the journey.</p>
+</div>
+<div class="card">
+  <h3>Follow-ups</h3>
+  <p>Every lead has a next follow-up date. The system reminds you when it's due. Never lose a lead because you forgot to call back.</p>
+  <div class="feature-grid">
+    <div class="feature-card"><h4>Call</h4><p>One-click dial</p></div>
+    <div class="feature-card"><h4>WhatsApp</h4><p>Message directly</p></div>
+    <div class="feature-card"><h4>Schedule</h4><p>Set next follow-up date</p></div>
+    <div class="feature-card"><h4>Convert</h4><p>Turn into a member</p></div>
+  </div>
+</div>
+<div class="warn">Leads with no follow-up for 7+ days are marked "Cold" in red. Call them today.</div>
+
+<h2 id="classes">Classes & Scheduling</h2>
+<p>Run group classes with proper capacity management and automated reminders.</p>
+<div class="card">
+  <h3>Creating a Class</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Set Details</h4><p>Name, day, time, trainer, capacity</p></div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Enroll Members</h4><p>Select multiple members at once</p></div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Send Reminders</h4><p>One button sends WhatsApp reminders to all enrolled members</p></div></div>
+</div>
+<div class="card">
+  <h3>Class Management</h3>
+  <p>See enrolled count, spots left, and trainer assignment. Cancel a class with a confirmation dialog — members are notified automatically.</p>
+</div>
+
+<h2 id="trainers">Trainers & Staff</h2>
+<p>Manage your team with task assignments, QR attendance, and performance tracking.</p>
+<div class="card">
+  <h3>Trainer Features</h3>
+  <table>
+    <tr><th>Feature</th><th>What it does</th></tr>
+    <tr><td>Task Assignment</td><td>Assign tasks with due dates and priority</td></tr>
+    <tr><td>QR Attendance</td><td>Trainers scan QR to mark attendance</td></tr>
+    <tr><td>Performance Stats</td><td>Members count, classes, rating, revenue</td></tr>
+    <tr><td>Reminders</td><td>Set reminders for trainer tasks</td></tr>
+    <tr><td>Specializations</td><td>Track trainer specialties</td></tr>
+  </table>
+</div>
+
+<h2 id="revenue">Revenue & Payments</h2>
+<p>Know your numbers. Track every rupee in and out.</p>
+<div class="card">
+  <h3>Revenue Dashboard</h3>
+  <div class="feature-grid">
+    <div class="feature-card"><div class="icon">&#128176;</div><h4>Total Earnings</h4><p>Monthly total with trend vs last month</p></div>
+    <div class="feature-card"><div class="icon">&#128200;</div><h4>Growth Chart</h4><p>Member growth and revenue over time</p></div>
+    <div class="feature-card"><div class="icon">&#128202;</div><h4>Revenue Breakdown</h4><p>By memberships, classes, personal training</p></div>
+    <div class="feature-card"><div class="icon">&#128176;</div><h4>Expense Tracking</h4><p>Log expenses and see net profit</p></div>
+  </div>
+</div>
+<div class="card">
+  <h3>Recording Payments</h3>
+  <p>Click "Record Offline Payment" to log cash or UPI transactions. The system reminds you if there are unrecorded offline payments. Every transaction updates your revenue in real time.</p>
+</div>
+<div class="tip">Record offline payments the same day. The app will remind you if you forget.</div>
+
+<h2 id="whatsapp">WhatsApp Automations</h2>
+<p>Your gym runs on WhatsApp. Gym OS automates the repetitive messages so you don't have to.</p>
+<div class="card">
+  <h3>Automated Messages</h3>
+  <table>
+    <tr><th>Trigger</th><th>Message Sent</th></tr>
+    <tr><td>New lead signup</td><td>Welcome message with gym info</td></tr>
+    <tr><td>New member</td><td>Onboarding message with QR code</td></tr>
+    <tr><td>Membership expiring</td><td>Renewal reminder (7 days before)</td></tr>
+    <tr><td>Member hasn't visited</td><td>"We miss you" re-engagement message</td></tr>
+    <tr><td>Class scheduled</td><td>Reminder to enrolled members</td></tr>
+    <tr><td>Payment received</td><td>Payment confirmation receipt</td></tr>
+  </table>
+</div>
+<div class="warn">WhatsApp automation requires setup by the Beyond Pixels team. Once connected, it works automatically.</div>
+
+<h2 id="qr">QR Check-In System</h2>
+<p>Fast, frictionless entry. No more sign-in sheets.</p>
+<div class="card">
+  <h3>How It Works</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Member Gets QR Code</h4><p>Each member gets a unique QR code when they join</p></div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Scan at Entry</h4><p>Member scans their QR at the gym entrance</p></div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Attendance Recorded</h4><p>Check-in time logged automatically. You see who's in the gym right now.</p></div></div>
+</div>
+
+<h2 id="socials">Social Media Management</h2>
+<p>Manage your Instagram, Facebook, and LinkedIn from one place. Create posts with AI-powered suggestions.</p>
+<div class="card">
+  <h3>Features</h3>
+  <div class="feature-grid">
+    <div class="feature-card"><div class="icon">&#9999;</div><h4>Master Prompt</h4><p>Define your brand voice once. AI generates posts in your style.</p></div>
+    <div class="feature-card"><div class="icon">&#128197;</div><h4>Content Calendar</h4><p>Schedule posts across platforms</p></div>
+    <div class="feature-card"><div class="icon">&#128202;</div><h4>Analytics</h4><p>Likes, comments, shares, reach</p></div>
+    <div class="feature-card"><div class="icon">&#128640;</div><h4>Campaigns</h4><p>Run social media campaigns with goals</p></div>
+  </div>
+</div>
+
+<h2 id="assistant">Gym OS AI Assistant</h2>
+<p>A floating button on every page. Tap it and ask anything about your gym.</p>
+<div class="card">
+  <h3>What It Can Do</h3>
+  <table>
+    <tr><th>On This Page</th><th>Ask It To</th></tr>
+    <tr><td>Dashboard</td><td>"What needs my attention today?"</td></tr>
+    <tr><td>Members</td><td>"Who hasn't visited in 2 weeks?"</td></tr>
+    <tr><td>Leads</td><td>"Which leads should I call first?"</td></tr>
+    <tr><td>Revenue</td><td>"How can I increase revenue this month?"</td></tr>
+    <tr><td>Classes</td><td>"Which classes are underperforming?"</td></tr>
+    <tr><td>Trainers</td><td>"Who's performing best?"</td></tr>
+    <tr><td>Socials</td><td>"Generate a post about our new class"</td></tr>
+    <tr><td>Any page</td><td>"Help me write a message to a member"</td></tr>
+  </table>
+</div>
+<div class="tip">The assistant knows which page you're on and gives relevant suggestions. Try it on different pages.</div>
+
+<h2 id="website">Your Gym Website</h2>
+<p>Every Gym OS account comes with a professional gym website — automatically generated with your branding, class schedule, and membership plans.</p>
+<div class="card">
+  <h3>Website Features</h3>
+  <div class="feature-grid">
+    <div class="feature-card"><h4>Lead Capture</h4><p>Visitors can book trials directly</p></div>
+    <div class="feature-card"><h4>Class Schedule</h4><p>Live schedule synced with Gym OS</p></div>
+    <div class="feature-card"><h4>Membership Plans</h4><p>Display your pricing clearly</p></div>
+    <div class="feature-card"><h4>AI Chatbot</h4><p>Answers visitor questions 24/7</p></div>
+  </div>
+</div>
+
+<h2 id="diet">Diet Plans</h2>
+<p>Trainers can create diet plans for members — calorie targets, macros, meal breakdowns. Members receive their plan via WhatsApp.</p>
+<div class="card">
+  <h3>Creating a Diet Plan</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Select Member</h4><p>Choose which member the plan is for</p></div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Set Targets</h4><p>Calories, protein, carbs, fat targets</p></div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Add Meals</h4><p>Break down by meal: breakfast, lunch, dinner, snacks</p></div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-content"><h4>Send</h4><p>Member receives plan on WhatsApp</p></div></div>
+</div>
+
+<h2 id="renewals">Renewals & Retention</h2>
+<p>Don't let members slip away. Gym OS tracks every membership expiry and sends automatic reminders.</p>
+<div class="card">
+  <h3>Renewal Pipeline</h3>
+  <p>See all memberships expiring in the next 30 days. Sort by date. Send WhatsApp reminders with one click. Track who renewed and who didn't.</p>
+</div>
+<div class="card">
+  <h3>At-Risk Members</h3>
+  <p>Members who haven't checked in recently are flagged as "At-Risk." The system alerts you so you can reach out before they cancel.</p>
+</div>
+<div class="tip">A member who hasn't visited in 2 weeks is 5x more likely to cancel. Call them before they decide to leave.</div>
+
+<h2 id="getting-started">Getting Started in 7 Days</h2>
+<div class="card">
+  <h3>Your First Week</h3>
+  <div class="step"><div class="step-num">1</div><div class="step-content"><h4>Day 1: Log In</h4><p>Use the credentials provided by Beyond Pixels. Explore the dashboard.</p></div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-content"><h4>Day 2-3: Add Members</h4><p>Add existing members one by one, or bulk upload from a spreadsheet.</p></div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-content"><h4>Day 4: Set Up Classes</h4><p>Create your class schedule and assign trainers.</p></div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-content"><h4>Day 5: Generate QR Codes</h4><p>Issue QR codes to members for check-in.</p></div></div>
+  <div class="step"><div class="step-num">5</div><div class="step-content"><h4>Day 6: Start Logging Payments</h4><p>Record payments — online and offline. Watch your revenue dashboard come alive.</p></div></div>
+  <div class="step"><div class="step-num">6</div><div class="step-content"><h4>Day 7: Connect WhatsApp</h4><p>Ask Beyond Pixels to connect WhatsApp automation. Welcome messages and reminders start flowing.</p></div></div>
+</div>
+<div class="card">
+  <h3>Need Help?</h3>
+  <p>Contact Beyond Pixels support:</p>
+  <p>beyondpixells@gmail.com | +91 77370 77479</p>
+  <p>Or use the AI Assistant — available 24/7 on every page.</p>
+</div>
+
+<div class="footer">
+  <p>Gym OS — by Beyond Pixels</p>
+  <p>The complete gym management platform</p>
+</div>
+
+</div>
+</body>
+</html>

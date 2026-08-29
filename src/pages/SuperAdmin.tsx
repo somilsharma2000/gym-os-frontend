@@ -155,7 +155,7 @@ export default function SuperAdmin() {
 
   const planColors: Record<string, string> = {
     starter: 'bg-blue-500/20 text-blue-300',
-    standard: 'bg-purple-500/20 text-purple-300',
+    standard: 'bg-brand-600/20 text-brand-300',
     premium: 'bg-amber-500/20 text-amber-300'
   }
 
@@ -273,7 +273,7 @@ export default function SuperAdmin() {
                   )}
                   </button>
                   {!gym.website_url && (
-                    <button onClick={() => { setConnectModal({ gymId: gym.gym_id, gymName: gym.gym_name }); setConnectUrl('') }} className="flex items-center justify-center gap-1.5 px-3 py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 rounded-lg text-xs font-semibold" title="Connect Website">
+                    <button onClick={() => { setConnectModal({ gymId: gym.gym_id, gymName: gym.gym_name }); setConnectUrl('') }} className="flex items-center justify-center gap-1.5 px-3 py-2 bg-brand-600/10 hover:bg-brand-600/20 text-brand-600 rounded-lg text-xs font-semibold" title="Connect Website">
                       <Link2 size={14} />
                     </button>
                   )}

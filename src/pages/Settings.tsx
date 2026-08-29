@@ -304,7 +304,7 @@ export default function Settings() {
             value={formData[name] as string | number}
             onChange={handleChange}
             placeholder={placeholder}
-            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all pr-12"
+            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all pr-12"
           />
           {isSecret && (
             <button
@@ -332,7 +332,7 @@ export default function Settings() {
     return (
       <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all">
         <div className="flex items-start gap-3 pr-4">
-          {icon && <div className="mt-0.5 text-emerald-400">{icon}</div>}
+          {icon && <div className="mt-0.5 text-brand-400">{icon}</div>}
           <div>
             <div className="text-sm font-medium text-white">{label}</div>
             {description && <div className="text-xs text-slate-400 mt-0.5">{description}</div>}
@@ -343,8 +343,8 @@ export default function Settings() {
           role="switch"
           aria-checked={isChecked}
           onClick={() => handleToggle(name)}
-          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${
-            isChecked ? 'bg-emerald-500' : 'bg-slate-700'
+          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-slate-900 ${
+            isChecked ? 'bg-brand-600' : 'bg-slate-700'
           }`}
         >
           <span
@@ -367,7 +367,7 @@ export default function Settings() {
             <div
               className={`flex items-center gap-2 text-sm px-3 py-1.5 rounded-lg border ${
                 tabFeedback.type === 'success'
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                  ? 'bg-brand-600/10 border-brand-500/30 text-brand-400'
                   : 'bg-red-500/10 border-red-500/30 text-red-400'
               }`}
             >
@@ -380,7 +380,7 @@ export default function Settings() {
           type="button"
           disabled={isSaving}
           onClick={() => saveTabSettings(tabId, payload)}
-          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm transition-all shadow-lg shadow-emerald-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 px-6 py-3 rounded-xl bg-brand-700 hover:bg-brand-600 text-white font-medium text-sm transition-all shadow-lg shadow-brand-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSaving ? <Loader size={18} className="animate-spin" /> : <Save size={18} />}
           <span>{isSaving ? 'Saving Changes...' : 'Save Settings'}</span>
@@ -392,7 +392,7 @@ export default function Settings() {
   if (loadingInitial) {
     return (
       <div className="min-h-[500px] flex flex-col items-center justify-center bg-slate-900 rounded-2xl border border-slate-800 p-8 text-white space-y-4">
-        <Loader size={36} className="animate-spin text-emerald-500" />
+        <Loader size={36} className="animate-spin text-brand-500" />
         <p className="text-slate-400 text-sm animate-pulse">Loading Integration Hub settings...</p>
       </div>
     )
@@ -432,14 +432,14 @@ export default function Settings() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-            <Zap className="text-emerald-400" size={28} /> Integration Hub
+            <Zap className="text-brand-400" size={28} /> Integration Hub
           </h1>
           <p className="text-sm text-slate-400 mt-1">
             Connect third-party API services, payment gateways, and automated gym marketing workflows.
           </p>
         </div>
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-medium self-start sm:self-auto">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-600/10 border border-brand-500/30 text-brand-400 text-xs font-medium self-start sm:self-auto">
+          <span className="w-2 h-2 rounded-full bg-brand-500 animate-ping" />
           Gym ID: <code className="font-mono text-white">{getCurrentGymId()}</code>
         </div>
       </div>
@@ -458,11 +458,11 @@ export default function Settings() {
               }}
               className={`flex items-center gap-2.5 px-4 py-3 rounded-xl font-medium text-sm whitespace-nowrap transition-all duration-200 border ${
                 isActive
-                  ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-400 shadow-md shadow-emerald-950/20'
+                  ? 'bg-brand-600/15 border-brand-500/50 text-brand-400 shadow-md shadow-brand-950/20'
                   : 'bg-white/5 border-transparent text-slate-400 hover:text-white hover:bg-white/10'
               }`}
             >
-              <Icon size={18} className={isActive ? 'text-emerald-400' : 'text-slate-400'} />
+              <Icon size={18} className={isActive ? 'text-brand-400' : 'text-slate-400'} />
               <span>{tab.label}</span>
             </button>
           )
@@ -476,7 +476,7 @@ export default function Settings() {
           <div className="space-y-6">
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-6">
               <div className="flex items-center gap-3 border-b border-white/10 pb-4">
-                <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <div className="p-2.5 rounded-xl bg-brand-600/10 text-brand-400 border border-brand-500/20">
                   <MessageCircle size={22} />
                 </div>
                 <div>
@@ -537,7 +537,7 @@ export default function Settings() {
           <div className="space-y-6">
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-6">
               <div className="flex items-center gap-3 border-b border-white/10 pb-4">
-                <div className="p-2.5 rounded-xl bg-pink-500/10 text-pink-400 border border-pink-500/20">
+                <div className="p-2.5 rounded-xl bg-brand-500/10 text-brand-400 border border-brand-500/20">
                   <Instagram size={22} />
                 </div>
                 <div>
@@ -550,7 +550,7 @@ export default function Settings() {
 
               {/* Instagram Section */}
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-emerald-400 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-brand-400 flex items-center gap-2">
                   <Instagram size={16} /> Instagram Business
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -596,7 +596,7 @@ export default function Settings() {
           <div className="space-y-6">
             <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-6">
               <div className="flex items-center gap-3 border-b border-white/10 pb-4">
-                <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                <div className="p-2.5 rounded-xl bg-brand-600/10 text-brand-400 border border-brand-500/20">
                   <CreditCard size={22} />
                 </div>
                 <div>
@@ -609,7 +609,7 @@ export default function Settings() {
 
               {/* Razorpay */}
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-indigo-400">Razorpay Credentials</h3>
+                <h3 className="text-sm font-semibold text-brand-400">Razorpay Credentials</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {renderInput('Razorpay Key ID', 'razorpay_key_id', 'rzp_live_...')}
                   {renderInput('Razorpay Key Secret', 'razorpay_key_secret', 'Secret Key', true)}
@@ -618,7 +618,7 @@ export default function Settings() {
 
               {/* Stripe */}
               <div className="border-t border-white/10 pt-4 space-y-4">
-                <h3 className="text-sm font-semibold text-purple-400">Stripe Credentials</h3>
+                <h3 className="text-sm font-semibold text-brand-400">Stripe Credentials</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {renderInput('Stripe Secret Key', 'stripe_secret_key', 'sk_live_...', true)}
                 </div>
@@ -737,7 +737,7 @@ export default function Settings() {
                       value={formData.website_url || `https://${getCurrentGymId()}.base44.app`}
                       onChange={handleChange}
                       placeholder="https://yourgym.com"
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
                     />
                   </div>
                 </div>
@@ -748,13 +748,13 @@ export default function Settings() {
                     <span
                       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider ${
                         ['generated', 'connected'].includes(formData.website_status)
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                          ? 'bg-brand-600/20 text-brand-400 border border-brand-500/30'
                           : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                       }`}
                     >
                       <span
                         className={`w-2 h-2 rounded-full ${
-                          ['generated', 'connected'].includes(formData.website_status) ? 'bg-emerald-400' : 'bg-amber-400'
+                          ['generated', 'connected'].includes(formData.website_status) ? 'bg-brand-500' : 'bg-amber-400'
                         }`}
                       />
                       {formData.website_status === 'connected' ? 'Connected' : formData.website_status === 'generated' ? 'Active / Generated' : 'Not Generated'}
@@ -785,10 +785,10 @@ export default function Settings() {
               </div>
 
               {/* Connect Existing Website */}
-              <div className="p-5 rounded-xl bg-gradient-to-r from-emerald-900/30 to-slate-800 border border-emerald-500/20 flex flex-col gap-4">
+              <div className="p-5 rounded-xl bg-gradient-to-r from-brand-900/30 to-slate-800 border border-brand-500/20 flex flex-col gap-4">
                 <div>
                   <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                    <LinkIcon size={16} className="text-emerald-400" /> Connect Your Existing Website
+                    <LinkIcon size={16} className="text-brand-400" /> Connect Your Existing Website
                   </h3>
                   <p className="text-xs text-slate-400 mt-1">
                     Already have a gym website? Paste the URL below to link it to your Gym OS dashboard. Leads from your site will flow directly into your CRM.
@@ -800,20 +800,20 @@ export default function Settings() {
                     value={connectUrlInput}
                     onChange={(e) => setConnectUrlInput(e.target.value)}
                     placeholder="https://yourgym.com"
-                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
+                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all text-sm"
                   />
                   <button
                     type="button"
                     disabled={connectingWebsite}
                     onClick={handleConnectExistingWebsite}
-                    className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm transition-all shadow-lg shadow-emerald-600/20 disabled:opacity-50 whitespace-nowrap"
+                    className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-brand-700 hover:bg-brand-600 text-white font-medium text-sm transition-all shadow-lg shadow-brand-600/20 disabled:opacity-50 whitespace-nowrap"
                   >
                     {connectingWebsite ? <Loader size={16} className="animate-spin" /> : <LinkIcon size={16} />}
                     <span>{connectingWebsite ? 'Connecting...' : 'Connect Website'}</span>
                   </button>
                 </div>
                 {formData.website_status === 'connected' && (
-                  <div className="flex items-center gap-2 text-sm text-emerald-400">
+                  <div className="flex items-center gap-2 text-sm text-brand-400">
                     <Check size={16} /> Currently connected: <span className="text-white font-medium">{formData.website_url}</span>
                   </div>
                 )}
