@@ -16,6 +16,7 @@ import Members from './pages/Members'
 import Memberships from './pages/Memberships'
 import Payments from './pages/Payments'
 import Revenue from './pages/Revenue'
+import RevenueEngine from './pages/RevenueEngine'
 import WhatsApp from './pages/WhatsApp'
 import Classes from './pages/Classes'
 import Renewals from './pages/Renewals'
@@ -43,6 +44,7 @@ function AppShell() {
             <Route path="/memberships" element={<Memberships />} />
             <Route path="/payments" element={<Payments />} />
             <Route path="/revenue" element={<Revenue />} />
+            <Route path="/revenue-engine" element={<RevenueEngine />} />
             <Route path="/whatsapp" element={<WhatsApp />} />
             <Route path="/classes" element={<Classes />} />
             <Route path="/renewals" element={<Renewals />} />

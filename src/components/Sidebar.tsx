@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Users, Ticket, QrCode, UserCircle, CreditCard, Calendar, RefreshCw, AlertTriangle, UserCog, Share2, X, LogOut, IndianRupee, TrendingUp, MessageCircle, Building2, Settings, ChevronDown, Check } from 'lucide-react'
+import { LayoutDashboard, Users, Ticket, QrCode, UserCircle, CreditCard, Calendar, RefreshCw, AlertTriangle, UserCog, Share2, X, LogOut, IndianRupee, TrendingUp, MessageCircle, Building2, Settings, ChevronDown, Check, Zap } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { canSwitchGym, isSuperAdmin, getAuthUser } from '../api/client'
 
@@ -16,6 +16,7 @@ const allNavItems = [
   { path: '/memberships', label: 'Memberships', icon: CreditCard },
   { path: '/payments', label: 'Payments', icon: IndianRupee },
   { path: '/revenue', label: 'Revenue', icon: TrendingUp },
+  { path: '/revenue-engine', label: 'Revenue Engine', icon: Zap },
   { path: '/whatsapp', label: 'WhatsApp', icon: MessageCircle },
   { path: '/classes', label: 'Classes', icon: Calendar },
   { path: '/renewals', label: 'Renewals', icon: RefreshCw },
