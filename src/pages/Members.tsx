@@ -1,10 +1,23 @@
 import { useState, useEffect } from 'react'
-import { Search, X, Phone, MessageCircle, Bell, Edit, Loader, IndianRupee, Check, Download } from 'lucide-react'
+import {
+  Search,
+  X,
+  Phone,
+  MessageCircle,
+  Bell,
+  Edit,
+  Loader,
+  Check,
+  MoreVertical,
+  Mail,
+  Eye,
+  Upload
+} from 'lucide-react'
 import { api } from '../api/client'
-import { exportToCSV } from '../utils/csvExport'
 import type { Member } from '../types'
 import StatusBadge from '../components/StatusBadge'
 import DataTable, { type Column } from '../components/DataTable'
+import BulkUploadModal from '../components/BulkUploadModal'
 
 const membershipStatusOptions = ['all', 'active', 'expiring', 'expired', 'frozen', 'cancelled']
 const riskStatusOptions = ['all', 'none', 'at_risk', 'critical']
@@ -24,6 +37,12 @@ export default function Members() {
   const [bulkSelect, setBulkSelect] = useState<Set<string>>(new Set())
   const [showBulkWhatsapp, setShowBulkWhatsapp] = useState(false)
 
+  // Bulk upload modal state
+  const [showBulkUpload, setShowBulkUpload] = useState(false)
+
+  // Open action menu state per row
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+
   const fetchMembers = async () => {
     setLoading(true); setError('')
     try {
@@ -38,6 +57,13 @@ export default function Members() {
     const debounce = setTimeout(fetchMembers, 300)
     return () => clearTimeout(debounce)
   }, [search, membershipFilter, riskFilter])
+
+  // Close open dropdown when clicking outside
+  useEffect(() => {
+    const handleOutsideClick = () => setOpenMenuId(null)
+    window.addEventListener('click', handleOutsideClick)
+    return () => window.removeEventListener('click', handleOutsideClick)
+  }, [])
 
   const handleWhatsApp = async (member: Member) => {
     setWhatsappTarget(member)
@@ -153,39 +179,137 @@ export default function Members() {
     },
     {
       key: 'actions', header: 'Actions',
-      render: (m) => (
-        <div className="flex items-center gap-1">
-          <a
-            href={`tel:${m.phone}`}
-            onClick={(e) => e.stopPropagation()}
-            className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-md transition-colors"
-            title="Call"
-          >
-            <Phone size={14} />
-          </a>
-          <button
-            onClick={(e) => { e.stopPropagation(); handleWhatsApp(m) }}
-            className="p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-md transition-colors"
-            title="Send WhatsApp"
-          >
-            {actionLoading === m.id ? <Loader size={14} className="animate-spin" /> : <MessageCircle size={14} />}
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); handleReminder(m) }}
-            className="p-1.5 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded-md transition-colors"
-            title="Send Reminder"
-          >
-            <Bell size={14} />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); handleEdit(m) }}
-            className="p-1.5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
-            title="Edit Member"
-          >
-            <Edit size={14} />
-          </button>
-        </div>
-      ),
+      render: (m) => {
+        const cleanPhone = m.phone.replace(/[^0-9+]/g, '')
+        const waLink = `https://wa.me/${cleanPhone.replace('+', '')}`
+        const isMenuOpen = openMenuId === m.id
+
+        return (
+          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+            <a
+              href={`tel:${m.phone}`}
+              className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-md transition-colors"
+              title="Call"
+            >
+              <Phone size={14} />
+            </a>
+            <button
+              onClick={() => handleWhatsApp(m)}
+              className="p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 rounded-md transition-colors"
+              title="Send WhatsApp Message"
+            >
+              {actionLoading === m.id ? <Loader size={14} className="animate-spin" /> : <MessageCircle size={14} />}
+            </button>
+            <button
+              onClick={() => handleReminder(m)}
+              className="p-1.5 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/30 rounded-md transition-colors"
+              title="Send Reminder"
+            >
+              <Bell size={14} />
+            </button>
+
+            {/* More options popover menu */}
+            <div className="relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setOpenMenuId(isMenuOpen ? null : m.id)
+                }}
+                className={`p-1.5 rounded-md transition-colors ${
+                  isMenuOpen
+                    ? 'bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                }`}
+                title="Contact & Options"
+              >
+                <MoreVertical size={15} />
+              </button>
+
+              {isMenuOpen && (
+                <div
+                  className="absolute right-0 mt-1 w-48 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-30 py-1 text-xs divide-y divide-slate-100 dark:divide-slate-700/60"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="py-1">
+                    <button
+                      onClick={() => {
+                        setSelectedMember(m)
+                        setOpenMenuId(null)
+                      }}
+                      className="w-full text-left px-3 py-2 font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 flex items-center gap-2.5 transition-colors"
+                    >
+                      <Eye size={14} className="text-indigo-500" />
+                      View Profile
+                    </button>
+                  </div>
+
+                  <div className="py-1">
+                    <a
+                      href={`tel:${m.phone}`}
+                      onClick={() => setOpenMenuId(null)}
+                      className="w-full text-left px-3 py-2 font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 flex items-center gap-2.5 transition-colors"
+                    >
+                      <Phone size={14} className="text-blue-500" />
+                      Call ({m.phone})
+                    </a>
+
+                    <a
+                      href={waLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setOpenMenuId(null)}
+                      className="w-full text-left px-3 py-2 font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 flex items-center gap-2.5 transition-colors"
+                    >
+                      <MessageCircle size={14} className="text-emerald-500" />
+                      WhatsApp (wa.me)
+                    </a>
+
+                    <button
+                      onClick={() => {
+                        handleWhatsApp(m)
+                        setOpenMenuId(null)
+                      }}
+                      className="w-full text-left px-3 py-2 font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 flex items-center gap-2.5 transition-colors"
+                    >
+                      <MessageCircle size={14} className="text-teal-500" />
+                      Send Message (API)
+                    </button>
+
+                    {m.email ? (
+                      <a
+                        href={`mailto:${m.email}`}
+                        onClick={() => setOpenMenuId(null)}
+                        className="w-full text-left px-3 py-2 font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 flex items-center gap-2.5 transition-colors"
+                      >
+                        <Mail size={14} className="text-purple-500" />
+                        Email ({m.email})
+                      </a>
+                    ) : (
+                      <span className="w-full text-left px-3 py-2 font-medium text-slate-400 dark:text-slate-500 opacity-60 flex items-center gap-2.5 cursor-not-allowed">
+                        <Mail size={14} />
+                        Email (None)
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="py-1">
+                    <button
+                      onClick={() => {
+                        handleEdit(m)
+                        setOpenMenuId(null)
+                      }}
+                      className="w-full text-left px-3 py-2 font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700/60 flex items-center gap-2.5 transition-colors"
+                    >
+                      <Edit size={14} className="text-slate-500 dark:text-slate-400" />
+                      Edit Member
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      },
     },
   ]
 
@@ -193,18 +317,29 @@ export default function Members() {
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Members</h2>
-        {bulkSelect.size > 0 && (
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-500">{bulkSelect.size} selected</span>
-            <button
-              onClick={() => setShowBulkWhatsapp(true)}
-              className="px-3 py-1.5 text-sm text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-1.5"
-            >
-              <MessageCircle size={14} /> Bulk WhatsApp
-            </button>
-            <button onClick={() => setBulkSelect(new Set())} className="text-sm text-slate-400 hover:text-slate-600">Clear</button>
-          </div>
-        )}
+
+        <div className="flex items-center gap-3">
+          {/* Bulk Member Upload Button */}
+          <button
+            onClick={() => setShowBulkUpload(true)}
+            className="px-3.5 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 rounded-lg transition-all flex items-center gap-2 shadow-sm"
+          >
+            <Upload size={14} /> Bulk Upload
+          </button>
+
+          {bulkSelect.size > 0 && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-slate-500">{bulkSelect.size} selected</span>
+              <button
+                onClick={() => setShowBulkWhatsapp(true)}
+                className="px-3 py-1.5 text-sm text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-colors flex items-center gap-1.5"
+              >
+                <MessageCircle size={14} /> Bulk WhatsApp
+              </button>
+              <button onClick={() => setBulkSelect(new Set())} className="text-sm text-slate-400 hover:text-slate-600">Clear</button>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
@@ -229,6 +364,13 @@ export default function Members() {
       </div>
 
       <DataTable data={members} columns={columns} loading={loading} error={error} emptyMessage="No members found." pageSize={15} onRowClick={setSelectedMember} />
+
+      {/* Bulk Upload Modal */}
+      <BulkUploadModal
+        isOpen={showBulkUpload}
+        onClose={() => setShowBulkUpload(false)}
+        onSuccess={() => fetchMembers()}
+      />
 
       {selectedMember && <MemberDetailDrawer member={selectedMember} onClose={() => setSelectedMember(null)} />}
       {whatsappTarget && <WhatsAppModal member={whatsappTarget} onClose={() => setWhatsappTarget(null)} onSend={sendWhatsAppMessage} />}
@@ -364,8 +506,8 @@ function BulkWhatsAppModal({ count, onClose, onSend, loading }: { count: number;
           <p className="text-sm text-slate-600 dark:text-slate-300">Sending to <strong>{count}</strong> members</p>
           <textarea value={message} onChange={e => setMessage(e.target.value)} rows={4}
             className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none" />
-          <p className="text-xs text-slate-400">Use {'{name}'} for personalization</p>
-          <button onClick={() => onSend(message)} disabled={loading} className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
+          <p className="text-xs text-slate-400">Use {'{name}'} for personalized recipient name</p>
+          <button onClick={() => onSend(message)} disabled={loading} className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
             {loading ? <Loader size={16} className="animate-spin" /> : <MessageCircle size={16} />} Send to {count} Members
           </button>
         </div>

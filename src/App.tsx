@@ -7,7 +7,10 @@ import Sidebar from './components/Sidebar'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import NotFound from './components/NotFound'
+import AIAssistant from './components/AIAssistant'
+import TrainerNotifications from './components/TrainerNotifications'
 import Login from './pages/Login'
+import Demo from './pages/Demo'
 import Dashboard from './pages/Dashboard'
 import Leads from './pages/Leads'
 import Trials from './pages/Trials'
@@ -58,6 +61,7 @@ function AppShell() {
         </main>
         <Footer />
       </div>
+      <AIAssistant />
     </div>
   )
 }
@@ -68,6 +72,7 @@ export default function App() {
       <HashRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/demo" element={<Demo />} />
           <Route
             path="/*"
             element={

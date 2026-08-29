@@ -6,7 +6,6 @@ import {
   Linkedin,
   CreditCard,
   Zap,
-  Globe,
   Smartphone,
   Save,
   Check,
@@ -14,7 +13,8 @@ import {
   Loader,
   Eye,
   EyeOff,
-  Sparkles
+  Sparkles,
+  Link as LinkIcon, Globe
 } from 'lucide-react'
 
 // Helper function to get current gym ID from localStorage
@@ -107,6 +107,8 @@ export default function Settings() {
   const [savingTab, setSavingTab] = useState<string | null>(null)
   const [tabFeedback, setTabFeedback] = useState<{ tab: string; type: 'success' | 'error'; message: string } | null>(null)
   const [generatingWebsite, setGeneratingWebsite] = useState(false)
+  const [connectingWebsite, setConnectingWebsite] = useState(false)
+  const [connectUrlInput, setConnectUrlInput] = useState('')
 
   // Password fields visibility state
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({})
@@ -120,7 +122,7 @@ export default function Settings() {
     setLoadingInitial(true)
     setErrorInitial('')
     try {
-      const response = await fetch('https://base44.app/api/apps/6a8949954092729194579577/functions/getIntegrations', {
+      const response = await fetch('https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions/getIntegrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ gym_id: getCurrentGymId() })
@@ -169,7 +171,7 @@ export default function Settings() {
     setSavingTab(tabId)
     setTabFeedback(null)
     try {
-      const response = await fetch('https://base44.app/api/apps/6a8949954092729194579577/functions/updateIntegrations', {
+      const response = await fetch('https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions/updateIntegrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -211,7 +213,7 @@ export default function Settings() {
     setGeneratingWebsite(true)
     setTabFeedback(null)
     try {
-      const response = await fetch('https://base44.app/api/apps/6a8949954092729194579577/functions/connectGymWebsite', {
+      const response = await fetch('https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions/updateGymProfile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ gym_id: getCurrentGymId() })
@@ -243,6 +245,37 @@ export default function Settings() {
       })
     } finally {
       setGeneratingWebsite(false)
+    }
+  }
+
+  // Connect Existing Website Handler
+  const handleConnectExistingWebsite = async () => {
+    if (!connectUrlInput.trim()) {
+      setTabFeedback({ tab: 'website', type: 'error', message: 'Please enter a website URL.' })
+      return
+    }
+    let url = connectUrlInput.trim()
+    if (!url.startsWith('http://') && !url.startsWith('https://')) url = 'https://' + url
+    setConnectingWebsite(true)
+    setTabFeedback(null)
+    try {
+      const response = await fetch('https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions/updateIntegrations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gym_id: getCurrentGymId(), website_url: url, website_status: 'connected' })
+      })
+      const res = await response.json()
+      if (res.success) {
+        setFormData(prev => ({ ...prev, website_url: url, website_status: 'connected' }))
+        setConnectUrlInput('')
+        setTabFeedback({ tab: 'website', type: 'success', message: 'Existing website connected successfully!' })
+      } else {
+        setTabFeedback({ tab: 'website', type: 'error', message: res.error || 'Failed to connect website.' })
+      }
+    } catch (err: any) {
+      setTabFeedback({ tab: 'website', type: 'error', message: err.message || 'Error connecting website.' })
+    } finally {
+      setConnectingWebsite(false)
     }
   }
 
@@ -714,17 +747,17 @@ export default function Settings() {
                   <div className="flex items-center gap-3 pt-2">
                     <span
                       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider ${
-                        formData.website_status === 'generated'
+                        ['generated', 'connected'].includes(formData.website_status)
                           ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                           : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                       }`}
                     >
                       <span
                         className={`w-2 h-2 rounded-full ${
-                          formData.website_status === 'generated' ? 'bg-emerald-400' : 'bg-amber-400'
+                          ['generated', 'connected'].includes(formData.website_status) ? 'bg-emerald-400' : 'bg-amber-400'
                         }`}
                       />
-                      {formData.website_status === 'generated' ? 'Active / Generated' : 'Not Generated'}
+                      {formData.website_status === 'connected' ? 'Connected' : formData.website_status === 'generated' ? 'Active / Generated' : 'Not Generated'}
                     </span>
                   </div>
                 </div>
@@ -734,7 +767,7 @@ export default function Settings() {
               <div className="p-5 rounded-xl bg-gradient-to-r from-blue-900/30 to-slate-800 border border-blue-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                   <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                    <Sparkles size={16} className="text-blue-400" /> Auto-Generate Branded Landing Page
+                    <Globe size={16} className="text-blue-400" /> Auto-Generate Branded Landing Page
                   </h3>
                   <p className="text-xs text-slate-400 mt-1">
                     Creates a custom HTML/CSS responsive landing page with your gym's brand colors, schedule, and lead contact forms.
@@ -749,6 +782,41 @@ export default function Settings() {
                   {generatingWebsite ? <Loader size={16} className="animate-spin" /> : <Sparkles size={16} />}
                   <span>{generatingWebsite ? 'Generating HTML...' : 'Generate Website'}</span>
                 </button>
+              </div>
+
+              {/* Connect Existing Website */}
+              <div className="p-5 rounded-xl bg-gradient-to-r from-emerald-900/30 to-slate-800 border border-emerald-500/20 flex flex-col gap-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                    <LinkIcon size={16} className="text-emerald-400" /> Connect Your Existing Website
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Already have a gym website? Paste the URL below to link it to your Gym OS dashboard. Leads from your site will flow directly into your CRM.
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="text"
+                    value={connectUrlInput}
+                    onChange={(e) => setConnectUrlInput(e.target.value)}
+                    placeholder="https://yourgym.com"
+                    className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-sm"
+                  />
+                  <button
+                    type="button"
+                    disabled={connectingWebsite}
+                    onClick={handleConnectExistingWebsite}
+                    className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm transition-all shadow-lg shadow-emerald-600/20 disabled:opacity-50 whitespace-nowrap"
+                  >
+                    {connectingWebsite ? <Loader size={16} className="animate-spin" /> : <LinkIcon size={16} />}
+                    <span>{connectingWebsite ? 'Connecting...' : 'Connect Website'}</span>
+                  </button>
+                </div>
+                {formData.website_status === 'connected' && (
+                  <div className="flex items-center gap-2 text-sm text-emerald-400">
+                    <Check size={16} /> Currently connected: <span className="text-white font-medium">{formData.website_url}</span>
+                  </div>
+                )}
               </div>
 
               {/* PWA Switch */}
