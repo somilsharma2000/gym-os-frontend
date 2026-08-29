@@ -1,195 +1,269 @@
 import { useState, useEffect } from 'react'
-import { Plus, Search, X } from 'lucide-react'
+import { Plus, X, Loader, Phone, MessageCircle, Mail, Instagram, Facebook, Globe, Users as UsersIcon, FileSpreadsheet, Zap, Check, Calendar, TrendingUp, Star } from 'lucide-react'
 import { api } from '../api/client'
-import type { Lead } from '../types'
 import StatusBadge from '../components/StatusBadge'
-import DataTable, { type Column } from '../components/DataTable'
 
-const statusOptions = ['all', 'new', 'contacted', 'trial_booked', 'trial_checked_in', 'trial_completed', 'follow_up', 'joined', 'lost']
-const sourceOptions = ['all', 'website', 'website_trial', 'walk_in', 'referral', 'social_media', 'phone']
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
+
+const sourceConfig: Record<string, { icon: any; color: string; label: string }> = {
+  instagram: { icon: Instagram, color: 'text-pink-600 bg-pink-50 dark:bg-pink-900/30', label: 'Instagram' },
+  facebook: { icon: Facebook, color: 'text-blue-600 bg-blue-50 dark:bg-blue-900/30', label: 'Facebook' },
+  whatsapp: { icon: MessageCircle, color: 'text-green-600 bg-green-50 dark:bg-green-900/30', label: 'WhatsApp' },
+  website: { icon: Globe, color: 'text-brand-600 bg-brand-50 dark:bg-brand-900/30', label: 'Website' },
+  walk_in: { icon: UsersIcon, color: 'text-purple-600 bg-purple-50 dark:bg-purple-900/30', label: 'Walk-in' },
+  phone: { icon: Phone, color: 'text-slate-600 bg-slate-50 dark:bg-slate-700/30', label: 'Phone' },
+  referral: { icon: UsersIcon, color: 'text-teal-600 bg-teal-50 dark:bg-teal-900/30', label: 'Referral' },
+  google_ads: { icon: TrendingUp, color: 'text-orange-600 bg-orange-50 dark:bg-orange-900/30', label: 'Google Ads' },
+  spreadsheet: { icon: FileSpreadsheet, color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30', label: 'Spreadsheet' },
+  other: { icon: Zap, color: 'text-slate-600 bg-slate-50 dark:bg-slate-700/30', label: 'Other' },
+}
 
 export default function Leads() {
-  const [leads, setLeads] = useState<Lead[]>([])
+  const [leads, setLeads] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [showAdd, setShowAdd] = useState(false)
+  const [showImport, setShowImport] = useState(false)
+  const [filter, setFilter] = useState('all')
   const [sourceFilter, setSourceFilter] = useState('all')
-  const [showCreate, setShowCreate] = useState(false)
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
+  const [search, setSearch] = useState('')
 
   const fetchLeads = async () => {
     setLoading(true)
     try {
-      const res = await api.getLeads({ status: statusFilter, source: sourceFilter, search })
+      const res = await api.getLeads({})
       if (res.success) setLeads(res.leads || [])
-      else setError(res.error)
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Unknown error")
-    }
+    } catch (e) { /* silent */ }
     setLoading(false)
   }
 
-  useEffect(() => {
-    const debounce = setTimeout(fetchLeads, 300)
-    return () => clearTimeout(debounce)
-  }, [search, statusFilter, sourceFilter])
+  useEffect(() => { fetchLeads() }, [])
 
-  const columns: Column<Lead>[] = [
-    {
-      key: 'name',
-      header: 'Name',
-      sortable: true,
-      render: (lead) => <span className="font-medium text-slate-700 dark:text-slate-200">{lead.name}</span>,
-    },
-    {
-      key: 'phone',
-      header: 'Phone',
-      sortable: true,
-      render: (lead) => <span className="text-slate-500 dark:text-slate-400">{lead.phone}</span>,
-    },
-    {
-      key: 'source',
-      header: 'Source',
-      sortable: true,
-      render: (lead) => <span className="text-slate-500 dark:text-slate-400">{lead.source}</span>,
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      sortable: true,
-      render: (lead) => <StatusBadge status={lead.status} />,
-    },
-    {
-      key: 'preferred_visit_period',
-      header: 'Visit Period',
-      render: (lead) => <span className="text-slate-500 dark:text-slate-400 capitalize">{lead.preferred_visit_period || '—'}</span>,
-    },
-    {
-      key: 'created_date',
-      header: 'Created',
-      sortable: true,
-      sortValue: (lead) => lead.created_date || '',
-      render: (lead) => <span className="text-slate-400 dark:text-slate-500">{lead.created_date?.split('T')[0]}</span>,
-    },
-  ]
+  const filtered = leads.filter(l => {
+    const matchSearch = (l.name || '').toLowerCase().includes(search.toLowerCase()) || (l.phone || '').includes(search)
+    const matchStatus = filter === 'all' || l.status === filter
+    const matchSource = sourceFilter === 'all' || l.source === sourceFilter
+    return matchSearch && matchStatus && matchSource
+  })
+
+  // Lead stats by source
+  const sourceStats = Object.keys(sourceConfig).map(key => ({
+    key,
+    label: sourceConfig[key].label,
+    count: leads.filter(l => l.source === key).length
+  })).filter(s => s.count > 0)
+
+  const statusCounts = {
+    new: leads.filter(l => l.status === 'new').length,
+    contacted: leads.filter(l => l.status === 'contacted').length,
+    trial: leads.filter(l => l.status === 'trial' || l.status === 'trial_scheduled').length,
+    won: leads.filter(l => l.status === 'won' || l.status === 'converted').length,
+    lost: leads.filter(l => l.status === 'lost').length,
+  }
+
+  const cardCls = "bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-4"
+
+  const handleQuickAction = async (lead: any, action: string) => {
+    if (action === 'call') window.open(`tel:${lead.phone}`)
+    if (action === 'whatsapp') {
+      const phone = (lead.phone || '').replace(/[^0-9]/g, '')
+      const msg = `Hi ${lead.name}, thanks for your interest in our gym! How can we help you achieve your fitness goals?`
+      if (phone) await api.sendWhatsApp(phone, msg)
+    }
+    if (action === 'email' && lead.email) window.open(`mailto:${lead.email}`)
+  }
+
+  const updateLeadStatus = async (leadId: string, status: string) => {
+    setLeads(prev => prev.map(l => l.id === leadId ? { ...l, status } : l))
+  }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Lead CRM</h2>
-        <button onClick={() => setShowCreate(true)} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-brand-600 rounded-md hover:bg-brand-700 transition-colors">
-          <Plus size={16} /> Create Lead
-        </button>
+        <div>
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Lead CRM</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Multi-source lead aggregation with real-time tracking.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowImport(true)} className="px-3 py-1.5 text-sm text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-1.5">
+            <FileSpreadsheet size={14} /> Import
+          </button>
+          <button onClick={() => setShowAdd(true)} className="px-3 py-1.5 text-sm text-white bg-brand-600 rounded-md hover:bg-brand-700 flex items-center gap-1.5">
+            <Plus size={14} /> Add Lead
+          </button>
+        </div>
       </div>
+
+      {/* Lead funnel stats */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className={cardCls}><div className="flex items-center gap-2 mb-2"><Star size={16} className="text-blue-600" /><span className="text-xs text-slate-500">New</span></div><p className="text-2xl font-bold text-blue-600">{statusCounts.new}</p></div>
+        <div className={cardCls}><div className="flex items-center gap-2 mb-2"><Phone size={16} className="text-amber-600" /><span className="text-xs text-slate-500">Contacted</span></div><p className="text-2xl font-bold text-amber-600">{statusCounts.contacted}</p></div>
+        <div className={cardCls}><div className="flex items-center gap-2 mb-2"><Calendar size={16} className="text-purple-600" /><span className="text-xs text-slate-500">Trial</span></div><p className="text-2xl font-bold text-purple-600">{statusCounts.trial}</p></div>
+        <div className={cardCls}><div className="flex items-center gap-2 mb-2"><Check size={16} className="text-green-600" /><span className="text-xs text-slate-500">Won</span></div><p className="text-2xl font-bold text-green-600">{statusCounts.won}</p></div>
+        <div className={cardCls}><div className="flex items-center gap-2 mb-2"><X size={16} className="text-red-600" /><span className="text-xs text-slate-500">Lost</span></div><p className="text-2xl font-bold text-red-600">{statusCounts.lost}</p></div>
+      </div>
+
+      {/* Source breakdown */}
+      {sourceStats.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Lead Sources</h3>
+          <div className="flex flex-wrap gap-2">
+            {sourceStats.map(s => {
+              const cfg = sourceConfig[s.key]
+              const Icon = cfg.icon
+              return (
+                <div key={s.key} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${cfg.color} text-xs`}>
+                  <Icon size={14} /> <span className="font-medium">{cfg.label}</span> <span className="opacity-60">{s.count}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search by name or phone..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400"
-          />
-        </div>
-        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400">
-          {statusOptions.map(s => <option key={s} value={s}>{s === 'all' ? 'All Status' : s.replace(/_/g, ' ')}</option>)}
+      <div className="flex items-center gap-3 flex-wrap">
+        <input type="text" placeholder="Search name or phone..." value={search} onChange={e => setSearch(e.target.value)}
+          className="flex-1 min-w-[180px] px-3 py-1.5 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md focus:outline-none focus:border-brand-400" />
+        <select value={filter} onChange={e => setFilter(e.target.value)}
+          className="px-3 py-1.5 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md">
+          <option value="all">All Status</option>
+          <option value="new">New</option><option value="contacted">Contacted</option><option value="trial">Trial</option><option value="won">Won</option><option value="lost">Lost</option>
         </select>
-        <select value={sourceFilter} onChange={e => setSourceFilter(e.target.value)} className="px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400">
-          {sourceOptions.map(s => <option key={s} value={s}>{s === 'all' ? 'All Sources' : s.replace(/_/g, ' ')}</option>)}
+        <select value={sourceFilter} onChange={e => setSourceFilter(e.target.value)}
+          className="px-3 py-1.5 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md">
+          <option value="all">All Sources</option>
+          {Object.entries(sourceConfig).map(([key, cfg]) => <option key={key} value={key}>{cfg.label}</option>)}
         </select>
       </div>
 
-      <DataTable
-        data={leads}
-        columns={columns}
-        loading={loading}
-        error={error}
-        emptyMessage="No leads found. Create your first lead to get started."
-        pageSize={15}
-        onRowClick={setSelectedLead}
-      />
+      {/* Leads table */}
+      <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+        {filtered.length === 0 ? (
+          <div className="px-4 py-12 text-center text-slate-400">No leads found.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm whitespace-nowrap">
+              <thead className="bg-slate-50 dark:bg-slate-700/30 border-b border-slate-200 dark:border-slate-700">
+                <tr>
+                  <th className="text-left px-4 py-2.5 font-medium text-slate-600 dark:text-slate-300">Name</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-slate-600 dark:text-slate-300">Phone</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-slate-600 dark:text-slate-300">Source</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-slate-600 dark:text-slate-300">Interest</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-slate-600 dark:text-slate-300">Status</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-slate-600 dark:text-slate-300">Follow-up</th>
+                  <th className="text-left px-4 py-2.5 font-medium text-slate-600 dark:text-slate-300">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50 dark:divide-slate-700/50">
+                {filtered.map(l => {
+                  const srcCfg = sourceConfig[l.source || 'other'] || sourceConfig.other
+                  const SrcIcon = srcCfg.icon
+                  return (
+                    <tr key={l.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                      <td className="px-4 py-2.5 font-medium text-slate-700 dark:text-slate-200">{l.name}</td>
+                      <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400">{l.phone}</td>
+                      <td className="px-4 py-2.5">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs ${srcCfg.color}`}>
+                          <SrcIcon size={11} /> {srcCfg.label}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400">{l.interest || l.fitness_goal || '\u2014'}</td>
+                      <td className="px-4 py-2.5">
+                        <select value={l.status || 'new'} onChange={e => updateLeadStatus(l.id, e.target.value)}
+                          className="text-xs px-2 py-1 border border-slate-200 dark:border-slate-600 rounded bg-white dark:bg-slate-900">
+                          <option value="new">New</option><option value="contacted">Contacted</option><option value="trial">Trial</option><option value="won">Won</option><option value="lost">Lost</option>
+                        </select>
+                      </td>
+                      <td className="px-4 py-2.5 text-slate-400 text-xs">{l.next_follow_up_date || '\u2014'}</td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center gap-1">
+                          <button onClick={() => handleQuickAction(l, 'call')} className="p-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded hover:bg-blue-100" title="Call"><Phone size={13} /></button>
+                          <button onClick={() => handleQuickAction(l, 'whatsapp')} className="p-1.5 bg-green-50 dark:bg-green-900/30 text-green-600 rounded hover:bg-green-100" title="WhatsApp"><MessageCircle size={13} /></button>
+                          {l.email && <button onClick={() => handleQuickAction(l, 'email')} className="p-1.5 bg-slate-50 dark:bg-slate-700/30 text-slate-600 rounded hover:bg-slate-100" title="Email"><Mail size={13} /></button>}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
-      {/* Create Lead Modal */}
-      {showCreate && <CreateLeadModal onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); fetchLeads() }} />}
+      {/* Add Lead Modal */}
+      {showAdd && (
+        <AddLeadModal
+          onClose={() => setShowAdd(false)}
+          onAdded={() => { setShowAdd(false); fetchLeads() }}
+        />
+      )}
 
-      {/* Lead Detail Drawer */}
-      {selectedLead && <LeadDetailDrawer lead={selectedLead} onClose={() => setSelectedLead(null)} />}
+      {/* Import Modal */}
+      {showImport && (
+        <ImportModal
+          onClose={() => setShowImport(false)}
+          onImported={() => { setShowImport(false); fetchLeads() }}
+        />
+      )}
     </div>
   )
 }
 
-function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
-  const [form, setForm] = useState({ name: '', phone: '', email: '', fitness_goal: '', source: 'website', preferred_visit_period: 'morning', consent: false })
+function AddLeadModal({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
+  const [source, setSource] = useState('walk_in')
+  const [interest, setInterest] = useState('')
+  const [fitnessGoal, setFitnessGoal] = useState('')
+  const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.consent) { setError('Consent is required to create a lead'); return }
+    if (!name || !phone) { setError('Name and phone are required'); return }
     setSubmitting(true)
-    setError('')
     try {
-      const res = await api.createLead({
-        name: form.name,
-        phone: form.phone,
-        email: form.email,
-        fitness_goal: form.fitness_goal,
-        source: form.source,
-        preferred_visit_period: form.preferred_visit_period,
-        consent_status: 'granted'
+      const gymId = localStorage.getItem('gym_os_gym_id') || 'gym_oxigen'
+      const res = await fetch(`${API_BASE}/createLead`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gym_id: gymId, name, phone, email, source, interest, fitness_goal: fitnessGoal, notes, status: 'new' })
       })
-      if (res.success) {
-        setSuccess('Lead created successfully!')
-        const t = setTimeout(onCreated, 1000); return () => clearTimeout(t)
-      } else if (res.duplicate) {
-        setError(`Duplicate: ${res.message} — Existing lead: ${res.existing_lead_name} (${res.existing_lead_status})`)
-      } else {
-        setError(res.error || 'Failed to create lead')
-      }
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : "Unknown error")
-    }
+      const data = await res.json()
+      if (data.success) onAdded()
+      else setError(data.error || 'Failed to add lead')
+    } catch (e) { setError('Network error') }
     setSubmitting(false)
   }
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50" onClick={onClose}>
-      <div className="bg-white dark:bg-slate-800 rounded-lg w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Create Lead</h3>
-          <button onClick={onClose}><X size={20} className="text-slate-400" /></button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-lg w-full">
+        <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-700">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Add New Lead</h3>
+          <button onClick={onClose} className="text-slate-400"><X size={20} /></button>
         </div>
-        {error && <div className="mb-3 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-sm text-red-600 dark:text-red-400">{error}</div>}
-        {success && <div className="mb-3 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded text-sm text-green-600 dark:text-green-400">{success}</div>}
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <input required placeholder="Name *" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400" />
-          <input required placeholder="Phone *" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400" />
-          <input placeholder="Email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400" />
-          <input placeholder="Fitness Goal" value={form.fitness_goal} onChange={e => setForm({ ...form, fitness_goal: e.target.value })} className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400" />
-          <select value={form.source} onChange={e => setForm({ ...form, source: e.target.value })} className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400">
-            <option value="website">Website</option>
-            <option value="walk_in">Walk-in</option>
-            <option value="referral">Referral</option>
-            <option value="social_media">Social Media</option>
-            <option value="phone">Phone</option>
-          </select>
-          <select value={form.preferred_visit_period} onChange={e => setForm({ ...form, preferred_visit_period: e.target.value })} className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400">
-            <option value="morning">Morning</option>
-            <option value="afternoon">Afternoon</option>
-            <option value="evening">Evening</option>
-            <option value="weekend">Weekend</option>
-          </select>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={form.consent} onChange={e => setForm({ ...form, consent: e.target.checked })} className="rounded" />
-            <span className="text-slate-600 dark:text-slate-400">I consent to be contacted about gym services</span>
-          </label>
-          <button type="submit" disabled={submitting} className="w-full py-2 text-sm font-medium text-white bg-brand-600 rounded-md hover:bg-brand-700 disabled:opacity-50 transition-colors">
-            {submitting ? 'Creating...' : 'Create Lead'}
+        <form onSubmit={handleSubmit} className="p-5 space-y-3">
+          {error && <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 rounded text-sm text-red-600">{error}</div>}
+          <div className="grid grid-cols-2 gap-3">
+            <input type="text" placeholder="Name *" value={name} onChange={e => setName(e.target.value)} className="px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md" />
+            <input type="text" placeholder="Phone *" value={phone} onChange={e => setPhone(e.target.value)} className="px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md" />
+            <select value={source} onChange={e => setSource(e.target.value)} className="px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md">
+              {Object.entries(sourceConfig).map(([key, cfg]) => <option key={key} value={key}>{cfg.label}</option>)}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <input type="text" placeholder="Interest" value={interest} onChange={e => setInterest(e.target.value)} className="px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md" />
+            <input type="text" placeholder="Fitness Goal" value={fitnessGoal} onChange={e => setFitnessGoal(e.target.value)} className="px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md" />
+          </div>
+          <textarea placeholder="Notes..." value={notes} onChange={e => setNotes(e.target.value)} rows={2} className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md resize-none" />
+          <button type="submit" disabled={submitting} className="w-full py-2.5 text-sm font-medium text-white bg-brand-600 rounded-md hover:bg-brand-700 disabled:opacity-50">
+            {submitting ? 'Adding...' : 'Add Lead'}
           </button>
         </form>
       </div>
@@ -197,29 +271,58 @@ function CreateLeadModal({ onClose, onCreated }: { onClose: () => void; onCreate
   )
 }
 
-function LeadDetailDrawer({ lead, onClose }: { lead: Lead; onClose: () => void }) {
+function ImportModal({ onClose, onImported }: { onClose: () => void; onImported: () => void }) {
+  const [csvText, setCsvText] = useState('')
+  const [importing, setImporting] = useState(false)
+  const [result, setResult] = useState<{ added: number; failed: number } | null>(null)
+
+  const handleImport = async () => {
+    if (!csvText.trim()) return
+    setImporting(true)
+    const lines = csvText.trim().split('\n')
+    let added = 0, failed = 0
+    const gymId = localStorage.getItem('gym_os_gym_id') || 'gym_oxigen'
+    
+    for (const line of lines) {
+      const [name, phone, email, source, interest] = line.split(',').map(s => s.trim())
+      if (!name || !phone) { failed++; continue }
+      try {
+        const res = await fetch(`${API_BASE}/createLead`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ gym_id: gymId, name, phone, email: email || '', source: source || 'spreadsheet', interest: interest || '', status: 'new' })
+        })
+        const data = await res.json()
+        if (data.success) added++; else failed++
+      } catch { failed++ }
+    }
+    setResult({ added, failed })
+    setImporting(false)
+    if (added > 0) setTimeout(onImported, 2000)
+  }
+
   return (
-    <div className="fixed inset-0 bg-black/40 flex justify-end z-50" onClick={onClose}>
-      <div className="bg-white dark:bg-slate-800 w-full max-w-md h-full overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">{lead.name}</h3>
-          <button onClick={onClose}><X size={20} className="text-slate-400" /></button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-lg w-full">
+        <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-700">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Import Leads from Spreadsheet</h3>
+          <button onClick={onClose} className="text-slate-400"><X size={20} /></button>
         </div>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div><span className="text-slate-400 dark:text-slate-500">Phone:</span> <span className="font-medium text-slate-700 dark:text-slate-200">{lead.phone}</span></div>
-            <div><span className="text-slate-400 dark:text-slate-500">Email:</span> <span className="font-medium text-slate-700 dark:text-slate-200">{lead.email || '—'}</span></div>
-            <div><span className="text-slate-400 dark:text-slate-500">Source:</span> <span className="font-medium text-slate-700 dark:text-slate-200">{lead.source}</span></div>
-            <div><span className="text-slate-400 dark:text-slate-500">Status:</span> <StatusBadge status={lead.status} /></div>
-            <div><span className="text-slate-400 dark:text-slate-500">Fitness Goal:</span> <span className="font-medium text-slate-700 dark:text-slate-200">{lead.fitness_goal || '—'}</span></div>
-            <div><span className="text-slate-400 dark:text-slate-500">Visit Period:</span> <span className="font-medium text-slate-700 dark:text-slate-200 capitalize">{lead.preferred_visit_period || '—'}</span></div>
-            <div><span className="text-slate-400 dark:text-slate-500">Created:</span> <span className="font-medium text-slate-700 dark:text-slate-200">{lead.created_date?.split('T')[0]}</span></div>
-          </div>
-          {lead.notes && (
-            <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-md text-sm">
-              <p className="text-slate-400 dark:text-slate-500 mb-1">Notes</p>
-              <p className="text-slate-700 dark:text-slate-200">{lead.notes}</p>
+        <div className="p-5 space-y-4">
+          {result ? (
+            <div className="text-center py-4">
+              <Check size={32} className="mx-auto text-green-600 mb-2" />
+              <p className="text-sm font-medium text-slate-700">Imported {result.added} leads{result.failed > 0 ? `, ${result.failed} failed` : ''}</p>
             </div>
+          ) : (
+            <>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Paste CSV data from your spreadsheet. Format: <span className="font-mono text-xs">name, phone, email, source, interest</span></p>
+              <textarea value={csvText} onChange={e => setCsvText(e.target.value)} rows={6} placeholder="John Doe, 9876543210, john@email.com, walk_in, Weight Loss&#10;Jane Smith, 9876543211, , instagram, Muscle Building"
+                className="w-full px-3 py-2 text-sm font-mono border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md resize-none" />
+              <button onClick={handleImport} disabled={importing || !csvText.trim()}
+                className="w-full py-2.5 text-sm font-medium text-white bg-brand-600 rounded-md hover:bg-brand-700 disabled:opacity-50 flex items-center justify-center gap-2">
+                {importing ? <Loader size={14} className="animate-spin" /> : <FileSpreadsheet size={14} />} Import Leads
+              </button>
+            </>
           )}
         </div>
       </div>

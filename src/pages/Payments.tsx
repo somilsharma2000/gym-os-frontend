@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { IndianRupee, Clock, CheckCircle, AlertCircle, Plus, Send, FileText, Loader, X, Bell } from 'lucide-react'
+import { IndianRupee, Clock, CheckCircle, AlertCircle, Plus, Send, FileText, Loader, X, Bell, CreditCard, Smartphone, Banknote, Wallet } from 'lucide-react'
 import { api } from '../api/client'
 import StatCard from '../components/StatCard'
 import StatusBadge from '../components/StatusBadge'
@@ -15,6 +15,7 @@ export default function Payments() {
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [reminderTarget, setReminderTarget] = useState<any | null>(null)
   const [showRecordModal, setShowRecordModal] = useState(false)
+  const [stats, setStats] = useState({ total_revenue: 0, pending_amount: 0, overdue_amount: 0, collected_this_month: 0 })
 
   useEffect(() => {
     fetchPayments()
@@ -24,7 +25,10 @@ export default function Payments() {
     setLoading(true)
     try {
       const res = await api.getPayments()
-      if (res.success) setPayments(res.payments || [])
+      if (res.success) {
+        setPayments(res.payments || [])
+        if (res.stats) setStats(res.stats)
+      }
     } catch (e) { /* silent */ }
     setLoading(false)
   }
@@ -37,13 +41,12 @@ export default function Payments() {
     })
   }, [search, statusFilter, payments])
 
-  // Dynamic counters from backend records
-  const totalRevenue = payments.filter(p => p.status === 'paid' || p.status === 'Paid').reduce((s, p) => s + (p.amount || 0), 0)
-  const pendingAmount = payments.filter(p => p.status === 'pending' || p.status === 'Pending').reduce((s, p) => s + (p.amount || 0), 0)
-  const overdueAmount = payments.filter(p => p.status === 'overdue' || p.status === 'Overdue').reduce((s, p) => s + (p.amount || 0), 0)
-  const currentMonth = new Date().toISOString().slice(0, 7)
+  // Use backend stats if available, otherwise calculate locally
+  const totalRevenue = stats.total_revenue || payments.filter(p => p.status === 'paid').reduce((s, p) => s + (p.amount || 0), 0)
+  const pendingAmount = stats.pending_amount || payments.filter(p => p.status === 'pending').reduce((s, p) => s + (p.amount || 0), 0)
+  const overdueAmount = stats.overdue_amount || payments.filter(p => p.status === 'overdue').reduce((s, p) => s + (p.amount || 0), 0)
   const currentMonthName = new Date().toLocaleString('default', { month: 'short' })
-  const collectedThisMonth = payments.filter(p => (p.status === 'paid' || p.status === 'Paid') && (p.date || '').startsWith(currentMonth)).reduce((s, p) => s + (p.amount || 0), 0)
+  const collectedThisMonth = stats.collected_this_month || payments.filter(p => p.status === 'paid' && (p.date || '').startsWith(new Date().toISOString().slice(0, 7))).reduce((s, p) => s + (p.amount || 0), 0)
 
   const formatINR = (amt: number) => `\u20B9${(amt || 0).toLocaleString('en-IN')}`
 
@@ -73,7 +76,6 @@ export default function Payments() {
     if (!reminderTarget) return
     setActionLoading(reminderTarget.id)
     try {
-      // Send WhatsApp payment reminder
       const phone = (reminderTarget.member_phone || '').replace(/[^0-9]/g, '')
       const msg = `Hi ${reminderTarget.member_name}, your payment of ${formatINR(reminderTarget.amount)} is ${reminderTarget.status}. Please clear it at your earliest convenience. Invoice: ${reminderTarget.invoice_number || 'N/A'}. Thank you!`
       if (phone) await api.sendWhatsApp(phone, msg)
@@ -85,18 +87,27 @@ export default function Payments() {
   const handleMarkPaid = async (payment: any) => {
     setActionLoading(payment.id)
     try {
-      await api.recordPayment({
-        id: payment.id,
-        member_id: payment.member_id,
-        member_name: payment.member_name,
-        amount: payment.amount,
-        type: payment.type,
-        method: payment.method,
-        status: 'paid',
-        date: new Date().toISOString().split('T')[0]
+      const gymId = localStorage.getItem('gym_os_gym_id') || 'gym_oxigen'
+      const res = await fetch(`${API_BASE}/recordPaymentWithInvoice`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          payment_id: payment.id,
+          gym_id: gymId,
+          member_id: payment.member_id,
+          member_name: payment.member_name,
+          amount: payment.amount,
+          type: payment.type,
+          method: payment.method,
+          status: 'paid',
+          date: new Date().toISOString().split('T')[0],
+          auto_generate_invoice: true
+        })
       })
-      // Update local state
-      setPayments(prev => prev.map(p => p.id === payment.id ? { ...p, status: 'paid' } : p))
+      const data = await res.json()
+      if (data.success) {
+        setPayments(prev => prev.map(p => p.id === payment.id ? { ...p, status: 'paid', invoice_number: data.invoice_number || p.invoice_number } : p))
+        fetchPayments()
+      }
     } catch (e) { /* silent */ }
     setActionLoading(null)
   }
@@ -119,7 +130,7 @@ export default function Payments() {
         </div>
       </div>
 
-      {/* Dynamic stat cards */}
+      {/* Dynamic stat cards from backend records */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard label="Total Revenue" value={formatINR(totalRevenue)} icon={<IndianRupee size={16} />} color="text-green-600 dark:text-green-400" />
         <StatCard label="Pending" value={formatINR(pendingAmount)} icon={<Clock size={16} />} color="text-amber-600 dark:text-amber-400" />
@@ -155,16 +166,24 @@ export default function Payments() {
                 <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-400 dark:text-slate-500">No payments found.</td></tr>
               ) : filtered.map((p) => (
                 <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors">
-                  <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-100">{p.member_name || '—'}</td>
-                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{p.type || '—'}</td>
+                  <td className="px-4 py-3 font-medium text-slate-800 dark:text-slate-100">{p.member_name || '\u2014'}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{p.type || '\u2014'}</td>
                   <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-100">{formatINR(p.amount)}</td>
-                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{p.date || '—'}</td>
-                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{p.method || '—'}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400">{p.date || '\u2014'}</td>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400">
+                      {p.method === 'card' && <CreditCard size={12} />}
+                      {p.method === 'upi' && <Smartphone size={12} />}
+                      {(p.method === 'cash' || !p.method) && <Banknote size={12} />}
+                      {p.method === 'wallet' && <Wallet size={12} />}
+                      <span className="capitalize">{p.method || 'cash'}</span>
+                    </span>
+                  </td>
                   <td className="px-4 py-3"><StatusBadge status={p.status} /></td>
-                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400 font-mono text-xs">{p.invoice_number || '—'}</td>
+                  <td className="px-4 py-3 text-slate-600 dark:text-slate-400 font-mono text-xs">{p.invoice_number || '\u2014'}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
-                      {p.status !== 'paid' && p.status !== 'Paid' && (
+                      {p.status !== 'paid' && (
                         <>
                           <button
                             onClick={() => handleMarkPaid(p)}
@@ -177,16 +196,16 @@ export default function Payments() {
                             onClick={() => handleSendReminder(p)}
                             className="text-xs px-2 py-1 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded border border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors flex items-center gap-1"
                           >
-                            <Bell size={11} /> Reminder
+                            <Bell size={11} /> Remind
                           </button>
                         </>
                       )}
                       <button
                         onClick={() => handleGenerateInvoice(p.id)}
                         disabled={invoiceLoading === p.id}
-                        className="text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors flex items-center gap-1 disabled:opacity-50"
+                        className="text-xs px-2 py-1 bg-brand-50 dark:bg-brand-900/30 text-brand-700 dark:text-brand-400 rounded border border-brand-200 dark:border-brand-800 hover:bg-brand-100 dark:hover:bg-brand-900/50 transition-colors flex items-center gap-1 disabled:opacity-50"
                       >
-                        {invoiceLoading === p.id ? <Loader size={12} className="animate-spin" /> : <FileText size={12} />} Invoice
+                        {invoiceLoading === p.id ? <Loader size={11} className="animate-spin" /> : <FileText size={11} />} Invoice
                       </button>
                     </div>
                   </td>
@@ -197,77 +216,183 @@ export default function Payments() {
         </div>
       </div>
 
-      {/* Reminder Confirmation Modal */}
+      {showRecordModal && (
+        <RecordPaymentModal
+          onClose={() => setShowRecordModal(false)}
+          onRecorded={() => { setShowRecordModal(false); fetchPayments() }}
+        />
+      )}
+
       {reminderTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-md w-full">
-            <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-700">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2"><Bell size={20} className="text-amber-600" /> Send Payment Reminder</h2>
-              <button onClick={() => setReminderTarget(null)} className="text-slate-400"><X size={20} /></button>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <Bell size={18} className="text-amber-500" /> Send Payment Reminder
+              </h3>
+              <button onClick={() => setReminderTarget(null)} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
             </div>
-            <div className="p-5 space-y-3">
-              <p className="text-sm text-slate-600 dark:text-slate-300">Send a WhatsApp payment reminder to <strong>{reminderTarget.member_name}</strong></p>
-              <div className="p-3 bg-slate-50 dark:bg-slate-900 rounded-lg text-sm space-y-1">
-                <div className="flex justify-between"><span className="text-slate-400">Amount:</span><span className="font-semibold">{formatINR(reminderTarget.amount)}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Status:</span><span className="font-semibold capitalize">{reminderTarget.status}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Invoice:</span><span className="font-mono">{reminderTarget.invoice_number || 'N/A'}</span></div>
+            <div className="space-y-3">
+              <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg text-sm space-y-1">
+                <div><span className="text-slate-400">Member:</span> <span className="font-medium text-slate-700 dark:text-slate-200">{reminderTarget.member_name}</span></div>
+                <div><span className="text-slate-400">Amount Due:</span> <span className="font-bold text-red-600">{formatINR(reminderTarget.amount)}</span></div>
+                <div><span className="text-slate-400">Invoice:</span> <span className="font-mono text-xs">{reminderTarget.invoice_number || 'N/A'}</span></div>
               </div>
-              <button onClick={confirmSendReminder} disabled={actionLoading === reminderTarget.id} className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
-                {actionLoading === reminderTarget.id ? <Loader size={16} className="animate-spin" /> : <Send size={16} />} Send WhatsApp Reminder
-              </button>
+              <p className="text-sm text-slate-500 dark:text-slate-400">A WhatsApp reminder will be sent to the member's registered phone number.</p>
+              <div className="flex gap-2">
+                <button onClick={() => setReminderTarget(null)} className="flex-1 px-4 py-2 text-sm border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700">Cancel</button>
+                <button onClick={confirmSendReminder} disabled={actionLoading === reminderTarget.id} className="flex-1 px-4 py-2 text-sm text-white bg-amber-500 rounded-md hover:bg-amber-600 disabled:opacity-50 flex items-center justify-center gap-2">
+                  {actionLoading === reminderTarget.id ? <Loader size={14} className="animate-spin" /> : <Send size={14} />} Send Reminder
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      )}
-
-      {/* Record Payment Modal */}
-      {showRecordModal && (
-        <RecordPaymentModal onClose={() => setShowRecordModal(false)} onRecord={fetchPayments} />
       )}
     </div>
   )
 }
 
-function RecordPaymentModal({ onClose, onRecord }: { onClose: () => void; onRecord: () => void }) {
+function RecordPaymentModal({ onClose, onRecorded }: { onClose: () => void; onRecorded: () => void }) {
   const [memberName, setMemberName] = useState('')
+  const [memberId, setMemberId] = useState('')
   const [amount, setAmount] = useState('')
-  const [type, setType] = useState('Monthly Membership')
-  const [method, setMethod] = useState('Cash')
+  const [type, setType] = useState('Membership')
+  const [method, setMethod] = useState('cash')
+  const [status, setStatus] = useState('paid')
   const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const [members, setMembers] = useState<any[]>([])
+  const [search, setSearch] = useState('')
+
+  useEffect(() => {
+    api.getMembers().then(res => { if (res.success) setMembers(res.members || []) })
+  }, [])
+
+  const filteredMembers = members.filter(m =>
+    m.name?.toLowerCase().includes(search.toLowerCase()) ||
+    m.phone?.includes(search)
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!amount) { setError('Amount is required'); return }
     setSubmitting(true)
+    setError('')
     try {
-      await api.recordPayment({
-        member_name: memberName, amount: parseFloat(amount), type, method,
-        status: 'paid', date: new Date().toISOString().split('T')[0],
-        invoice_number: `GYM-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`
+      const gymId = localStorage.getItem('gym_os_gym_id') || 'gym_oxigen'
+      const res = await fetch(`${API_BASE}/recordPaymentWithInvoice`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          gym_id: gymId,
+          member_id: memberId || null,
+          member_name: memberName || 'Walk-in',
+          amount: Number(amount),
+          type, method, status,
+          date: new Date().toISOString().split('T')[0],
+          auto_generate_invoice: status === 'paid'
+        })
       })
-      onRecord()
-      onClose()
-    } catch (e) { /* silent */ }
+      const data = await res.json()
+      if (data.success) {
+        if (data.invoice_html) {
+          const w = window.open('', '_blank')
+          if (w) { w.document.write(data.invoice_html); w.document.close() }
+        }
+        onRecorded()
+      } else {
+        setError(data.error || 'Failed to record payment')
+      }
+    } catch (err) { setError('Network error') }
     setSubmitting(false)
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-md w-full">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-lg w-full">
         <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Record Payment</h2>
-          <button onClick={onClose} className="text-slate-400"><X size={20} /></button>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Record Payment</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X size={20} /></button>
         </div>
-        <form onSubmit={handleSubmit} className="p-5 space-y-3">
-          <div><label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Member Name *</label><input type="text" required value={memberName} onChange={e => setMemberName(e.target.value)} className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500" /></div>
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          {error && <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-sm text-red-600 dark:text-red-400">{error}</div>}
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Member</label>
+            <input type="text" placeholder="Search member..." value={search} onChange={e => setSearch(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md mb-2 focus:outline-none focus:border-brand-400" />
+            {search && filteredMembers.length > 0 && (
+              <div className="max-h-40 overflow-y-auto border border-slate-200 dark:border-slate-600 rounded-md">
+                {filteredMembers.slice(0, 5).map(m => (
+                  <button key={m.id} type="button" onClick={() => { setMemberId(m.id); setMemberName(m.name); setSearch('') }}
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                    <span className="font-medium text-slate-700 dark:text-slate-200">{m.name}</span>
+                    <span className="text-slate-400 ml-2">{m.phone}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {memberName && <p className="text-xs text-green-600 mt-1">Selected: {memberName}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Amount</label>
+            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0"
+              className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md focus:outline-none focus:border-brand-400" />
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Amount (₹) *</label><input type="number" required value={amount} onChange={e => setAmount(e.target.value)} className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500" /></div>
-            <div><label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Method</label><select value={method} onChange={e => setMethod(e.target.value)} className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"><option>Cash</option><option>UPI</option><option>Card</option><option>Bank Transfer</option><option>Razorpay</option></select></div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Type</label>
+              <select value={type} onChange={e => setType(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md focus:outline-none focus:border-brand-400">
+                <option value="Membership">Membership</option>
+                <option value="Personal Training">Personal Training</option>
+                <option value="Class Fee">Class Fee</option>
+                <option value="Supplements">Supplements</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Status</label>
+              <select value={status} onChange={e => setStatus(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md focus:outline-none focus:border-brand-400">
+                <option value="paid">Paid</option>
+                <option value="pending">Pending</option>
+                <option value="overdue">Overdue</option>
+              </select>
+            </div>
           </div>
-          <div><label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Type</label><select value={type} onChange={e => setType(e.target.value)} className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"><option>Monthly Membership</option><option>Quarterly Membership</option><option>Annual Membership</option><option>Personal Training</option><option>Merchandise</option><option>Other</option></select></div>
-          <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-semibold">Cancel</button>
-            <button type="submit" disabled={submitting} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold">{submitting ? <Loader size={16} className="animate-spin" /> : <Plus size={16} />} Record</button>
+
+          {/* Payment Method Selector */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Payment Method</label>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { value: 'cash', label: 'Cash', icon: Banknote },
+                { value: 'card', label: 'Card', icon: CreditCard },
+                { value: 'upi', label: 'UPI', icon: Smartphone },
+                { value: 'wallet', label: 'Wallet', icon: Wallet },
+              ].map(m => {
+                const Icon = m.icon
+                return (
+                  <button key={m.value} type="button" onClick={() => setMethod(m.value)}
+                    className={`flex flex-col items-center gap-1 py-3 rounded-md border-2 transition-colors ${method === m.value ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/30' : 'border-slate-200 dark:border-slate-600 hover:border-slate-300'}`}>
+                    <Icon size={18} className={method === m.value ? 'text-brand-600' : 'text-slate-400'} />
+                    <span className={`text-xs ${method === m.value ? 'text-brand-600 font-medium' : 'text-slate-500'}`}>{m.label}</span>
+                  </button>
+                )
+              })}
+            </div>
           </div>
+
+          <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md text-xs text-blue-600 dark:text-blue-400">
+            Invoice will be auto-generated for paid payments. GST (18%) is calculated automatically.
+          </div>
+
+          <button type="submit" disabled={submitting} className="w-full py-2.5 text-sm font-medium text-white bg-brand-600 rounded-md hover:bg-brand-700 disabled:opacity-50 transition-colors">
+            {submitting ? 'Recording...' : 'Record Payment & Generate Invoice'}
+          </button>
         </form>
       </div>
     </div>

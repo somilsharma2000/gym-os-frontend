@@ -82,6 +82,8 @@ export interface CheckIn {
   attendance_status?: string
   branch_id?: string
   trial_pass_id?: string
+  check_out_time?: string
+  duration_minutes?: number
   member_id?: string
   lead_id?: string
   validated_by?: string
