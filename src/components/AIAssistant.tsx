@@ -75,15 +75,15 @@ export default function AIAssistant() {
       <button
         onClick={() => setOpen(true)}
         aria-label="Open Gym OS Assistant"
-        className="fixed bottom-4 right-4 z-50 w-11 h-11 rounded-full bg-[#0066FF] text-white flex items-center justify-center shadow-lg shadow-[#0066FF]/30 hover:scale-105 active:scale-95 transition-all"
+        className="fixed bottom-3 right-3 z-50 w-9 h-9 rounded-full bg-[#0066FF] text-white flex items-center justify-center shadow-md shadow-[#0066FF]/20 hover:scale-110 active:scale-95 transition-all opacity-80 hover:opacity-100"
       >
-        <Sparkles className="w-5 h-5" />
+        <Sparkles className="w-4 h-4" />
       </button>
     )
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-72 max-w-[calc(100vw-2rem)] flex flex-col rounded-xl overflow-hidden bg-[#0F1535] border border-slate-800 shadow-2xl">
+    <div className="fixed bottom-3 right-3 z-50 w-64 max-w-[calc(100vw-1.5rem)] flex flex-col rounded-xl overflow-hidden bg-[#0F1535] border border-slate-800 shadow-2xl">
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2.5 bg-[#0F1535] border-b border-slate-800">
         <div className="flex items-center gap-2">

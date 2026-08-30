@@ -31,7 +31,8 @@ const GYMOS_FUNCTIONS = new Set([
   'checkInWithAttendance', 'connectGymWebsite', 'setupGymProfile', 'detectAtRiskMembers',
   'expireTrialPasses', 'autoFollowUpTask', 'sendDailySummary', 'updateRenewalPipeline',
   'seedGymData', 'createTrialBooking',
-  'activateTrial', 'getPayments', 'getRevenue', 'fetchExpiringMembers'
+  'activateTrial', 'getPayments', 'getRevenue', 'fetchExpiringMembers',
+  'getApiKey', 'regenerateApiKey', 'ingestFeedback'
 ])
 
 // Functions handled by the unified gymAdmin backend function
@@ -624,5 +625,22 @@ export const api = {
   checkIn: async (qr_token: string): Promise<any> => {
     if (DEMO_MODE) return { success: true }
     return apiCall('checkIn', { qr_token })
+  },
+
+  // Feedback
+  submitFeedback: async (data: any): Promise<any> => {
+    if (DEMO_MODE) return { success: true }
+    return apiCall('ingestFeedback', data)
+  },
+
+  // API Key management
+  getApiKey: async (): Promise<any> => {
+    if (DEMO_MODE) return { success: true, api_key: 'demo_api_key_GYM_DEMO' }
+    return apiCall('getApiKey', { gym_id: getGymId() })
+  },
+
+  regenerateApiKey: async (): Promise<any> => {
+    if (DEMO_MODE) return { success: true, api_key: 'demo_api_key_' + Date.now().toString(36).toUpperCase() }
+    return apiCall('regenerateApiKey', { gym_id: getGymId() })
   }
 }

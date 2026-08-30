@@ -14,7 +14,7 @@ import {
   Eye,
   EyeOff,
   Sparkles,
-  Link as LinkIcon, Globe
+  Link as LinkIcon, Globe, Key, Copy, RefreshCw
 } from 'lucide-react'
 import { api } from '../api/client'
 
@@ -99,9 +99,13 @@ const defaultSettings: IntegrationSettings = {
 }
 
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState<'whatsapp' | 'social' | 'payments' | 'automations' | 'website'>('whatsapp')
+  const [activeTab, setActiveTab] = useState<'whatsapp' | 'social' | 'payments' | 'automations' | 'website' | 'api'>('whatsapp')
   const [formData, setFormData] = useState<IntegrationSettings>(defaultSettings)
   const [loadingInitial, setLoadingInitial] = useState(true)
+  const [apiKey, setApiKey] = useState('')
+  const [apiKeyLoading, setApiKeyLoading] = useState(false)
+  const [apiKeyCopied, setApiKeyCopied] = useState(false)
+  const [apiKeyRegenerating, setApiKeyRegenerating] = useState(false)
   const [errorInitial, setErrorInitial] = useState('')
 
   // Tab action states
@@ -336,6 +340,36 @@ export default function Settings() {
   }
 
   // Render Save Button for Active Tab
+
+  // API Key functions
+  const loadApiKey = async () => {
+    setApiKeyLoading(true)
+    try {
+      const res = await api.getApiKey()
+      if (res.success && res.api_key) setApiKey(res.api_key)
+    } catch (e) { /* ignore */ }
+    setApiKeyLoading(false)
+  }
+
+  const regenerateApiKey = async () => {
+    setApiKeyRegenerating(true)
+    try {
+      const res = await api.regenerateApiKey()
+      if (res.success && res.api_key) {
+        setApiKey(res.api_key)
+        setApiKeyCopied(false)
+      }
+    } catch (e) { /* ignore */ }
+    setApiKeyRegenerating(false)
+  }
+
+  const copyApiKey = () => {
+    if (!apiKey) return
+    navigator.clipboard.writeText(apiKey)
+    setApiKeyCopied(true)
+    setTimeout(() => setApiKeyCopied(false), 2000)
+  }
+
   const renderSaveButton = (tabId: string, payload: Partial<IntegrationSettings>) => {
     const isSaving = savingTab === tabId
     return (
@@ -396,12 +430,18 @@ export default function Settings() {
     )
   }
 
+  // Load API key when API tab is opened
+  useEffect(() => {
+    if (activeTab === 'api' && !apiKey) loadApiKey()
+  }, [activeTab])
+
   const tabs = [
     { id: 'whatsapp', label: 'WhatsApp Business API', icon: MessageCircle },
     { id: 'social', label: 'Social Media', icon: Instagram },
     { id: 'payments', label: 'Payments', icon: CreditCard },
     { id: 'automations', label: 'Automations', icon: Zap },
-    { id: 'website', label: 'Website & App', icon: Globe }
+    { id: 'website', label: 'Website & App', icon: Globe },
+    { id: 'api', label: 'API Key & Sync', icon: Key }
   ]
 
   return (
@@ -812,6 +852,124 @@ export default function Settings() {
                 website_status: formData.website_status,
                 pwa_enabled: formData.pwa_enabled
               })}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 6: API Key & Sync */}
+        {activeTab === 'api' && (
+          <div className="space-y-6">
+            {/* API Key Card */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 space-y-6">
+              <div className="flex items-center gap-3 border-b border-white/10 pb-4">
+                <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <Key size={22} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-white">Website API Key</h2>
+                  <p className="text-xs text-slate-400">
+                    Share this key with your website developer to enable real-time sync between your website and Gym OS.
+                  </p>
+                </div>
+              </div>
+
+              {/* API Key Display */}
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-slate-200">Your Permanent API Key</label>
+                {apiKeyLoading ? (
+                  <div className="flex items-center gap-2 text-slate-400 text-sm">
+                    <Loader size={16} className="animate-spin" /> Loading...
+                  </div>
+                ) : apiKey ? (
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 bg-slate-900/80 border border-white/10 rounded-xl px-4 py-3 font-mono text-sm text-emerald-400 select-all break-all">
+                      {apiKey}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={copyApiKey}
+                      className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 hover:text-white transition-all"
+                      title="Copy API key"
+                    >
+                      {apiKeyCopied ? <Check size={18} className="text-emerald-400" /> : <Copy size={18} />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={regenerateApiKey}
+                      disabled={apiKeyRegenerating}
+                      className="p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 hover:text-white transition-all disabled:opacity-50"
+                      title="Regenerate API key"
+                    >
+                      {apiKeyRegenerating ? <Loader size={18} className="animate-spin" /> : <RefreshCw size={18} />}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-sm text-slate-400">No API key generated yet.</p>
+                    <button
+                      type="button"
+                      onClick={loadApiKey}
+                      className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm transition-all"
+                    >
+                      Generate API Key
+                    </button>
+                  </div>
+                )}
+                {apiKeyCopied && (
+                  <p className="text-xs text-emerald-400 flex items-center gap-1">
+                    <Check size={14} /> Copied to clipboard
+                  </p>
+                )}
+              </div>
+
+              {/* How It Works */}
+              <div className="space-y-3 p-5 rounded-xl bg-gradient-to-r from-emerald-900/20 to-slate-800 border border-emerald-500/20">
+                <h3 className="text-sm font-semibold text-white">How Real-Time Sync Works</h3>
+                <div className="space-y-2 text-xs text-slate-400">
+                  <div className="flex items-start gap-2">
+                    <span className="text-emerald-400 font-bold mt-0.5">1.</span>
+                    <span>Share your API key with your website developer</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-emerald-400 font-bold mt-0.5">2.</span>
+                    <span>Your website sends leads, member sign-ups, and bookings to Gym OS using this key</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-emerald-400 font-bold mt-0.5">3.</span>
+                    <span>Classes, trainers, and plans you manage in Gym OS appear on your website in real-time</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-emerald-400 font-bold mt-0.5">4.</span>
+                    <span>Any changes you make in Gym OS admin instantly reflect on your website — no manual updates needed</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Available Endpoints */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-white">Available Sync Endpoints</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="p-3 rounded-lg bg-slate-900/60 border border-white/5">
+                    <code className="text-xs text-emerald-400 font-mono">POST /ingestWebsiteLead</code>
+                    <p className="text-xs text-slate-400 mt-1">Capture leads from website forms</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-slate-900/60 border border-white/5">
+                    <code className="text-xs text-emerald-400 font-mono">POST /ingestMember</code>
+                    <p className="text-xs text-slate-400 mt-1">Sync new member sign-ups</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-slate-900/60 border border-white/5">
+                    <code className="text-xs text-emerald-400 font-mono">POST /getGymClasses</code>
+                    <p className="text-xs text-slate-400 mt-1">Fetch live class schedules</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-slate-900/60 border border-white/5">
+                    <code className="text-xs text-emerald-400 font-mono">POST /getGymTrainers</code>
+                    <p className="text-xs text-slate-400 mt-1">Fetch trainer profiles</p>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500 pt-1">
+                  Base URL: <code className="text-slate-400 font-mono">https://my-gym-os.base44.app/functions</code>
+                </p>
+              </div>
             </div>
           </div>
         )}

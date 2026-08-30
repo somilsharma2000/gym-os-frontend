@@ -13,6 +13,7 @@ import {
   Copy,
   Bell,
   Ban,
+  Star,
   Search,
   CheckSquare,
   Square,
@@ -21,6 +22,7 @@ import {
 } from 'lucide-react'
 import LoadingScreen from '../components/LoadingScreen'
 import { api } from '../api/client'
+import FeedbackWidget from '../components/FeedbackWidget'
 import StatusBadge from '../components/StatusBadge'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
@@ -39,6 +41,7 @@ export default function Classes() {
 
   // Modals state
   const [enrollModal, setEnrollModal] = useState<any | null>(null)
+  const [feedbackModal, setFeedbackModal] = useState<any | null>(null)
   const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set())
   const [memberSearch, setMemberSearch] = useState('')
   const [enrollLoading, setEnrollLoading] = useState(false)
@@ -393,6 +396,23 @@ export default function Classes() {
                             <Bell size={13} /> Send Reminder
                           </button>
 
+                          {/* Rate Class Button */}
+                          {enrolledNames.length > 0 && (
+                            <button
+                              onClick={() => setFeedbackModal({
+                                classId: c.id,
+                                className: c.name || c.title,
+                                trainerId: c.trainer_id,
+                                trainerName: c.trainer_name,
+                                members: enrolledNames
+                              })}
+                              className="px-2.5 py-1 bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-lg border border-amber-200 dark:border-amber-800 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors text-xs font-bold flex items-center gap-1"
+                              title="Rate this class"
+                            >
+                              <Star size={13} /> Rate
+                            </button>
+                          )}
+
                           {/* Share Link Button */}
                           <button
                             onClick={() => setShareModal({ classId: c.id, className: c.name || c.title })}
@@ -644,4 +664,17 @@ export default function Classes() {
       )}
     </div>
   )
+
+        {/* Feedback Widget */}
+        {feedbackModal && (
+          <FeedbackWidget
+            classId={feedbackModal.classId}
+            className={feedbackModal.className}
+            trainerId={feedbackModal.trainerId}
+            trainerName={feedbackModal.trainerName}
+            memberId={feedbackModal.members?.[0] || 'unknown'}
+            memberName={feedbackModal.members?.[0] || 'Member'}
+            onClose={() => setFeedbackModal(null)}
+          />
+        )}
 }
