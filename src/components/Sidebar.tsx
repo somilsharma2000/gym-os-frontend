@@ -97,19 +97,19 @@ export default function Sidebar({
       )}
 
       <aside
-        className={`fixed lg:sticky top-0 left-0 z-50 lg:z-30 bg-slate-950 border-r border-slate-800 text-white flex flex-col h-screen overflow-hidden select-none transition-[width,transform] duration-300 ease-in-out ${
+        className={`fixed lg:sticky top-0 left-0 z-50 lg:z-30 bg-slate-950 border-r border-slate-800 text-white flex flex-col h-screen select-none transition-[width,transform] duration-300 ease-in-out ${
           collapsed ? 'lg:w-[76px]' : 'lg:w-60'
         } w-60 ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
-        {/* Collapse toggle (desktop only) */}
+        {/* Collapse toggle (desktop only) — sits half outside the sidebar edge, never clipped */}
         <button
           onClick={onToggleCollapse}
-          className="hidden lg:flex cursor-pointer absolute top-6 -right-3 z-50 w-6 h-6 rounded-full bg-slate-800 border border-slate-700 items-center justify-center text-slate-300 hover:text-white hover:bg-brand-600 hover:border-brand-600 shadow-lg transition-all duration-300"
+          className="hidden lg:flex cursor-pointer absolute top-7 -right-3.5 z-50 w-7 h-7 rounded-full bg-slate-800 border border-slate-700 items-center justify-center text-slate-300 hover:text-white hover:bg-brand-600 hover:border-brand-600 shadow-lg hover:shadow-brand-600/30 hover:scale-110 active:scale-95 transition-all duration-200"
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           <ChevronLeft
-            size={13}
-            className={`transition-transform duration-300 ${collapsed ? 'rotate-180' : ''}`}
+            size={14}
+            className={`transition-transform duration-300 ease-in-out ${collapsed ? 'rotate-180' : ''}`}
           />
         </button>
 
@@ -136,7 +136,7 @@ export default function Sidebar({
         </div>
 
         {/* NAVIGATION LINKS */}
-        <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto overflow-x-hidden">
+        <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto overflow-x-hidden min-h-0">
           {navItems.map(item => {
             const Icon = item.icon
             return (

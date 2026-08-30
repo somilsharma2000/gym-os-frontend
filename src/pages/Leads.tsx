@@ -29,21 +29,9 @@ import {
 import { api } from '../api/client'
 import { exportToCSV } from '../utils/csvExport'
 import StatusBadge from '../components/StatusBadge'
+import LeadProfileModal, { sourceConfig } from '../components/LeadProfileModal'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://base44.app/api/apps/6a8949954092729194579577/functions'
-
-const sourceConfig: Record<string, { icon: any; color: string; label: string }> = {
-  instagram: { icon: Instagram, color: 'text-brand-600 bg-brand-50 dark:bg-brand-900/30', label: 'Instagram' },
-  facebook: { icon: Facebook, color: 'text-blue-600 bg-blue-50 dark:bg-blue-900/30', label: 'Facebook' },
-  whatsapp: { icon: MessageCircle, color: 'text-green-600 bg-green-50 dark:bg-green-900/30', label: 'WhatsApp' },
-  website: { icon: Globe, color: 'text-brand-600 bg-brand-50 dark:bg-brand-900/30', label: 'Website' },
-  walk_in: { icon: UsersIcon, color: 'text-brand-600 bg-brand-50 dark:bg-brand-900/30', label: 'Walk-in' },
-  phone: { icon: Phone, color: 'text-slate-600 bg-slate-50 dark:bg-slate-700/30', label: 'Phone' },
-  referral: { icon: UsersIcon, color: 'text-teal-600 bg-teal-50 dark:bg-teal-900/30', label: 'Referral' },
-  google_ads: { icon: TrendingUp, color: 'text-orange-600 bg-orange-50 dark:bg-orange-900/30', label: 'Google Ads' },
-  spreadsheet: { icon: FileSpreadsheet, color: 'text-brand-600 bg-brand-50 dark:bg-brand-900/30', label: 'Spreadsheet' },
-  other: { icon: Zap, color: 'text-slate-600 bg-slate-50 dark:bg-slate-700/30', label: 'Other' },
-}
 
 export default function Leads() {
   const [leads, setLeads] = useState<any[]>([])
@@ -371,7 +359,7 @@ export default function Leads() {
 
       {/* LEAD DETAIL MODAL */}
       {selectedLead && (
-        <LeadDetailModal
+        <LeadProfileModal
           lead={selectedLead}
           onClose={() => setSelectedLead(null)}
           onAction={handleQuickAction}
@@ -562,115 +550,6 @@ function LeadCard({
 }
 
 /* LEAD DETAIL MODAL */
-function LeadDetailModal({
-  lead,
-  onClose,
-  onAction,
-  onStatusChange
-}: {
-  lead: any
-  onClose: () => void
-  onAction: (lead: any, action: string) => void
-  onStatusChange: (status: string) => void
-}) {
-  const srcCfg = sourceConfig[lead.source || 'other'] || sourceConfig.other
-  const SrcIcon = srcCfg.icon
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto">
-      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-lg w-full p-6 shadow-2xl space-y-4 my-8">
-        <div className="flex items-start justify-between gap-3 border-b border-slate-200 dark:border-slate-700 pb-4">
-          <div>
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white">{lead.name}</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Lead Profile & History</p>
-          </div>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg">
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm">
-          <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700/60">
-            <p className="text-slate-400 text-xs font-medium">Phone</p>
-            <a href={`tel:${lead.phone}`} className="font-bold text-blue-600 dark:text-blue-400 hover:underline">{lead.phone || '—'}</a>
-          </div>
-          <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700/60">
-            <p className="text-slate-400 text-xs font-medium">Email</p>
-            <p className="font-bold text-slate-800 dark:text-slate-200 truncate">{lead.email || '—'}</p>
-          </div>
-          <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700/60">
-            <p className="text-slate-400 text-xs font-medium">Source</p>
-            <span className={`inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded text-xs font-semibold ${srcCfg.color}`}>
-              <SrcIcon size={12} /> {srcCfg.label}
-            </span>
-          </div>
-          <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-100 dark:border-slate-700/60">
-            <p className="text-slate-400 text-xs font-medium">Status</p>
-            <select
-              value={lead.status || 'new'}
-              onChange={e => onStatusChange(e.target.value)}
-              className="mt-1 text-xs font-bold px-2 py-1 border border-slate-200 dark:border-slate-600 rounded bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200"
-            >
-              <option value="new">New</option>
-              <option value="contacted">Contacted</option>
-              <option value="trial">Trial Pass</option>
-              <option value="won">Won / Converted</option>
-              <option value="lost">Lost</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="space-y-2 text-xs sm:text-sm">
-          <div className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700/60">
-            <p className="text-slate-400 text-xs font-medium">Fitness Goal / Interest</p>
-            <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">{lead.fitness_goal || lead.interest || 'Not specified'}</p>
-          </div>
-
-          <div className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700/60">
-            <p className="text-slate-400 text-xs font-medium">Next Follow-Up Date</p>
-            <p className="font-semibold text-amber-600 dark:text-amber-400 mt-0.5">{lead.next_follow_up_date || 'No follow-up date set'}</p>
-          </div>
-
-          {lead.notes && (
-            <div className="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-100 dark:border-slate-700/60">
-              <p className="text-slate-400 text-xs font-medium">Notes & Activity</p>
-              <p className="text-slate-700 dark:text-slate-300 mt-0.5 whitespace-pre-wrap">{lead.notes}</p>
-            </div>
-          )}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="pt-2 border-t border-slate-200 dark:border-slate-700 grid grid-cols-2 gap-2">
-          <button
-            onClick={() => { onClose(); onAction(lead, 'call') }}
-            className="py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2"
-          >
-            <Phone size={14} /> Call Lead
-          </button>
-          <button
-            onClick={() => { onClose(); onAction(lead, 'whatsapp') }}
-            className="py-2 px-3 bg-brand-700 hover:bg-brand-800 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2"
-          >
-            <MessageCircle size={14} /> WhatsApp
-          </button>
-          <button
-            onClick={() => { onClose(); onAction(lead, 'followup') }}
-            className="py-2 px-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2"
-          >
-            <Calendar size={14} /> Set Follow-Up
-          </button>
-          <button
-            onClick={() => { onClose(); onAction(lead, 'convert') }}
-            className="py-2 px-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2"
-          >
-            <UserCheck size={14} /> Convert to Member
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 /* FOLLOW-UP MODAL */
 function FollowUpModal({
   lead,
