@@ -156,12 +156,12 @@ export default function Leads() {
       )}
 
       {/* Lead funnel stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <div className={cardCls}><div className="flex items-center gap-2 mb-1.5"><Star size={16} className="text-blue-600" /><span className="text-xs font-semibold text-slate-500 dark:text-slate-400">New Leads</span></div><p className="text-2xl font-black text-blue-600">{statusCounts.new}</p></div>
-        <div className={cardCls}><div className="flex items-center gap-2 mb-1.5"><Phone size={16} className="text-amber-600" /><span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Contacted</span></div><p className="text-2xl font-black text-amber-600">{statusCounts.contacted}</p></div>
-        <div className={cardCls}><div className="flex items-center gap-2 mb-1.5"><Calendar size={16} className="text-brand-600" /><span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Trial Scheduled</span></div><p className="text-2xl font-black text-brand-600">{statusCounts.trial}</p></div>
-        <div className={cardCls}><div className="flex items-center gap-2 mb-1.5"><Check size={16} className="text-brand-600" /><span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Converted (Won)</span></div><p className="text-2xl font-black text-brand-600">{statusCounts.won}</p></div>
-        <div className={cardCls}><div className="flex items-center gap-2 mb-1.5"><X size={16} className="text-red-600" /><span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Lost</span></div><p className="text-2xl font-black text-red-600">{statusCounts.lost}</p></div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
+        <div className={cardCls}><div className="flex items-center gap-2 mb-1.5"><Star size={16} className="text-blue-600" /><span className="text-xs font-semibold text-slate-500 dark:text-slate-400">New Leads</span></div><p className="text-lg sm:text-2xl font-black text-blue-600">{statusCounts.new}</p></div>
+        <div className={cardCls}><div className="flex items-center gap-2 mb-1.5"><Phone size={16} className="text-amber-600" /><span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Contacted</span></div><p className="text-lg sm:text-2xl font-black text-amber-600">{statusCounts.contacted}</p></div>
+        <div className={cardCls}><div className="flex items-center gap-2 mb-1.5"><Calendar size={16} className="text-brand-600" /><span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Trial Scheduled</span></div><p className="text-lg sm:text-2xl font-black text-brand-600">{statusCounts.trial}</p></div>
+        <div className={cardCls}><div className="flex items-center gap-2 mb-1.5"><Check size={16} className="text-brand-600" /><span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Converted (Won)</span></div><p className="text-lg sm:text-2xl font-black text-brand-600">{statusCounts.won}</p></div>
+        <div className={cardCls}><div className="flex items-center gap-2 mb-1.5"><X size={16} className="text-red-600" /><span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Lost</span></div><p className="text-lg sm:text-2xl font-black text-red-600">{statusCounts.lost}</p></div>
       </div>
 
       {/* Source breakdown */}
@@ -234,16 +234,16 @@ export default function Leads() {
         /* TABLE VIEW */
         <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
-            <table className="w-full text-xs sm:text-sm whitespace-nowrap">
+            <table className="w-full text-xs sm:text-sm">
               <thead className="bg-slate-50 dark:bg-slate-700/40 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
                 <tr>
-                  <th className="text-left px-4 py-3 font-semibold">Name</th>
-                  <th className="text-left px-4 py-3 font-semibold">Phone</th>
-                  <th className="text-left px-4 py-3 font-semibold">Source</th>
-                  <th className="text-left px-4 py-3 font-semibold">Fitness Goal / Interest</th>
-                  <th className="text-left px-4 py-3 font-semibold">Status</th>
-                  <th className="text-left px-4 py-3 font-semibold">Follow-up</th>
-                  <th className="text-left px-4 py-3 font-semibold">Actions</th>
+                  <th className="text-left px-2 sm:px-4 py-2 sm:py-3 font-semibold whitespace-nowrap">Name</th>
+                  <th className="text-left px-2 sm:px-4 py-2 sm:py-3 font-semibold whitespace-nowrap">Phone</th>
+                  <th className="text-left px-2 sm:px-4 py-2 sm:py-3 font-semibold whitespace-nowrap">Source</th>
+                  <th className="text-left px-2 sm:px-4 py-2 sm:py-3 font-semibold whitespace-nowrap">Fitness Goal / Interest</th>
+                  <th className="text-left px-2 sm:px-4 py-2 sm:py-3 font-semibold whitespace-nowrap">Status</th>
+                  <th className="text-left px-2 sm:px-4 py-2 sm:py-3 font-semibold whitespace-nowrap">Follow-up</th>
+                  <th className="text-left px-2 sm:px-4 py-2 sm:py-3 font-semibold whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">

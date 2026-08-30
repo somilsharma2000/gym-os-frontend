@@ -30,25 +30,39 @@ const GYMOS_FUNCTIONS = new Set([
   'createTrialPass', 'createClassBooking', 'checkIn', 'validateQR', 'validateQRPass',
   'checkInWithAttendance', 'connectGymWebsite', 'setupGymProfile', 'detectAtRiskMembers',
   'expireTrialPasses', 'autoFollowUpTask', 'sendDailySummary', 'updateRenewalPipeline',
-  'seedGymData', 'createTrialBooking'
+  'seedGymData', 'createTrialBooking',
+  'activateTrial', 'getPayments', 'getRevenue', 'fetchExpiringMembers',
+  'getIntegrations', 'updateIntegrations', 'generateGymWebsite'
 ])
 
-// Functions that live on the Superagent/Admin app (auth, settings, gym management)
+// Functions handled by the unified gymAdmin backend function
+const GYM_ADMIN_ACTIONS = new Set([
+  'getExpenses', 'addExpense', 'deleteExpense',
+  'getNotifications', 'createNotification', 'markNotificationRead',
+  'updateLeadStatus', 'convertLeadToMember',
+  'getAtRiskMembers', 'addMember', 'updateMember',
+  'recordPayment', 'createPayment',
+  'qrCheckIn', 'enrollInClass',
+  'sendWhatsAppMessage',
+  'createGym', 'updateGymProfile', 'deleteGym'
+])
+
+// Functions that live on the Superagent/Admin app (separate deployed functions)
 const ADMIN_FUNCTIONS = new Set([
-  'login', 'getGymSettings', 'updateGymSettings', 'getAllGyms', 'createGym', 'deleteGym',
-  'updateGymProfile', 'getIntegrations', 'updateIntegrations', 'getExpenses', 'addExpense',
-  'deleteExpense', 'getRevenue', 'getPayments', 'recordPayment', 'createPayment',
-  'addMember', 'updateMember', 'convertLeadToMember', 'activateTrial', 'getAtRiskMembers',
-  'getNotifications', 'sendWhatsAppMessage', 'updateLeadStatus', 'qrCheckIn', 'getGymProfile',
-  'enrollInClass', 'publicGymAPI'
+  'login', 'getGymSettings', 'updateGymSettings', 'getAllGyms', 'getGymProfile',
+  ...GYM_ADMIN_ACTIONS
 ])
 
 // Route to the correct API based on function name
 function getApiBase(functionName: string): string {
   if (GYMOS_FUNCTIONS.has(functionName)) return GYMOS_API_BASE
   if (ADMIN_FUNCTIONS.has(functionName)) return ADMIN_API_BASE
-  // Default: try GYMOS first (most data functions live there)
   return GYMOS_API_BASE
+}
+
+// Check if a function should be routed through the unified gymAdmin function
+function isGymAdminAction(functionName: string): boolean {
+  return GYM_ADMIN_ACTIONS.has(functionName)
 }
 
 // --- Token Management ---
@@ -234,7 +248,43 @@ async function apiCall<T = any>(functionName: string, payload?: Record<string, u
 
   let res: Response
   const apiBase = getApiBase(functionName)
-  const effectiveGymId = (gym_id === 'ALL' || !gym_id) && GYMOS_FUNCTIONS.has(functionName) ? 'gym_oxigen' : gym_id
+  
+  // Route gymAdmin actions through the unified function
+  if (isGymAdminAction(functionName)) {
+    try {
+      res = await fetch(`${ADMIN_API_BASE}/gymAdmin`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ action: functionName, gym_id: getGymId(), ...payload }),
+      })
+    } catch {
+      throw new ApiRequestError('Network error — unable to reach the server.', 0)
+    }
+    if (!res.ok) {
+      if (res.status === 401) {
+        clearAuth()
+        window.dispatchEvent(new CustomEvent('auth:unauthorized'))
+        window.location.hash = '#/login'
+        throw new ApiRequestError('Session expired.', 401)
+      }
+      const errBody = await res.json().catch(() => ({}))
+      throw new ApiRequestError(errBody.error || `Request failed (${res.status})`, res.status)
+    }
+    return await res.json() as T
+  }
+  // STRICT DATA ISOLATION: Never default to another gym's data
+  // Gym owners are locked to their gym_id via getGymId()
+  // Super admin with 'ALL' must select a gym before accessing data
+  let effectiveGymId = gym_id
+  if (gym_id === 'ALL' || !gym_id) {
+    const user = getAuthUser()
+    if (user && user.role === 'gym_owner' && user.gym_id && user.gym_id !== 'ALL') {
+      effectiveGymId = user.gym_id  // Use locked gym_id
+    } else {
+      // Super admin with ALL — use last selected gym, don't default to gym_oxigen
+      effectiveGymId = localStorage.getItem(GYM_KEY) || 'gym_oxigen'
+    }
+  }
   try {
     res = await fetch(`${apiBase}/${functionName}`, {
       method: 'POST',
@@ -433,7 +483,7 @@ export const api = {
   },
   deleteExpense: async (expense_id: string): Promise<any> => {
     if (DEMO_MODE) return { success: true }
-    return apiCall('deleteExpense', { expense_id })
+    return apiCall('deleteExpense', { id: expense_id })
   },
   // Check-in
   getCheckIns: async (): Promise<any> => {
@@ -528,7 +578,7 @@ export const api = {
   // QR Check-in
   qrCheckIn: async (qr_token: string): Promise<any> => {
     if (DEMO_MODE) return { success: true }
-    return apiCall('qrCheckIn', { qr_token })
+    return apiCall('qrCheckIn', { qr_code: qr_token })
   },
 
   // Gym Settings

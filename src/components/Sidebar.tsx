@@ -28,27 +28,38 @@ import { useAuth } from '../contexts/AuthContext'
 import { isSuperAdmin } from '../api/client'
 
 const allNavItems = [
+  // Dashboard
   { path: '/', label: 'Command Center', icon: LayoutDashboard },
+  // Lead Management
   { path: '/leads', label: 'Lead CRM', icon: Users },
   { path: '/follow-ups', label: 'Follow-Ups', icon: ClipboardList },
   { path: '/trials', label: 'Trial Engine', icon: Ticket },
-  { path: '/check-in', label: 'QR Check-In', icon: QrCode },
+  // Members
   { path: '/members', label: 'Members', icon: UserCircle },
   { path: '/memberships', label: 'Memberships', icon: CreditCard },
+  { path: '/check-in', label: 'QR Check-In', icon: QrCode },
+  // Classes & Training
+  { path: '/classes', label: 'Classes', icon: Calendar },
+  { path: '/trainers', label: 'Trainers', icon: Dumbbell },
+  // Revenue
   { path: '/payments', label: 'Payments', icon: IndianRupee },
   { path: '/revenue', label: 'Revenue', icon: TrendingUp },
   { path: '/revenue-engine', label: 'Revenue Engine', icon: Zap },
-  { path: '/socials', label: 'Social Media', icon: Megaphone },
-  { path: '/analytics', label: 'Analytics', icon: BarChart3 },
-  { path: '/whatsapp', label: 'WhatsApp', icon: MessageCircle },
-  { path: '/classes', label: 'Classes', icon: Calendar },
-  { path: '/trainers', label: 'Trainers', icon: Dumbbell },
-  { path: '/renewals', label: 'Renewals', icon: RefreshCw },
+  // Retention
   { path: '/at-risk', label: 'At-Risk', icon: AlertTriangle },
-  { path: '/staff', label: 'Staff', icon: UserCog },
+  { path: '/renewals', label: 'Renewals', icon: RefreshCw },
   { path: '/referrals', label: 'Referrals', icon: Share2 },
+  // Insights
+  { path: '/analytics', label: 'Analytics', icon: BarChart3 },
+  // Communication
+  { path: '/whatsapp', label: 'WhatsApp', icon: MessageCircle },
+  { path: '/socials', label: 'Social Media', icon: Megaphone },
+  // Staff & Settings
+  { path: '/staff', label: 'Staff', icon: UserCog },
+  { path: '/settings', label: 'Settings', icon: Settings, roles: ['gym_owner', 'super_admin'] },
+  { path: '/integrations', label: 'Integrations', icon: Settings },
+  // Admin Only
   { path: '/super-admin', label: 'Super Admin', icon: Building2, superAdminOnly: true },
-  { path: '/settings', label: 'Integrations', icon: Settings, superAdminOnly: true }
 ]
 
 const gymOwnerNavItems = allNavItems.filter(item => !item.superAdminOnly)

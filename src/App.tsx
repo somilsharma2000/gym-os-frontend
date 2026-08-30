@@ -21,6 +21,7 @@ import Revenue from './pages/Revenue'
 import RevenueEngine from './pages/RevenueEngine'
 import Analytics from './pages/Analytics'
 import Socials from './pages/Socials'
+import Integrations from './pages/Integrations'
 import WhatsApp from './pages/WhatsApp'
 import Classes from './pages/Classes'
 import Trainers from './pages/Trainers'
@@ -60,8 +61,9 @@ function AppShell() {
             <Route path="/at-risk" element={<AtRisk />} />
             <Route path="/staff" element={<Staff />} />
             <Route path="/referrals" element={<Referrals />} />
-            <Route path="/super-admin" element={<SuperAdminRoute><SuperAdmin /></SuperAdminRoute>} />
-            <Route path="/settings" element={<SuperAdminRoute><Settings /></SuperAdminRoute>} />
+            <Route path="/integrations" element={<Integrations />} />
+          <Route path="/super-admin" element={<SuperAdminRoute><SuperAdmin /></SuperAdminRoute>} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </main>

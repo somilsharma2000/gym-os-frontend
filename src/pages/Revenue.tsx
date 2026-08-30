@@ -168,7 +168,7 @@ export default function Revenue() {
   // Fetch API Data
   const fetchData = async () => {
     setLoading(true)
-    const gymId = getGymId() || 'gym_oxigen'
+    const gymId = getGymId()
 
     try {
       const [revRes, dashRes, memRes, expRes, payRes] = await Promise.allSettled([
@@ -271,7 +271,7 @@ export default function Revenue() {
 
     setSubmitting(true)
     const amountNum = parseFloat(expenseForm.amount)
-    const gymId = getGymId() || 'gym_oxigen'
+    const gymId = getGymId()
 
     const newExpense: Expense = {
       id: `exp_${Date.now()}`,

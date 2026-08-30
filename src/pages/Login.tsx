@@ -84,7 +84,7 @@ export default function Login() {
 
   const handleTrySampleGym = () => {
     setEmail('owner@oxigenfitness.com')
-    setPassword('gym_oxigen_2026')
+    setPassword('')
     setError('')
   }
 
