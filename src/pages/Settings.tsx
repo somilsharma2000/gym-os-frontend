@@ -149,6 +149,11 @@ export default function Settings() {
     fetchSettings()
   }, [])
 
+  // Load API key when API tab is opened
+  useEffect(() => {
+    if (activeTab === 'api' && !apiKey) loadApiKey()
+  }, [activeTab])
+
   // Input change handler
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target
@@ -429,11 +434,6 @@ export default function Settings() {
       </div>
     )
   }
-
-  // Load API key when API tab is opened
-  useEffect(() => {
-    if (activeTab === 'api' && !apiKey) loadApiKey()
-  }, [activeTab])
 
   const tabs = [
     { id: 'whatsapp', label: 'WhatsApp Business API', icon: MessageCircle },
