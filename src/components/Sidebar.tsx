@@ -95,14 +95,13 @@ export default function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; 
           <Link to="/" onClick={onClose} className="flex items-center gap-3 cursor-pointer group">
             <img
               src={`${import.meta.env.BASE_URL}brand/beyond-pixells-logo.png`}
-              alt="Beyond Pixels"
+              alt="Beyond Pixells"
               className="w-9 h-9 rounded-full object-cover flex-shrink-0 ring-2 ring-brand-600/30 group-hover:ring-brand-400 transition-all"
             />
             <div>
               <h1 className="text-base font-black tracking-tight leading-tight text-white group-hover:text-brand-400 transition-colors">
                 GYM OS
               </h1>
-              <p className="text-[10px] text-slate-400 leading-tight">by Beyond Pixels</p>
             </div>
           </Link>
           <button

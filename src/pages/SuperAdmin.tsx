@@ -457,7 +457,7 @@ export default function SuperAdmin() {
                   <li>• <span className="font-medium">Real-time sync</span> — all leads, trials, and check-ins flow directly into Gym OS dashboard</li>
                   <li>• <span className="font-medium">48-hour trial pass</span> — visitors can sign up for a trial directly from your website</li>
                   <li>• <span className="font-medium">QR check-in</span> — members scan in/out using their QR token</li>
-                  <li>• <span className="font-medium">Branded UI</span> — matches Beyond Pixels navy/blue design</li>
+                  <li>• <span className="font-medium">Branded UI</span> — matches Beyond Pixells navy/blue design</li>
                 </ul>
               </div>
               <p className="text-xs text-slate-400">Works with Base44 apps, WordPress, Wix, Squarespace, custom HTML, GitHub Pages — any website that supports script tags.</p>

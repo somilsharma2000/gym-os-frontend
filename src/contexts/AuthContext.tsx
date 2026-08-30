@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 import { getToken, getAuthUser, setAuth, clearAuth, isAuthenticated, type AuthUser } from '../api/client'
+import { DEMO_MODE, demoUser, disableDemoMode } from '../data/demoData'
 
 interface AuthContextValue {
   user: AuthUser | null
@@ -17,6 +18,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authed, setAuthed] = useState(false)
 
   useEffect(() => {
+    // Demo mode: auto-login as demo user without token
+    if (DEMO_MODE) {
+      setUser(demoUser as AuthUser)
+      setToken('demo_token')
+      setAuthed(true)
+      return
+    }
+
     // Check for existing auth on mount
     if (isAuthenticated()) {
       const t = getToken()
@@ -48,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const logout = useCallback(() => {
+    disableDemoMode()
     clearAuth()
     setToken(null)
     setUser(null)

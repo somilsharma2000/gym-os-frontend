@@ -17,6 +17,7 @@ import {
   Bot
 } from 'lucide-react'
 import { api, isTokenExpired } from '../api/client'
+import { enableDemoMode } from '../data/demoData'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function Login() {
@@ -82,10 +83,11 @@ export default function Login() {
     }
   }
 
-  const handleTrySampleGym = () => {
-    setEmail('owner@oxigenfitness.com')
-    setPassword('')
-    setError('')
+  const handleViewDemo = () => {
+    enableDemoMode()
+    navigate('/')
+    // Force reload to pick up demo mode state
+    window.location.reload()
   }
 
   return (
@@ -99,7 +101,7 @@ export default function Login() {
         />
         <div>
           <h1 className="text-2xl font-bold text-white tracking-tight">GYM OS</h1>
-          <p className="text-xs text-slate-400">by Beyond Pixells</p>
+          <p className="text-xs text-slate-400">Beyond Pixells Gym Management Platform</p>
         </div>
       </div>
 
@@ -202,11 +204,11 @@ export default function Login() {
         <div className="mt-6 pt-6 border-t border-slate-800 text-center">
           <button
             type="button"
-            onClick={handleTrySampleGym}
-            className="w-full py-2 px-3 text-xs font-medium text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 hover:border-slate-600 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+            onClick={handleViewDemo}
+            className="w-full py-3 px-4 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-lg transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-blue-600/20"
           >
-            <Sparkles size={14} className="text-blue-400" />
-            <span>Try with sample gym</span>
+            <Sparkles size={16} className="text-white" />
+            <span>View Live Demo</span>
           </button>
         </div>
       </div>

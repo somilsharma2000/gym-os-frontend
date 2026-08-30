@@ -13,6 +13,7 @@ import {
   Settings
 } from 'lucide-react'
 import { api, getGymId, setGymId, getBranchId, setBranchId, isSuperAdmin } from '../api/client'
+import { DEMO_MODE } from '../data/demoData'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 
@@ -45,6 +46,9 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
 
   const [gyms, setGyms] = useState<GymInfo[]>(DEFAULT_GYMS)
   const [selectedGym, setSelectedGym] = useState<GymInfo | null>(null)
+
+  // Demo mode: show demo gym, no branch switcher
+  const demoGym: GymInfo = { gym_id: 'gym_demo', gym_name: 'PULSE Fitness Hyderabad' }
   const [gymDropdownOpen, setGymDropdownOpen] = useState(false)
 
   const [branches] = useState<BranchInfo[]>(SAMPLE_BRANCHES)
@@ -61,12 +65,12 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
   const _isGymOwner = user?.role === 'gym_owner'
 
   // Determine visibility rules:
-  // Gym Switcher: Only shown for super_admin
-  const showGymSwitcher = _isSuperAdmin
+  // Gym Switcher: Only shown for super_admin (never in demo mode)
+  const showGymSwitcher = _isSuperAdmin && !DEMO_MODE
 
   // Branch Selector: Only shown for super_admin OR if gym_owner has > 1 branch.
-  // If gym_owner has <= 1 branch, hide entirely.
-  const showBranchSelector = _isSuperAdmin || (_isGymOwner && branches.length > 1)
+  // Hidden in demo mode, hidden for gym owners with single branch.
+  const showBranchSelector = (_isSuperAdmin || (_isGymOwner && branches.length > 1)) && !DEMO_MODE
 
   // Initialize selected branch from localStorage
   useEffect(() => {

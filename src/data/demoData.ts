@@ -1,27 +1,48 @@
-export const DEMO_MODE = false
+// Demo mode is activated when user clicks "View Live Demo" on login page
+// This shows seeded data so visitors can see Gym OS in action
+export const DEMO_MODE = typeof window !== 'undefined' && localStorage.getItem('gym_os_demo_mode') === 'true'
+
+export function enableDemoMode() {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('gym_os_demo_mode', 'true')
+    localStorage.setItem('gym_os_gym_id', 'gym_demo')
+    localStorage.setItem('gym_os_gym_name', 'PULSE Fitness Hyderabad')
+  }
+}
+
+export function disableDemoMode() {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('gym_os_demo_mode')
+    localStorage.removeItem('gym_os_gym_id')
+    localStorage.removeItem('gym_os_gym_name')
+    localStorage.removeItem('gym_os_branch_id')
+    localStorage.removeItem('gym_os_token')
+    localStorage.removeItem('gym_os_user')
+  }
+}
 
 export const demoUser = {
   id: 'demo-user-001',
-  name: 'Gym Admin',
-  email: 'demo@oxigen.fitness',
-  role: 'admin',
-  gym_id: 'gym_oxigen',
-  gym_name: 'Oxigen Fitness'
+  name: 'Demo Viewer',
+  email: 'demo@pulse.fitness',
+  role: 'gym_owner',
+  gym_id: 'gym_demo',
+  gym_name: 'PULSE Fitness Hyderabad'
 }
 
 export const demoDashboardData = {
   success: true,
   metrics: {
-    total_leads: 47,
-    new_leads: 12,
-    trial_passes_active: 8,
-    trial_visitors_checked_in: 5,
-    pending_followups: 14,
-    active_memberships: 156,
-    expiring_memberships: 12,
-    at_risk_members: 7,
-    today_attendance: 43,
-    pending_referrals: 3
+    total_leads: 124,
+    new_leads: 18,
+    trial_passes_active: 14,
+    trial_visitors_checked_in: 9,
+    pending_followups: 23,
+    active_memberships: 287,
+    expiring_memberships: 19,
+    at_risk_members: 11,
+    today_attendance: 86,
+    pending_referrals: 8
   },
   recent_leads: [
     { id: 'lead_001', name: 'Rahul Sharma', phone: '+91 98765 43210', email: 'rahul@email.com', source: 'Instagram', status: 'new', interest: 'Weight Loss', created_date: '2026-08-26T10:30:00Z', notes: 'Saw our Instagram post about HIIT classes' },
