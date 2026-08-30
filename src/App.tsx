@@ -34,10 +34,26 @@ import Settings from './pages/Settings'
 
 function AppShell() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    return localStorage.getItem('gym_os_sidebar_collapsed') === 'true'
+  })
+
+  const toggleSidebarCollapse = () => {
+    setSidebarCollapsed(prev => {
+      const next = !prev
+      localStorage.setItem('gym_os_sidebar_collapsed', String(next))
+      return next
+    })
+  }
 
   return (
     <div className="flex min-h-screen bg-slate-100 dark:bg-slate-900 transition-colors">
-      <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar
+        mobileOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={toggleSidebarCollapse}
+      />
       <div className="flex-1 flex flex-col min-w-0">
         <Header onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 p-4 sm:p-6">

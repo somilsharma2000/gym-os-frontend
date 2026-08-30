@@ -441,43 +441,58 @@ function LeadCard({
 }) {
   const srcCfg = sourceConfig[lead.source || 'other'] || sourceConfig.other
   const SrcIcon = srcCfg.icon
+  const initial = (lead.name || '?').charAt(0).toUpperCase()
+
+  const statusStyles: Record<string, string> = {
+    new: 'border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300',
+    contacted: 'border-violet-200 dark:border-violet-800 bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300',
+    trial: 'border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300',
+    won: 'border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300',
+    lost: 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+  }
+  const currentStatus = lead.status || 'new'
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between h-full">
+    <div className="group bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700/80 p-4 shadow-sm hover:shadow-lg hover:shadow-slate-200/60 dark:hover:shadow-black/20 hover:-translate-y-0.5 hover:border-brand-300 dark:hover:border-brand-700/60 transition-all duration-200 flex flex-col justify-between h-full">
       <div>
-        {/* Header: Name + Source */}
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <div className="min-w-0 flex-1">
-            <h3
-              onClick={() => onSelect(lead)}
-              className="text-base font-bold text-slate-900 dark:text-white hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer truncate transition-colors"
-            >
-              {lead.name}
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
-              <Phone size={11} className="flex-shrink-0" />
-              <span className="truncate">{lead.phone || 'No phone'}</span>
-            </p>
-            {lead.email && (
-              <p className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1.5 mt-0.5 truncate">
-                <Mail size={11} className="flex-shrink-0" />
-                <span className="truncate">{lead.email}</span>
+        {/* Header: Avatar + Name + Source */}
+        <div className="flex items-start justify-between gap-2 mb-3">
+          <div className="flex items-start gap-2.5 min-w-0 flex-1">
+            <div className="w-9 h-9 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 flex items-center justify-center font-bold text-sm flex-shrink-0 ring-1 ring-brand-100 dark:ring-brand-800/50">
+              {initial}
+            </div>
+            <div className="min-w-0 flex-1 pt-0.5">
+              <h3
+                onClick={() => onSelect(lead)}
+                className="text-sm font-bold text-slate-900 dark:text-white hover:text-brand-600 dark:hover:text-brand-400 cursor-pointer truncate transition-colors leading-tight"
+              >
+                {lead.name}
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-1">
+                <Phone size={11} className="flex-shrink-0" />
+                <span className="truncate">{lead.phone || 'No phone'}</span>
               </p>
-            )}
+              {lead.email && (
+                <p className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1.5 mt-0.5 truncate">
+                  <Mail size={11} className="flex-shrink-0" />
+                  <span className="truncate">{lead.email}</span>
+                </p>
+              )}
+            </div>
           </div>
-          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-semibold flex-shrink-0 ${srcCfg.color}`}>
-            <SrcIcon size={12} /> {srcCfg.label}
+          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 ${srcCfg.color}`}>
+            <SrcIcon size={11} /> {srcCfg.label}
           </span>
         </div>
 
         {/* Status Badge Select & Fitness Goal */}
-        <div className="space-y-2 my-3 pt-2 border-t border-slate-100 dark:border-slate-700/60">
+        <div className="space-y-2 my-3 pt-3 border-t border-slate-100 dark:border-slate-700/60">
           <div className="flex items-center justify-between gap-2 text-xs">
-            <span className="text-slate-400 font-medium">Status:</span>
+            <span className="text-slate-400 font-medium">Status</span>
             <select
-              value={lead.status || 'new'}
+              value={currentStatus}
               onChange={e => onStatusChange(lead.id, e.target.value)}
-              className="text-xs font-semibold px-2 py-1 border border-slate-200 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200"
+              className={`text-xs font-bold px-2.5 py-1 border rounded-full appearance-none cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-brand-400/40 ${statusStyles[currentStatus] || statusStyles.new}`}
             >
               <option value="new">New</option>
               <option value="contacted">Contacted</option>
@@ -489,7 +504,7 @@ function LeadCard({
 
           <div className="flex items-center justify-between gap-2 text-xs">
             <span className="text-slate-400 font-medium flex items-center gap-1">
-              <Target size={12} /> Goal:
+              <Target size={12} /> Goal
             </span>
             <span className="font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[140px]">
               {lead.fitness_goal || lead.interest || 'General Fitness'}
@@ -498,9 +513,9 @@ function LeadCard({
 
           <div className="flex items-center justify-between gap-2 text-xs">
             <span className="text-slate-400 font-medium flex items-center gap-1">
-              <Clock size={12} /> Follow-Up:
+              <Clock size={12} /> Follow-Up
             </span>
-            <span className="font-medium text-amber-600 dark:text-amber-400">
+            <span className="font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-full">
               {lead.next_follow_up_date || lead.created_date?.split('T')[0] || 'Not set'}
             </span>
           </div>
@@ -511,7 +526,7 @@ function LeadCard({
       <div className="pt-3 border-t border-slate-100 dark:border-slate-700/60 grid grid-cols-4 gap-1.5">
         <button
           onClick={() => onAction(lead, 'call')}
-          className="py-1.5 px-2 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-colors"
+          className="cursor-pointer py-1.5 px-2 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 hover:scale-[1.03] text-blue-600 dark:text-blue-400 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 transition-all duration-150"
           title="Call Lead"
         >
           <Phone size={13} />
@@ -519,7 +534,7 @@ function LeadCard({
         </button>
         <button
           onClick={() => onAction(lead, 'whatsapp')}
-          className="py-1.5 px-2 bg-brand-50 dark:bg-brand-900/30 hover:bg-brand-100 text-brand-600 dark:text-brand-400 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-colors"
+          className="cursor-pointer py-1.5 px-2 bg-brand-50 dark:bg-brand-900/30 hover:bg-brand-100 dark:hover:bg-brand-900/50 hover:scale-[1.03] text-brand-600 dark:text-brand-400 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 transition-all duration-150"
           title="WhatsApp Lead"
         >
           <MessageCircle size={13} />
@@ -527,7 +542,7 @@ function LeadCard({
         </button>
         <button
           onClick={() => onAction(lead, 'followup')}
-          className="py-1.5 px-2 bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 text-amber-600 dark:text-amber-400 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-colors"
+          className="cursor-pointer py-1.5 px-2 bg-amber-50 dark:bg-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-900/50 hover:scale-[1.03] text-amber-600 dark:text-amber-400 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 transition-all duration-150"
           title="Schedule Follow-up"
         >
           <Calendar size={13} />
@@ -535,7 +550,7 @@ function LeadCard({
         </button>
         <button
           onClick={() => onAction(lead, 'convert')}
-          className="py-1.5 px-2 bg-brand-50 dark:bg-brand-900/30 hover:bg-brand-100 text-brand-600 dark:text-brand-400 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-colors"
+          className="cursor-pointer py-1.5 px-2 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 hover:scale-[1.03] text-emerald-600 dark:text-emerald-400 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 transition-all duration-150"
           title="Convert to Member"
         >
           <UserCheck size={13} />
