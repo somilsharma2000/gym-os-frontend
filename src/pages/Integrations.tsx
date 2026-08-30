@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { api, getGymId, isSuperAdmin, getToken } from '../api/client'
+import { api, getGymId, isSuperAdmin } from '../api/client'
 
 const API_BASE = 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
 

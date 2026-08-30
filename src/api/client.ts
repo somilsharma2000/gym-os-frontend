@@ -31,8 +31,7 @@ const GYMOS_FUNCTIONS = new Set([
   'checkInWithAttendance', 'connectGymWebsite', 'setupGymProfile', 'detectAtRiskMembers',
   'expireTrialPasses', 'autoFollowUpTask', 'sendDailySummary', 'updateRenewalPipeline',
   'seedGymData', 'createTrialBooking',
-  'activateTrial', 'getPayments', 'getRevenue', 'fetchExpiringMembers',
-  'getIntegrations', 'updateIntegrations', 'generateGymWebsite'
+  'activateTrial', 'getPayments', 'getRevenue', 'fetchExpiringMembers'
 ])
 
 // Functions handled by the unified gymAdmin backend function
@@ -50,6 +49,7 @@ const GYM_ADMIN_ACTIONS = new Set([
 // Functions that live on the Superagent/Admin app (separate deployed functions)
 const ADMIN_FUNCTIONS = new Set([
   'login', 'getGymSettings', 'updateGymSettings', 'getAllGyms', 'getGymProfile',
+  'getIntegrations', 'updateIntegrations', 'generateGymWebsite',
   ...GYM_ADMIN_ACTIONS
 ])
 

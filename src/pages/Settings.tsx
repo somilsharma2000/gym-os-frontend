@@ -16,10 +16,11 @@ import {
   Sparkles,
   Link as LinkIcon, Globe
 } from 'lucide-react'
+import { api } from '../api/client'
 
 // Helper function to get current gym ID from localStorage
 const getCurrentGymId = (): string => {
-  return localStorage.getItem('gym_os_gym_id') || 'gym_oxigen'
+  return localStorage.getItem('gym_id') || ''
 }
 
 export interface IntegrationSettings {
@@ -122,12 +123,7 @@ export default function Settings() {
     setLoadingInitial(true)
     setErrorInitial('')
     try {
-      const response = await fetch('https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions/getIntegrations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gym_id: getCurrentGymId() })
-      })
-      const res = await response.json()
+      const res = await api.getIntegrations() as any
       if (res.success && res.settings) {
         const fetched = res.settings.data || res.settings
         setFormData(prev => ({
@@ -171,15 +167,7 @@ export default function Settings() {
     setSavingTab(tabId)
     setTabFeedback(null)
     try {
-      const response = await fetch('https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions/updateIntegrations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          gym_id: getCurrentGymId(),
-          ...fieldsPayload
-        })
-      })
-      const res = await response.json()
+      const res = await api.updateIntegrations({ ...fieldsPayload }) as any
       if (res.success) {
         setTabFeedback({
           tab: tabId,
@@ -213,17 +201,12 @@ export default function Settings() {
     setGeneratingWebsite(true)
     setTabFeedback(null)
     try {
-      const response = await fetch('https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions/updateGymProfile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gym_id: getCurrentGymId() })
-      })
-      const res = await response.json()
+      const res = await api.generateGymWebsite() as any
       if (res.success) {
         setFormData(prev => ({
           ...prev,
           website_status: 'generated',
-          website_url: prev.website_url || `https://${getCurrentGymId()}.base44.app`
+          website_url: res.website_url || prev.website_url || ''
         }))
         setTabFeedback({
           tab: 'website',
@@ -259,12 +242,7 @@ export default function Settings() {
     setConnectingWebsite(true)
     setTabFeedback(null)
     try {
-      const response = await fetch('https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions/updateIntegrations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ gym_id: getCurrentGymId(), website_url: url, website_status: 'connected' })
-      })
-      const res = await response.json()
+      const res = await api.updateIntegrations({ website_url: url, website_status: 'connected' }) as any
       if (res.success) {
         setFormData(prev => ({ ...prev, website_url: url, website_status: 'connected' }))
         setConnectUrlInput('')
