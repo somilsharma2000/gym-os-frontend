@@ -55,6 +55,8 @@ export interface TrialPass {
 }
 
 export interface Member {
+  membership_type?: string
+  attendance_count?: number
   id: string
   name: string
   phone: string

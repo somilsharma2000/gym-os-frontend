@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import {
   Search,
-  X,
   Phone,
   MessageCircle,
   Bell,
@@ -11,13 +10,15 @@ import {
   MoreVertical,
   Mail,
   Eye,
-  Upload
+  Upload,
+  X
 } from 'lucide-react'
 import { api } from '../api/client'
 import type { Member } from '../types'
 import StatusBadge from '../components/StatusBadge'
 import DataTable, { type Column } from '../components/DataTable'
 import BulkUploadModal from '../components/BulkUploadModal'
+import MemberDetailPanel from '../components/MemberDetailPanel'
 
 const membershipStatusOptions = ['all', 'active', 'expiring', 'expired', 'frozen', 'cancelled']
 const riskStatusOptions = ['all', 'none', 'at_risk', 'critical']
@@ -372,48 +373,23 @@ export default function Members() {
         onSuccess={() => fetchMembers()}
       />
 
-      {selectedMember && <MemberDetailDrawer member={selectedMember} onClose={() => setSelectedMember(null)} />}
+      {selectedMember && (
+        <MemberDetailPanel
+          member={selectedMember}
+          onClose={() => setSelectedMember(null)}
+          onEdit={(m) => {
+            setEditMember(m)
+          }}
+          onWhatsApp={(m) => {
+            setWhatsappTarget(m)
+          }}
+        />
+      )}
+
       {whatsappTarget && <WhatsAppModal member={whatsappTarget} onClose={() => setWhatsappTarget(null)} onSend={sendWhatsAppMessage} />}
       {reminderTarget && <ReminderModal member={reminderTarget} onClose={() => setReminderTarget(null)} onSend={sendReminder} />}
       {editMember && <EditMemberModal member={editMember} onClose={() => setEditMember(null)} onSave={saveEdit} />}
       {showBulkWhatsapp && <BulkWhatsAppModal count={bulkSelect.size} onClose={() => setShowBulkWhatsapp(false)} onSend={sendBulkWhatsApp} loading={actionLoading === 'bulk'} />}
-    </div>
-  )
-}
-
-function MemberDetailDrawer({ member, onClose }: { member: Member; onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 bg-black/40 flex justify-end z-50" onClick={onClose}>
-      <div className="bg-white dark:bg-slate-800 w-full max-w-md h-full overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">{member.name}</h3>
-          <button onClick={onClose}><X size={20} className="text-slate-400" /></button>
-        </div>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div><span className="text-slate-400 dark:text-slate-500">Phone:</span> <a href={`tel:${member.phone}`} className="font-medium text-blue-600">{member.phone}</a></div>
-            <div><span className="text-slate-400 dark:text-slate-500">Email:</span> <span className="font-medium text-slate-700 dark:text-slate-200">{member.email || '—'}</span></div>
-            <div><span className="text-slate-400 dark:text-slate-500">Membership:</span> <StatusBadge status={member.membership_status} /></div>
-            <div><span className="text-slate-400 dark:text-slate-500">Risk:</span> <StatusBadge status={member.risk_status} /></div>
-            <div><span className="text-slate-400 dark:text-slate-500">Plan:</span> <span className="font-medium text-slate-700 dark:text-slate-200">{member.plan_name || '—'}</span></div>
-            <div><span className="text-slate-400 dark:text-slate-500">Joined:</span> <span className="font-medium text-slate-700 dark:text-slate-200">{member.joined_date || '—'}</span></div>
-            <div><span className="text-slate-400 dark:text-slate-500">Expiry:</span> <span className="font-medium text-slate-700 dark:text-slate-200">{member.membership_expiry_date || member.membership_expiry || '—'}</span></div>
-            <div><span className="text-slate-400 dark:text-slate-500">Payment:</span> <span className="font-medium text-slate-700 dark:text-slate-200">{member.payment_status || '—'}</span></div>
-          </div>
-          {member.risk_reason && (
-            <div className="p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-md text-sm">
-              <p className="text-orange-600 dark:text-orange-400 font-medium mb-1">Risk Reason</p>
-              <p className="text-slate-700 dark:text-slate-200">{member.risk_reason}</p>
-            </div>
-          )}
-          {member.notes && (
-            <div className="p-3 bg-slate-50 dark:bg-slate-700/30 rounded-md text-sm">
-              <p className="text-slate-400 dark:text-slate-500 mb-1">Notes</p>
-              <p className="text-slate-700 dark:text-slate-200">{member.notes}</p>
-            </div>
-          )}
-        </div>
-      </div>
     </div>
   )
 }
