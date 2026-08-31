@@ -30,7 +30,7 @@ import { isSuperAdmin } from '../api/client'
 
 const allNavItems = [
   // Dashboard
-  { path: '/', label: 'Command Center', icon: LayoutDashboard },
+  { path: '/dashboard', label: 'Command Center', icon: LayoutDashboard },
   // Lead Management
   { path: '/leads', label: 'Lead CRM', icon: Users },
   { path: '/follow-ups', label: 'Follow-Ups', icon: ClipboardList },
@@ -115,7 +115,7 @@ export default function Sidebar({
 
         {/* BRAND HEADER */}
         <div className={`px-5 py-4 border-b border-slate-800 flex items-center gap-3 transition-all duration-300 ${collapsed ? 'lg:justify-center lg:px-0' : 'justify-between'}`}>
-          <Link to="/" onClick={onClose} className="flex items-center gap-3 cursor-pointer group min-w-0">
+          <Link to="/dashboard" onClick={onClose} className="flex items-center gap-3 cursor-pointer group min-w-0">
             <img
               src={`${import.meta.env.BASE_URL}brand/beyond-pixells-logo.png`}
               alt="Beyond Pixells"
@@ -143,7 +143,7 @@ export default function Sidebar({
               <NavLink
                 key={item.path}
                 to={item.path}
-                end={item.path === '/'}
+                end={item.path === '/dashboard'}
                 onClick={onClose}
                 title={collapsed ? item.label : undefined}
                 className={({ isActive }) =>

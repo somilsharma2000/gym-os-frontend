@@ -36,7 +36,7 @@ export default function Login() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/', { replace: true })
+      navigate('/dashboard', { replace: true })
     }
   }, [isAuthenticated, navigate])
 
@@ -71,7 +71,7 @@ export default function Login() {
           return
         }
         login(res.token, res.user)
-        navigate('/', { replace: true })
+        navigate('/dashboard', { replace: true })
       } else {
         setError(res.error || 'Invalid credentials. Please try again.')
       }

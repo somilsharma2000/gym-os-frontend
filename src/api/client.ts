@@ -235,7 +235,7 @@ export class ApiRequestError extends Error {
   }
 }
 
-async function apiCall<T = any>(functionName: string, payload?: Record<string, unknown>): Promise<T> {
+export async function apiCall<T = any>(functionName: string, payload?: Record<string, unknown>): Promise<T> {
   const gym_id = getGymId()
   const token = getToken()
 
@@ -642,5 +642,11 @@ export const api = {
   regenerateApiKey: async (): Promise<any> => {
     if (DEMO_MODE) return { success: true, api_key: 'demo_api_key_' + Date.now().toString(36).toUpperCase() }
     return apiCall('regenerateApiKey', { gym_id: getGymId() })
-  }
+  },
+
+  // Feature Toggles
+  getFeatureToggles: async (): Promise<any> => {
+    if (DEMO_MODE) return { success: true, plan: 'premium' };
+    return apiCall('getFeatureToggles');
+  },
 }

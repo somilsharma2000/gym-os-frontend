@@ -1,4 +1,25 @@
-export default function LoadingScreen({ message = 'Loading...' }: { message?: string }) {
+import React from 'react'
+import SkeletonPage, { SkeletonGrid, SkeletonTable, SkeletonChart } from './SkeletonLoader'
+
+export interface LoadingScreenProps {
+  message?: string
+  variant?: 'page' | 'cards' | 'table' | 'chart'
+}
+
+export default function LoadingScreen({ message = 'Loading...', variant }: LoadingScreenProps) {
+  if (variant === 'page') {
+    return <SkeletonPage />
+  }
+  if (variant === 'cards') {
+    return <SkeletonGrid />
+  }
+  if (variant === 'table') {
+    return <SkeletonTable />
+  }
+  if (variant === 'chart') {
+    return <SkeletonChart />
+  }
+
   return (
     <div className="flex flex-col items-center justify-center h-96 gap-4">
       <div className="relative">
