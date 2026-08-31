@@ -36,6 +36,7 @@ const allNavItems = [
   { path: '/members', label: 'Members', icon: UserCircle },
   { path: '/memberships', label: 'Memberships', icon: CreditCard },
   { path: '/check-in', label: 'QR Check-In', icon: QrCode },
+  { path: '/qr-passes', label: 'QR Passes', icon: QrCode },
   { path: '/classes', label: 'Classes', icon: Calendar },
   { path: '/trainers', label: 'Trainers', icon: Dumbbell },
   { path: '/payments', label: 'Payments', icon: IndianRupee },

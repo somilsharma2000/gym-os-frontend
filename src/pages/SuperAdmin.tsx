@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Building2, Plus, Globe, Settings as SettingsIcon, Users, Search, X, TrendingUp, CheckCircle, AlertCircle, Loader, IndianRupee, ArrowRight, Link2, Trash2, AlertTriangle, Code, Copy } from 'lucide-react'
+import { Bot, Building2, Plus, Globe, Settings as SettingsIcon, Users, Search, X, TrendingUp, CheckCircle, AlertCircle, Loader, IndianRupee, ArrowRight, Link2, Trash2, AlertTriangle, Code, Copy } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 
 const API_BASE = 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
@@ -149,6 +149,47 @@ export default function SuperAdmin() {
     localStorage.setItem('gym_os_gym_id', gymId)
     navigate('/')
     setTimeout(() => window.location.reload(), 100)
+  }
+
+  const [aiProviders, setAiProviders] = useState<any[]>([])
+
+  useEffect(() => {
+    const gymId = localStorage.getItem('gym_os_gym_id') || ''
+    fetch(`${API_BASE}/getGymSettings`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gym_id: gymId })
+    }).then(r => r.json()).then(res => {
+      if (res?.settings?.ai_providers) {
+        try { setAiProviders(JSON.parse(res.settings.ai_providers)) } catch {}
+      }
+    }).catch(() => {})
+  }, [])
+
+  const saveProviders = (providers: any[]) => {
+    setAiProviders(providers)
+    const gymId = localStorage.getItem('gym_os_gym_id') || ''
+    fetch(`${API_BASE}/updateGymSettings`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ gym_id: gymId, ai_providers: JSON.stringify(providers) })
+    }).catch(() => {})
+  }
+
+  const addProvider = () => {
+    const name = (document.getElementById('ai_provider_name') as HTMLSelectElement)?.value
+    const model_id = (document.getElementById('ai_provider_model') as HTMLInputElement)?.value
+    const api_key = (document.getElementById('ai_provider_key') as HTMLInputElement)?.value
+    if (!name || !model_id || !api_key) return
+    saveProviders([...aiProviders, { name, model_id, api_key, enabled: true }])
+  }
+
+  const toggleProvider = (idx: number) => {
+    const updated = [...aiProviders]
+    updated[idx].enabled = !updated[idx].enabled
+    saveProviders(updated)
+  }
+
+  const removeProvider = (idx: number) => {
+    saveProviders(aiProviders.filter((_: any, i: number) => i !== idx))
   }
 
   const formatINR = (amt: number) => `₹${(amt || 0).toLocaleString('en-IN')}`
@@ -466,6 +507,62 @@ export default function SuperAdmin() {
           </div>
         </div>
       )}
+
+      {/* AI Content Providers Section */}
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <Bot size={20} className="text-brand-500" /> AI Content Providers
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Add AI models for social media content generation. Max 3 active providers.</p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {aiProviders.map((provider: any, idx: number) => (
+            <div key={idx} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/30 rounded-xl">
+              <div className={`w-2 h-2 rounded-full ${provider.enabled ? 'bg-green-500' : 'bg-slate-400'}`} />
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-slate-900 dark:text-white">{provider.name}</span>
+                  <span className="text-xs text-slate-400">{provider.model_id}</span>
+                </div>
+                <div className="text-xs text-slate-400 mt-0.5">API Key: {provider.api_key ? '••••••••' + provider.api_key.slice(-4) : 'Not set'}</div>
+              </div>
+              <button onClick={() => toggleProvider(idx)} className={`px-3 py-1.5 rounded-lg text-xs font-medium ${provider.enabled ? 'bg-amber-500/20 text-amber-600' : 'bg-green-500/20 text-green-600'}`}>
+                {provider.enabled ? 'Disable' : 'Enable'}
+              </button>
+              <button onClick={() => removeProvider(idx)} className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg">
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+
+          {aiProviders.length < 3 && (
+            <div className="border-2 border-dashed border-slate-200 dark:border-slate-600 rounded-xl p-4 space-y-3">
+              <p className="text-xs font-semibold text-slate-500">Add New Provider</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <select id="ai_provider_name" className="px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md">
+                  <option value="openrouter">OpenRouter</option>
+                  <option value="openai">OpenAI</option>
+                  <option value="anthropic">Anthropic</option>
+                  <option value="custom">Custom</option>
+                </select>
+                <input id="ai_provider_model" placeholder="model id (e.g. llama-3.3-70b)" className="px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md" />
+                <input id="ai_provider_key" placeholder="API Key" type="password" className="px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md" />
+              </div>
+              <button onClick={addProvider} className="w-full py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 rounded-md flex items-center justify-center gap-1.5">
+                <Plus size={14} /> Add Provider
+              </button>
+            </div>
+          )}
+
+          {aiProviders.length >= 3 && (
+            <p className="text-xs text-amber-500 text-center py-2">Maximum 3 active providers reached. Remove one to add another.</p>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

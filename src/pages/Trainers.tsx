@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import QrCodeThemed from '../components/QrCodeThemed'
 import {
   Dumbbell,
   Users,
@@ -1208,8 +1209,8 @@ function QrAttendanceModal({
         </div>
 
         {/* QR Code Container */}
-        <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 inline-block shadow-inner">
-          <img src={qrCodeUrl} alt="Trainer QR" className="w-40 h-40 object-contain mx-auto" />
+        <div className="flex justify-center">
+          <QrCodeThemed payload={`TRAINER-ATTENDANCE-${trainer.id}`} passCode={`trainer_${trainer.id}`} showPicker size={160} />
         </div>
 
         <p className="text-xs text-slate-500 dark:text-slate-400">

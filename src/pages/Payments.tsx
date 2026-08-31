@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
-import { IndianRupee, Clock, CheckCircle, AlertCircle, Plus, Send, FileText, Loader, X, Bell, CreditCard, Smartphone, Banknote, Wallet } from 'lucide-react'
+import { IndianRupee, Clock, CheckCircle, AlertCircle, Plus, Send, FileText, Loader, X, Bell, CreditCard, Smartphone, Banknote,
+  QrCode, Wallet } from 'lucide-react'
 import { api } from '../api/client'
 import StatCard from '../components/StatCard'
 import StatusBadge from '../components/StatusBadge'
@@ -263,6 +264,7 @@ function RecordPaymentModal({ onClose, onRecorded }: { onClose: () => void; onRe
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [members, setMembers] = useState<any[]>([])
+  const [expiryDate, setExpiryDate] = useState('')
   const [search, setSearch] = useState('')
 
   useEffect(() => {
@@ -390,9 +392,38 @@ function RecordPaymentModal({ onClose, onRecorded }: { onClose: () => void; onRe
             Invoice will be auto-generated for paid payments. GST (18%) is calculated automatically.
           </div>
 
-          <button type="submit" disabled={submitting} className="w-full py-2.5 text-sm font-medium text-white bg-brand-600 rounded-md hover:bg-brand-700 disabled:opacity-50 transition-colors">
-            {submitting ? 'Recording...' : 'Record Payment & Generate Invoice'}
-          </button>
+          {/* Expiry Date for Cash + QR */}
+          {method === 'cash' && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Membership Expiry (for QR pass)</label>
+              <input type="date" value={expiryDate} onChange={e => setExpiryDate(e.target.value)}
+                className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md focus:outline-none focus:border-brand-400" />
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <button type="submit" disabled={submitting} className="flex-1 py-2.5 text-sm font-medium text-white bg-brand-600 rounded-md hover:bg-brand-700 disabled:opacity-50 transition-colors">
+              {submitting ? 'Recording...' : 'Record + Invoice'}
+            </button>
+            {method === 'cash' && (
+              <button type="button" disabled={submitting || !memberId} onClick={async () => {
+                setSubmitting(true); setError('')
+                try {
+                  const gymId = localStorage.getItem('gym_os_gym_id') || ''
+                  const res = await api.recordCashPayment({
+                    gym_id: gymId, member_id: memberId, member_name: memberName,
+                    amount: Number(amount), plan_name: type,
+                    expires_at: expiryDate ? new Date(expiryDate).toISOString() : undefined
+                  })
+                  if (res.success) { onRecorded() }
+                  else { setError(res.error || 'Failed') }
+                } catch (err: any) { setError(err.message) }
+                setSubmitting(false)
+              }} className="flex-1 py-2.5 text-sm font-medium text-white bg-emerald-600 rounded-md hover:bg-emerald-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-1.5">
+                <QrCode size={14} /> Cash + Issue QR
+              </button>
+            )}
+          </div>
         </form>
       </div>
     </div>

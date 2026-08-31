@@ -52,6 +52,8 @@ const Staff = React.lazy(() => import('./pages/Staff'))
 const Referrals = React.lazy(() => import('./pages/Referrals'))
 const SuperAdmin = React.lazy(() => import('./pages/SuperAdmin'))
 const Settings = React.lazy(() => import('./pages/Settings'))
+const QrPasses = React.lazy(() => import('./pages/QrPasses'))
+const MemberPortal = React.lazy(() => import('./pages/MemberPortal'))
 
 function AppShell() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -104,6 +106,7 @@ function AppShell() {
                 <Route path="/integrations" element={<Integrations />} />
                 <Route path="/website-sync" element={<WebsiteSync />} />
                 <Route path="/super-admin" element={<SuperAdminRoute><SuperAdmin /></SuperAdminRoute>} />
+                <Route path="/qr-passes" element={<QrPasses />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
@@ -139,6 +142,7 @@ export default function App() {
           <Route path="/widget/booking" element={<Suspense fallback={null}><WidgetBooking /></Suspense>} />
           <Route path="/widget/plans" element={<Suspense fallback={null}><WidgetPlans /></Suspense>} />
           <Route path="/widget/trainers" element={<Suspense fallback={null}><WidgetTrainers /></Suspense>} />
+          <Route path="/member/:gymId" element={<Suspense fallback={null}><MemberPortal gymId="" /></Suspense>} />
 
           {/* Dashboard routes — auth required */}
           <Route

@@ -1,3 +1,4 @@
+import { api } from '../api/client'
 import { useState, useEffect, useMemo } from 'react'
 import {
   Sparkles,
@@ -85,6 +86,16 @@ export default function Socials() {
   // Modal states
   const [showScheduleModal, setShowScheduleModal] = useState(false)
   const [showCampaignModal, setShowCampaignModal] = useState(false)
+  const [gymSettings, setGymSettings] = useState<any>(null)
+
+  useEffect(() => {
+    const gymId = localStorage.getItem('gym_os_gym_id') || ''
+    if (gymId) {
+      api.getGymSettings(gymId).then((res: any) => {
+        if (res?.success && res.settings) setGymSettings(res.settings)
+      }).catch(() => {})
+    }
+  }, [])
 
   // Generated Post Ideas state
   const [postIdeas, setPostIdeas] = useState([
@@ -759,30 +770,33 @@ export default function Socials() {
       {/* TAB 4: ENGAGEMENT ANALYTICS */}
       {activeTab === 'analytics' && (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl">
-              <span className="text-xs font-bold text-slate-400 uppercase">Weekly Total Reach</span>
-              <div className="text-2xl font-black text-white mt-1">46,900</div>
-              <span className="text-xs text-brand-400 font-bold mt-1 inline-block">+18.4% vs last week</span>
+          {/* Connection Status */}
+          <div className="bg-slate-900/90 border border-slate-800 p-5 rounded-2xl">
+            <h3 className="text-sm font-bold text-white mb-3">Platform Connection Status</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {[
+                { name: 'Instagram', key: 'instagram_access_token' },
+                { name: 'Facebook', key: 'facebook_access_token' },
+                { name: 'LinkedIn', key: 'linkedin_access_token' },
+                { name: 'Telegram', key: 'telegram_bot_token' }
+              ].map(p => {
+                const connected = !!(gymSettings as any)?.[p.key]
+                return (
+                  <div key={p.name} className={`p-3 rounded-xl border ${connected ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-amber-500/5 border-amber-500/20'}`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-white">{p.name}</span>
+                      <span className={`w-2 h-2 rounded-full ${connected ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                    </div>
+                    <p className={`text-xs mt-1 ${connected ? 'text-emerald-400' : 'text-amber-400'}`}>
+                      {connected ? 'Connected' : 'Not Connected'}
+                    </p>
+                  </div>
+                )
+              })}
             </div>
-
-            <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl">
-              <span className="text-xs font-bold text-slate-400 uppercase">Engagement Rate</span>
-              <div className="text-2xl font-black text-white mt-1">8.4%</div>
-              <span className="text-xs text-brand-400 font-bold mt-1 inline-block">2x industry average</span>
-            </div>
-
-            <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl">
-              <span className="text-xs font-bold text-slate-400 uppercase">Total Likes & Shares</span>
-              <div className="text-2xl font-black text-white mt-1">9,910</div>
-              <span className="text-xs text-blue-400 font-bold mt-1 inline-block">1,420 interactions/day</span>
-            </div>
-
-            <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl">
-              <span className="text-xs font-bold text-slate-400 uppercase">Direct Lead Inquiries</span>
-              <div className="text-2xl font-black text-white mt-1">82 Leads</div>
-              <span className="text-xs text-brand-400 font-bold mt-1 inline-block">Converted to 28 trials</span>
-            </div>
+            {!gymSettings?.instagram_access_token && !gymSettings?.facebook_access_token && (
+              <p className="text-xs text-slate-500 mt-3">Connect your social accounts in Settings → Social Media to enable real analytics and auto-publishing.</p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -4,6 +4,7 @@ import { api } from '../api/client'
 import type { TrialPass, Lead } from '../types'
 import StatusBadge from '../components/StatusBadge'
 import DataTable, { type Column } from '../components/DataTable'
+import QrCodeThemed from '../components/QrCodeThemed'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://base44.app/api/apps/6a8949954092729194579577/functions'
 
@@ -213,7 +214,7 @@ function IssuePassModal({ leads, onClose, onIssued }: { leads: Lead[]; onClose: 
               <div className="text-sm text-slate-600 dark:text-slate-300"><span className="text-slate-400 dark:text-slate-500">Valid Until:</span> {result.valid_until?.split('T')[0]}</div>
             </div>
             <div className="flex justify-center">
-              <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${result.qr_token}`} alt="QR Code" className="rounded-lg border border-slate-200 dark:border-slate-700" />
+              <QrCodeThemed payload={result.qr_token} passCode={result.qr_token} showPicker size={190} />
             </div>
           </div>
         ) : (
@@ -258,7 +259,7 @@ function PassDetailDrawer({ pass, onClose }: { pass: TrialPass; onClose: () => v
           <button onClick={onClose}><X size={20} className="text-slate-400" /></button>
         </div>
         <div className="flex justify-center mb-4">
-          <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${pass.qr_token}`} alt="QR Code" className="rounded-lg border border-slate-200 dark:border-slate-700" />
+          <QrCodeThemed payload={pass.qr_token} passCode={pass.qr_token} showPicker size={190} />
         </div>
         <div className="space-y-3 text-sm">
           <div className="grid grid-cols-2 gap-2">

@@ -34,7 +34,9 @@ const GYMOS_FUNCTIONS = new Set([
   'expireTrialPasses', 'autoFollowUpTask', 'sendDailySummary', 'updateRenewalPipeline',
   'seedGymData', 'createTrialBooking',
   'activateTrial', 'getPayments', 'getRevenue', 'fetchExpiringMembers',
-  'getApiKey', 'regenerateApiKey', 'ingestFeedback'
+  'getApiKey', 'regenerateApiKey', 'ingestFeedback',
+  'createTrialPassV2', 'createMembershipPass', 'validatePass', 'getPassStatus',
+  'memberLogin', 'memberGetMyPass', 'getPublicGymData', 'createRazorpayOrder', 'recordCashPayment'
 ])
 
 // Functions handled by the unified gymAdmin backend function
@@ -529,9 +531,10 @@ export const api = {
   },
 
   // Members
-  getMembers: async (filters?: Record<string, unknown>): Promise<any> => {
+  getMembers: async (filters?: Record<string, unknown> | string): Promise<any> => {
+    const opts = typeof filters === 'string' ? { gym_id: filters } : (filters || {})
     if (DEMO_MODE) return { success: true, members: demoMembers }
-    return apiCall("getMembers", filters || {})
+    return apiCall("getMembers", opts)
   },
 
   // Memberships
@@ -692,5 +695,80 @@ export const api = {
   getFeatureToggles: async (): Promise<any> => {
     if (DEMO_MODE) return { success: true, plan: 'premium' };
     return apiCall('getFeatureToggles');
+  },
+
+  // QR Pass System v2
+  validatePass: async (pass_code: string, scanned_by?: string): Promise<any> => {
+    if (DEMO_MODE) {
+      const isTrial = pass_code.toLowerCase().includes('trial')
+      const isInvalid = pass_code.toLowerCase().includes('invalid') || pass_code.toLowerCase().includes('expire')
+      if (isInvalid) {
+        return { valid: false, reason: 'Pass is invalid or expired' }
+      }
+      return {
+        valid: true,
+        type: isTrial ? 'trial' : 'membership',
+        name: isTrial ? 'Demo Trial Visitor' : 'Demo Member',
+        phone: '+91 98765 43210',
+        expires_at: isTrial ? new Date(Date.now() + 86400000).toISOString() : '2026-12-31T23:59:59Z',
+        plan_name: isTrial ? '48hr Free Trial' : 'Gold Annual Membership',
+        used: isTrial
+      }
+    }
+    return apiCall('validatePass', { pass_code, scanned_by: scanned_by || 'front_desk' })
+  },
+
+  getPassStatus: async (pass_code: string): Promise<any> => {
+    if (DEMO_MODE) {
+      return {
+        success: true,
+        status: 'active',
+        type: 'membership',
+        expires_at: '2026-12-31T23:59:59Z',
+        remaining_ms: 864000000,
+        name: 'Demo Member',
+        phone: '+91 98765 43210',
+        plan_name: 'Gold Annual Membership'
+      }
+    }
+    return apiCall('getPassStatus', { pass_code })
+  },
+
+  // ── Member Portal ──
+  memberLogin: async (gym_id: string, phone: string, password?: string): Promise<any> => {
+    return apiCall('memberLogin', { gym_id, phone, password })
+  },
+  memberGetMyPass: async (token: string): Promise<any> => {
+    return apiCall('memberGetMyPass', { token })
+  },
+  // ── Public Gym Data (no auth) ──
+  getPublicGymData: async (gym_id: string): Promise<any> => {
+    return apiCall('getPublicGymData', { gym_id })
+  },
+  // ── Payments ──
+  createRazorpayOrder: async (gym_id: string, amount: number, member_id?: string, plan_name?: string): Promise<any> => {
+    return apiCall('createRazorpayOrder', { gym_id, amount, member_id, plan_name })
+  },
+  recordCashPayment: async (data: { gym_id: string; member_id: string; member_name: string; amount: number; plan_name?: string; expires_at?: string }): Promise<any> => {
+    return apiCall('recordCashPayment', data)
+  },
+
+  createMembershipPass: async (data: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) {
+      return { success: true, qr_payload: 'MEMB-' + Date.now(), pass: { id: 'pass_' + Date.now(), ...data } }
+    }
+    return apiCall('createMembershipPass', data)
+  },
+
+  createTrialPassV2: async (data: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) {
+      return { success: true, qr_payload: 'TRIAL-' + Date.now(), pass: { id: 'pass_' + Date.now(), ...data } }
+    }
+    return apiCall('createTrialPassV2', data)
+  },
+
+  getAllEntities: async (entity_name: string, gym_id?: string): Promise<any> => {
+    if (DEMO_MODE) return { success: true, records: [] }
+    return apiCall('getAllEntities', { entity_name, gym_id })
   },
 }
