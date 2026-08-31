@@ -197,8 +197,9 @@ export default function WhatsApp() {
       return { sent: 0, total: audienceMembers.length }
     }
 
-    // Immediate Send
+    // Immediate Send — HONEST reporting: only count real API successes
     let sentCount = 0
+    let notConfigured = false
     for (const member of audienceMembers) {
       const phone = (member.phone || '').replace(/[^0-9+]/g, '')
       if (!phone) continue
@@ -209,10 +210,15 @@ export default function WhatsApp() {
         .replace(/{membership_type}/g, member.membership_type || member.plan || 'Standard')
 
       try {
-        await api.sendWhatsAppMessage(phone, personalized)
-        sentCount++
+        const res = await api.sendWhatsAppMessage(phone, personalized)
+        if (res?.success) {
+          sentCount++
+        } else if (res?.not_configured) {
+          notConfigured = true
+          break // no point retrying the rest, WhatsApp isn't connected at all
+        }
       } catch (e) {
-        // continue send
+        // real network/API failure — do not count as sent
       }
     }
 
@@ -222,16 +228,25 @@ export default function WhatsApp() {
       audience: data.audience,
       audience_label: targetSegment?.label || data.audience,
       message: data.message,
-      status: 'sent',
+      status: sentCount > 0 ? 'sent' : 'failed',
       sent_count: sentCount,
       delivered_count: sentCount,
-      read_count: Math.floor(sentCount * 0.8),
+      read_count: 0,
       total_count: audienceMembers.length,
       created_date: new Date().toISOString()
     }
 
     setBroadcasts(prev => [sentRecord, ...prev])
-    showToast(`WhatsApp broadcast sent to ${sentCount} members!`)
+
+    if (notConfigured) {
+      showToast(`WhatsApp isn't connected yet — add your API token in Settings first.`)
+    } else if (sentCount === 0) {
+      showToast(`Broadcast failed — 0 of ${audienceMembers.length} messages sent. Check your WhatsApp connection.`)
+    } else if (sentCount < audienceMembers.length) {
+      showToast(`Sent to ${sentCount} of ${audienceMembers.length} members (some failed).`)
+    } else {
+      showToast(`WhatsApp broadcast sent to ${sentCount} members!`)
+    }
     return { sent: sentCount, total: audienceMembers.length }
   }
 

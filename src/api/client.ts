@@ -35,8 +35,7 @@ const GYMOS_FUNCTIONS = new Set([
   'seedGymData', 'createTrialBooking',
   'activateTrial', 'getPayments', 'getRevenue', 'fetchExpiringMembers',
   'getApiKey', 'regenerateApiKey', 'ingestFeedback',
-  'createTrialPassV2', 'createMembershipPass', 'validatePass', 'getPassStatus',
-  'memberLogin', 'memberGetMyPass', 'getPublicGymData', 'createRazorpayOrder', 'recordCashPayment'
+  'createTrialPassV2', 'createMembershipPass', 'validatePass', 'getPassStatus'
 ])
 
 // Functions handled by the unified gymAdmin backend function
@@ -48,7 +47,8 @@ const GYM_ADMIN_ACTIONS = new Set([
   'recordPayment', 'createPayment',
   'qrCheckIn', 'enrollInClass',
   'sendWhatsAppMessage',
-  'createGym', 'updateGymProfile', 'deleteGym'
+  'createGym', 'updateGymProfile', 'deleteGym',
+  'memberLogin', 'memberGetMyPass', 'getPublicGymData', 'createRazorpayOrder', 'recordCashPayment'
 ])
 
 // Functions that live on the Superagent/Admin app (separate deployed functions)
