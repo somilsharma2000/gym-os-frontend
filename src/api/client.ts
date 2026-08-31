@@ -219,7 +219,7 @@ export function isSuperAdmin(): boolean {
 }
 
 export function getBranchId(): string {
-  return localStorage.getItem('gym_os_branch_id') || import.meta.env.VITE_DEFAULT_BRANCH_ID || 'branch_c_scheme'
+  return localStorage.getItem('gym_os_branch_id') || import.meta.env.VITE_DEFAULT_BRANCH_ID || 'demo_branch'
 }
 
 export function setBranchId(branchId: string): void {
@@ -426,9 +426,38 @@ export const api = {
   },
 
   // Class enrollment
-  enrollInClass: async (gym_id: string, member_id: string, class_id: string): Promise<any> => {
-    if (DEMO_MODE) return { success: true }
-    return apiCall('enrollInClass', { gym_id, member_id, class_id })
+  enrollInClass: async (arg1: any, arg2?: string, arg3?: string): Promise<any> => {
+    let gym_id = ''
+    let member_id = ''
+    let class_id = ''
+    let name = ''
+    let phone = ''
+    let email = ''
+
+    if (typeof arg1 === 'object' && arg1 !== null) {
+      gym_id = arg1.gym_id || ''
+      class_id = arg1.class_id || ''
+      member_id = arg1.member_id || ''
+      name = arg1.name || ''
+      phone = arg1.phone || ''
+      email = arg1.email || ''
+    } else {
+      gym_id = arg1
+      member_id = arg2 || ''
+      class_id = arg3 || ''
+    }
+
+    if (DEMO_MODE) return { success: true, enrolled: true }
+    return apiCall('enrollInClass', { gym_id, class_id, member_id, name, phone, email })
+  },
+
+  createLeadWithConsent: async (data: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) {
+      const newLead = { id: 'lead_' + Date.now(), name: (data.name as string) || 'New Lead', phone: (data.phone as string) || '', email: (data.email as string) || '', source: (data.source as string) || 'Website', status: 'new', interest: (data.interest as string) || (data.fitness_goal as string) || 'General Fitness', value: 3500, created_date: new Date().toISOString(), notes: (data.notes as string) || '' }
+      demoLeads.unshift(newLead as any)
+      return { success: true, lead: newLead }
+    }
+    return apiCall('createLeadWithConsent', data)
   },
 
   // Payments
@@ -439,7 +468,12 @@ export const api = {
 
   // Members
   addMember: async (data: Record<string, unknown>): Promise<any> => {
-    if (DEMO_MODE) return { success: true, member_id: 'demo_' + Date.now(), qr_code: 'demo_qr' }
+    if (DEMO_MODE) {
+      const name = (data.name as string) || 'New Member'
+      const initials = name.trim().split(/\s+/).map(p => p[0]).join('').substring(0,3).toUpperCase()
+      const qr_code = 'MBR-' + initials + '-' + String(Date.now()).slice(-4)
+      return { success: true, member_id: 'demo_' + Date.now(), qr_code, member: { ...data, qr_code } }
+    }
     return apiCall('addMember', data)
   },
   updateMember: async (member_id: string, data: Record<string, unknown>): Promise<any> => {
@@ -501,9 +535,9 @@ export const api = {
   },
 
   // Memberships
-  getMemberships: async (): Promise<any> => {
+  getMemberships: async (gym_id?: string): Promise<any> => {
     if (DEMO_MODE) return { success: true, memberships: demoMemberships }
-    return apiCall('getMemberships')
+    return apiCall('getMemberships', gym_id ? { gym_id } : {})
   },
 
   // Payments
@@ -517,7 +551,6 @@ export const api = {
     return apiCall('recordPayment', data)
   },
 
-  // Expenses
   // Revenue
   getRevenue: async (): Promise<any> => {
     if (DEMO_MODE) return { success: true, ...demoRevenue }
@@ -525,30 +558,34 @@ export const api = {
   },
 
   // Classes
-  getClassSchedule: async (): Promise<any> => {
+  getClassSchedule: async (gym_id?: string): Promise<any> => {
     if (DEMO_MODE) return { success: true, classes: demoClasses }
-    return apiCall('getClassSchedule')
+    return apiCall('getClassSchedule', gym_id ? { gym_id } : {})
   },
 
   // Staff
-  getStaff: async (): Promise<any> => {
+  getStaff: async (gym_id?: string): Promise<any> => {
     if (DEMO_MODE) return { success: true, staff: demoStaff }
-    return apiCall('getStaff')
+    return apiCall('getStaff', gym_id ? { gym_id } : {})
   },
 
   // Referrals
-  getReferrals: async (): Promise<any> => {
+  getReferrals: async (gym_id?: string): Promise<any> => {
     if (DEMO_MODE) return { success: true, referrals: demoReferrals }
-    return apiCall('getReferrals')
+    return apiCall('getReferrals', { gym_id: gym_id || getGymId() })
   },
 
   // Renewals
-  getRenewals: async (): Promise<any> => {
-    if (DEMO_MODE) return { success: true, renewals: demoRenewals }
-    return apiCall('fetchExpiringMembers')
+  getRenewals: async (days: number = 30): Promise<any> => {
+    if (DEMO_MODE) return { success: true, renewals: demoRenewals, expiring_members: demoRenewals }
+    return apiCall('fetchExpiringMembers', { days })
   },
 
-  // At-Risk
+  fetchExpiringMembers: async (gym_id?: string, days: number = 30): Promise<any> => {
+    if (DEMO_MODE) return { success: true, expiring_members: demoRenewals, renewals: demoRenewals }
+    return apiCall('fetchExpiringMembers', { gym_id: gym_id || getGymId(), days })
+  },
+
   // Notifications
   getNotifications: async (): Promise<any> => {
     if (DEMO_MODE) return { success: true, notifications: [] }
@@ -557,6 +594,11 @@ export const api = {
 
   // WhatsApp
   sendWhatsApp: async (phone: string, message: string): Promise<any> => {
+    if (DEMO_MODE) return { success: true }
+    return apiCall('sendWhatsAppMessage', { phone, message })
+  },
+
+  sendWhatsAppMessage: async (phone: string, message: string): Promise<any> => {
     if (DEMO_MODE) return { success: true }
     return apiCall('sendWhatsAppMessage', { phone, message })
   },

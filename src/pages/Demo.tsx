@@ -176,7 +176,7 @@ export default function Demo() {
                 </span>
               </div>
               <p className="text-xs text-slate-400 flex items-center gap-1.5">
-                <Building2 size={12} className="text-brand-400" /> Oxigen Fitness (Sample Branch)
+                <Building2 size={12} className="text-brand-400" /> Pulse Fitness (Sample Branch)
               </p>
             </div>
           </div>

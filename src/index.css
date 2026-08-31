@@ -96,6 +96,17 @@
   }
 }
 
+/* === GLOBAL SMOOTH SCROLL & SELECTION === */
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background: rgba(37, 99, 235, 0.3);
+  color: #ffffff;
+}
+
+/* === GLOBAL SCROLLBARS (Thin with rounded corners) === */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -104,20 +115,76 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-.dark ::-webkit-scrollbar-thumb {
-  background: #475569;
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: rgba(37, 99, 235, 0.6);
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.4);
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(37, 99, 235, 0.6);
 }
 
-/* === PREMIUM UI POLISH === */
+/* === SIDEBAR NAV CUSTOM SCROLLBAR (Thin, dark, with blue thumb on hover) === */
+.sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(51, 65, 85, 0.4);
+  border-radius: 4px;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(37, 99, 235, 0.8);
+}
 
-/* Smooth scroll everywhere */
-html { scroll-behavior: smooth; }
+/* === GLASS EFFECT UTILITY === */
+.glass-effect {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  background-color: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(30, 41, 59, 0.5);
+}
+
+/* === ANIMATION UTILITIES FOR PAGE TRANSITIONS & TOOLTIPS === */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 300ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-in.slide-in-from-left-2,
+.slide-in-from-left-2 {
+  animation: slideInFromLeft 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* === ADDITIONAL PREMIUM UI UTILITIES === */
 
 /* Premium card hover lift effect */
 .card-hover {
@@ -128,7 +195,7 @@ html { scroll-behavior: smooth; }
   box-shadow: 0 12px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
 }
 
-/* Premium glass effect */
+/* Premium glass effect (standard) */
 .glass {
   backdrop-filter: blur(12px);
   background: rgba(255,255,255,0.7);
@@ -208,21 +275,10 @@ html { scroll-behavior: smooth; }
   box-shadow: 0 0 0 2px rgba(59,130,246,0.3), 0 0 0 4px rgba(59,130,246,0.15);
 }
 
-/* Premium scrollbar (global) */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(100,116,139,0.3); border-radius: 6px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(100,116,139,0.5); }
-
-/* Dark mode scrollbar */
-.dark ::-webkit-scrollbar-thumb { background: rgba(71,85,105,0.3); }
-.dark ::-webkit-scrollbar-thumb:hover { background: rgba(71,85,105,0.5); }
-
 /* Page transition smooth */
 .page-enter {
   animation: fadeUp 350ms cubic-bezier(0.4,0,0.2,1) forwards;
 }
-
 
 /* === QR SCANNER MOCKUP ANIMATIONS === */
 @keyframes scanLine {

@@ -11,7 +11,10 @@ import {
   Mail,
   Eye,
   Upload,
-  X
+  X,
+  UserPlus,
+  QrCode,
+  Download
 } from 'lucide-react'
 import { api } from '../api/client'
 import type { Member } from '../types'
@@ -19,6 +22,7 @@ import StatusBadge from '../components/StatusBadge'
 import DataTable, { type Column } from '../components/DataTable'
 import BulkUploadModal from '../components/BulkUploadModal'
 import MemberDetailPanel from '../components/MemberDetailPanel'
+import { generateQrCodeSvg } from '../utils/qrGenerator'
 
 const membershipStatusOptions = ['all', 'active', 'expiring', 'expired', 'frozen', 'cancelled']
 const riskStatusOptions = ['all', 'none', 'at_risk', 'critical']
@@ -40,9 +44,23 @@ export default function Members() {
 
   // Bulk upload modal state
   const [showBulkUpload, setShowBulkUpload] = useState(false)
+  const [showAddMember, setShowAddMember] = useState(false)
+  const [newMemberQr, setNewMemberQr] = useState<{ name: string; qr_code: string } | null>(null)
 
   // Open action menu state per row
   const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+
+  const handleAddMember = async (data: { name: string; phone: string; email: string; membership_type: string }) => {
+    setActionLoading('add')
+    try {
+      const res = await api.addMember({ ...data, membership_status: 'active', join_date: new Date().toISOString().split('T')[0] })
+      if (res.success) {
+        setNewMemberQr({ name: data.name, qr_code: res.qr_code || res.member?.qr_code || 'MBR-NEW' })
+        fetchMembers()
+      }
+    } catch (e) { /* silent */ }
+    setActionLoading(null)
+  }
 
   const fetchMembers = async () => {
     setLoading(true); setError('')
@@ -320,10 +338,18 @@ export default function Members() {
         <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Members</h2>
 
         <div className="flex items-center gap-3">
+          {/* Add Single Member Button - auto-generates QR code */}
+          <button
+            onClick={() => setShowAddMember(true)}
+            className="px-3.5 py-2 text-xs font-semibold text-white bg-brand-600 hover:bg-brand-700 active:bg-brand-700 rounded-lg transition-all flex items-center gap-2 shadow-sm"
+          >
+            <UserPlus size={14} /> Add Member
+          </button>
+
           {/* Bulk Member Upload Button */}
           <button
             onClick={() => setShowBulkUpload(true)}
-            className="px-3.5 py-2 text-xs font-semibold text-white bg-brand-700 hover:bg-brand-800 active:bg-brand-800 rounded-lg transition-all flex items-center gap-2 shadow-sm"
+            className="px-3.5 py-2 text-xs font-semibold text-brand-700 dark:text-brand-400 bg-white dark:bg-slate-800 border border-brand-200 dark:border-brand-800 hover:bg-brand-50 dark:hover:bg-brand-900/30 rounded-lg transition-all flex items-center gap-2 shadow-sm"
           >
             <Upload size={14} /> Bulk Upload
           </button>
@@ -365,6 +391,24 @@ export default function Members() {
       </div>
 
       <DataTable data={members} columns={columns} loading={loading} error={error} emptyMessage="No members found." pageSize={15} onRowClick={setSelectedMember} />
+
+      {/* Add Member Modal - auto-generates QR code on save */}
+      {showAddMember && (
+        <AddMemberModal
+          onClose={() => setShowAddMember(false)}
+          onSave={handleAddMember}
+          loading={actionLoading === 'add'}
+        />
+      )}
+
+      {/* New Member QR Result Modal */}
+      {newMemberQr && (
+        <NewMemberQrModal
+          name={newMemberQr.name}
+          qrCode={newMemberQr.qr_code}
+          onClose={() => { setNewMemberQr(null); setShowAddMember(false) }}
+        />
+      )}
 
       {/* Bulk Upload Modal */}
       <BulkUploadModal
@@ -486,6 +530,123 @@ function BulkWhatsAppModal({ count, onClose, onSend, loading }: { count: number;
           <button onClick={() => onSend(message)} disabled={loading} className="w-full py-2.5 bg-brand-700 hover:bg-brand-800 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
             {loading ? <Loader size={16} className="animate-spin" /> : <MessageCircle size={16} />} Send to {count} Members
           </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Add Member Modal — collects basic info, backend auto-generates the QR token on save ──
+function AddMemberModal({
+  onClose,
+  onSave,
+  loading
+}: {
+  onClose: () => void
+  onSave: (data: { name: string; phone: string; email: string; membership_type: string }) => void
+  loading: boolean
+}) {
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
+  const [membershipType, setMembershipType] = useState('Monthly Standard')
+
+  const canSave = name.trim().length > 1 && phone.trim().length >= 7
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-md w-full p-6 shadow-2xl space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3">
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <UserPlus size={20} className="text-brand-600" /> Add New Member
+          </h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><X size={18} /></button>
+        </div>
+
+        <div className="p-2.5 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-[11px] text-blue-600 dark:text-blue-300 flex items-center gap-2">
+          <QrCode size={14} className="flex-shrink-0" /> A unique QR check-in code is generated automatically — no manual step needed.
+        </div>
+
+        <div className="space-y-3 text-sm">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Full Name *</label>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Priya Sharma"
+              className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400" />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Phone *</label>
+            <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91 98765 43210"
+              className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400" />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Email</label>
+            <input value={email} onChange={e => setEmail(e.target.value)} placeholder="priya@email.com"
+              className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400" />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Membership Plan</label>
+            <select value={membershipType} onChange={e => setMembershipType(e.target.value)}
+              className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400">
+              <option>Monthly Standard</option>
+              <option>Quarterly Standard</option>
+              <option>Half-Yearly</option>
+              <option>Annual VIP</option>
+              <option>Personal Training</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="flex gap-3 pt-2">
+          <button onClick={onClose} className="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-semibold">Cancel</button>
+          <button
+            disabled={!canSave || loading}
+            onClick={() => onSave({ name: name.trim(), phone: phone.trim(), email: email.trim(), membership_type: membershipType })}
+            className="flex-1 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
+          >
+            {loading ? <Loader size={16} className="animate-spin" /> : <QrCode size={16} />} {loading ? 'Creating...' : 'Create & Generate QR'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Shown right after a member is created — displays their auto-generated QR pass ──
+function NewMemberQrModal({ name, qrCode, onClose }: { name: string; qrCode: string; onClose: () => void }) {
+  const qrImage = generateQrCodeSvg(qrCode)
+
+  const handleDownload = () => {
+    const link = document.createElement('a')
+    link.href = qrImage
+    link.download = `${name.replace(/\s+/g, '_')}_QR_Pass.svg`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 max-w-sm w-full p-6 shadow-2xl space-y-4 text-center animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-center gap-2 text-emerald-600 dark:text-emerald-400">
+          <Check size={20} /> <span className="text-sm font-bold">Member created!</span>
+        </div>
+        <p className="text-slate-700 dark:text-slate-200 font-semibold">{name}</p>
+
+        <div className="flex justify-center">
+          <img src={qrImage} alt="Member QR Code" className="w-40 h-40 rounded-lg border-2 border-brand-200 dark:border-brand-800" />
+        </div>
+
+        <p className="text-xs font-mono text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 rounded-md py-1.5">{qrCode}</p>
+
+        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+          Print this or send it to the member's phone. They scan it at the entrance to check in — no manual step required from here on.
+        </p>
+
+        <div className="flex gap-3">
+          <button onClick={handleDownload} className="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
+            <Download size={14} /> Download
+          </button>
+          <button onClick={onClose} className="flex-1 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-sm font-semibold">Done</button>
         </div>
       </div>
     </div>

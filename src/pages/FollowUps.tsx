@@ -283,7 +283,7 @@ export default function FollowUps() {
   // WhatsApp Pre-filled URL Generator
   const getWhatsAppUrl = (phone: string, name: string, taskType: string) => {
     const cleanPhone = phone.replace(/[^0-9]/g, '')
-    let msg = `Hi ${name}! Greetings from Oxigen Fitness.`
+    let msg = `Hi ${name}! Greetings from Pulse Fitness.`
     if (taskType === 'Lead Follow-Up') {
       msg += ` We noticed your interest in our gym. Would you like to drop by for a free workout trial today?`
     } else if (taskType === 'Payment Reminder') {
@@ -466,7 +466,7 @@ export default function FollowUps() {
                   {/* EMAIL BUTTON */}
                   {item.email && (
                     <a
-                      href={`mailto:${item.email}?subject=${encodeURIComponent(`Oxigen Fitness Update for ${item.entityName}`)}`}
+                      href={`mailto:${item.email}?subject=${encodeURIComponent(`Pulse Fitness Update for ${item.entityName}`)}`}
                       className="p-2 bg-slate-800 hover:bg-slate-700 text-blue-400 rounded-xl transition-colors border border-slate-700"
                       title={`Email ${item.entityName}`}
                     >

@@ -45,7 +45,7 @@ const MASTER_PROMPT_KEY = 'gym_os_socials_master_prompt'
 const SCHEDULED_POSTS_KEY = 'gym_os_socials_scheduled_posts'
 const CAMPAIGNS_KEY = 'gym_os_socials_campaigns'
 
-const DEFAULT_MASTER_PROMPT = `Oxigen Fitness is a premier high-energy gym in Jaipur offering state-of-the-art strength equipment, HIIT classes, and personalized coaching. Tone: Motivating, authoritative yet approachable, focused on real results, discipline, and community support. Target Audience: Working professionals aged 22-45.`
+const DEFAULT_MASTER_PROMPT = `Pulse Fitness is a premier high-energy gym in Jaipur offering state-of-the-art strength equipment, HIIT classes, and personalized coaching. Tone: Motivating, authoritative yet approachable, focused on real results, discipline, and community support. Target Audience: Working professionals aged 22-45.`
 
 interface ScheduledPost {
   id: string
@@ -98,7 +98,7 @@ export default function Socials() {
     {
       id: 'idea_2',
       title: 'Member Spotlight: How Rahul Lost 11kg in 90 Days Without Extreme Diets',
-      caption: 'Meet Rahul! 🏋️‍♂️ When he joined Oxigen Fitness, he couldn\'t squat 40kg without knee discomfort. Fast forward 90 days: -11kg fat loss & 100kg clean squat.\n\nHis secret? Consistency over intensity.\n\nReady for your own transformation? DM us "TRANSFORM" for a free trial pass!',
+      caption: 'Meet Rahul! 🏋️‍♂️ When he joined Pulse Fitness, he couldn\'t squat 40kg without knee discomfort. Fast forward 90 days: -11kg fat loss & 100kg clean squat.\n\nHis secret? Consistency over intensity.\n\nReady for your own transformation? DM us "TRANSFORM" for a free trial pass!',
       framework: 'Social Proof / Transformation',
       platform: 'Instagram'
     },
@@ -112,14 +112,14 @@ export default function Socials() {
     {
       id: 'idea_4',
       title: 'Behind the Scenes: A Day in the Life of Head Trainer Ankit',
-      caption: '5:30 AM alarm ⏰ -> Pre-workout espresso ☕ -> 6 AM clients -> Heavy leg day at 2 PM. Here\'s what dedicated coaching looks like behind the scenes at Oxigen Gym.\n\nComment "ANKIT" to book a 1-on-1 consultation session with him!',
+      caption: '5:30 AM alarm ⏰ -> Pre-workout espresso ☕ -> 6 AM clients -> Heavy leg day at 2 PM. Here\'s what dedicated coaching looks like behind the scenes at Pulse Fitness.\n\nComment "ANKIT" to book a 1-on-1 consultation session with him!',
       framework: 'Storytelling / Day in Life',
       platform: 'YouTube Shorts'
     },
     {
       id: 'idea_5',
       title: 'Why Most Gym Members Quit After Week 3 (And How We Stop It)',
-      caption: 'Week 3 is where motivation fades and discipline takes over. At Oxigen Fitness, we pair every new member with a mentor trainer to smash through the 3-week wall.\n\nDon\'t quit on yourself this season. Tap the link to claim your 3-Day VIP pass!',
+      caption: 'Week 3 is where motivation fades and discipline takes over. At Pulse Fitness, we pair every new member with a mentor trainer to smash through the 3-week wall.\n\nDon\'t quit on yourself this season. Tap the link to claim your 3-Day VIP pass!',
       framework: 'Psychological Hook',
       platform: 'Facebook'
     }
@@ -170,7 +170,7 @@ export default function Socials() {
           {
             id: 'post_102',
             title: 'Morning Yoga Batch Highlights',
-            caption: 'Peaceful mornings start at Oxigen Gym. Join our 7 AM sunrise yoga cohort.',
+            caption: 'Peaceful mornings start at Pulse Fitness. Join our 7 AM sunrise yoga cohort.',
             platform: 'Facebook',
             date: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
             time: '08:00',
@@ -380,7 +380,7 @@ export default function Socials() {
       description: 'Empathy-first stories that bridge member struggles to real physical results.',
       examples: [
         'Before vs After Journey: How [Member Name] balanced work & workouts.',
-        'Behind the scenes: What a 5 AM training shift looks like at Oxigen.',
+        'Behind the scenes: What a 5 AM training shift looks like at Pulse Fitness.',
         'Why I started coaching: Our founder’s personal fitness journey.'
       ]
     },
@@ -398,7 +398,7 @@ export default function Socials() {
       description: 'Validate your gym quality with real member stats, reviews, and video clips.',
       examples: [
         'Member Spotlight: -12kg fat loss in 90 days with zero crash diets.',
-        'Client Video Review: "Why I switched from my old gym to Oxigen Fitness."',
+        'Client Video Review: "Why I switched from my old gym to Pulse Fitness."',
         'Monthly Transformation Tally: 48 members reached milestone goals this month.'
       ]
     }
@@ -546,19 +546,19 @@ export default function Socials() {
             <div className="flex flex-wrap items-center gap-2 pt-1">
               <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Quick Tones:</span>
               <button
-                onClick={() => setMasterPrompt('Oxigen Fitness: High-intensity, energetic, hardcore strength focus in Jaipur. Target: Lifters & athletes seeking peak performance.')}
+                onClick={() => setMasterPrompt('Pulse Fitness: High-intensity, energetic, hardcore strength focus in Jaipur. Target: Lifters & athletes seeking peak performance.')}
                 className="cursor-pointer text-[11px] font-semibold px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition-colors"
               >
                 🔥 High Performance
               </button>
               <button
-                onClick={() => setMasterPrompt('Oxigen Fitness: Friendly, welcoming, supportive beginner-focused gym in Jaipur. Target: First-time gym goers & weight loss seekers.')}
+                onClick={() => setMasterPrompt('Pulse Fitness: Friendly, welcoming, supportive beginner-focused gym in Jaipur. Target: First-time gym goers & weight loss seekers.')}
                 className="cursor-pointer text-[11px] font-semibold px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition-colors"
               >
                 🌱 Inclusive & Supportive
               </button>
               <button
-                onClick={() => setMasterPrompt('Oxigen Fitness: Premium luxury fitness club with sauna, personal trainers, & executive membership. Target: Corporate leaders & professionals.')}
+                onClick={() => setMasterPrompt('Pulse Fitness: Premium luxury fitness club with sauna, personal trainers, & executive membership. Target: Corporate leaders & professionals.')}
                 className="cursor-pointer text-[11px] font-semibold px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg border border-slate-700 transition-colors"
               >
                 💎 Luxury Executive

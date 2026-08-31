@@ -35,7 +35,7 @@ const DEFAULT_GYMS: GymInfo[] = [
 ]
 
 const SAMPLE_BRANCHES: BranchInfo[] = [
-  { id: 'branch_c_scheme', name: 'C-Scheme Main Branch', code: 'CS' }
+  { id: 'demo_branch', name: 'Demo Branch', code: 'DM' }
 ]
 
 export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
