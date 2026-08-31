@@ -151,45 +151,39 @@ export default function SuperAdmin() {
     setTimeout(() => window.location.reload(), 100)
   }
 
-  const [aiProviders, setAiProviders] = useState<any[]>([])
+  const [aiConfig, setAiConfig] = useState<any>({ ai_provider: 'openrouter', ai_model_id: '', ai_enabled: false, has_key: false, key_preview: '' })
+  const [aiKeyInput, setAiKeyInput] = useState('')
+  const [aiSaving, setAiSaving] = useState(false)
+  const [aiSaved, setAiSaved] = useState(false)
 
   useEffect(() => {
-    const gymId = localStorage.getItem('gym_os_gym_id') || ''
-    fetch(`${API_BASE}/getGymSettings`, {
+    fetch(`${API_BASE}/manageAIConfig`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ gym_id: gymId })
+      body: JSON.stringify({ action: 'get' })
     }).then(r => r.json()).then(res => {
-      if (res?.settings?.ai_providers) {
-        try { setAiProviders(JSON.parse(res.settings.ai_providers)) } catch {}
-      }
+      if (res?.success && res.config) setAiConfig(res.config)
     }).catch(() => {})
   }, [])
 
-  const saveProviders = (providers: any[]) => {
-    setAiProviders(providers)
-    const gymId = localStorage.getItem('gym_os_gym_id') || ''
-    fetch(`${API_BASE}/updateGymSettings`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ gym_id: gymId, ai_providers: JSON.stringify(providers) })
-    }).catch(() => {})
-  }
-
-  const addProvider = () => {
-    const name = (document.getElementById('ai_provider_name') as HTMLSelectElement)?.value
-    const model_id = (document.getElementById('ai_provider_model') as HTMLInputElement)?.value
-    const api_key = (document.getElementById('ai_provider_key') as HTMLInputElement)?.value
-    if (!name || !model_id || !api_key) return
-    saveProviders([...aiProviders, { name, model_id, api_key, enabled: true }])
-  }
-
-  const toggleProvider = (idx: number) => {
-    const updated = [...aiProviders]
-    updated[idx].enabled = !updated[idx].enabled
-    saveProviders(updated)
-  }
-
-  const removeProvider = (idx: number) => {
-    saveProviders(aiProviders.filter((_: any, i: number) => i !== idx))
+  const saveAIConfig = async () => {
+    setAiSaving(true)
+    try {
+      await fetch(`${API_BASE}/manageAIConfig`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'save',
+          ai_provider: aiConfig.ai_provider,
+          ai_model_id: aiConfig.ai_model_id,
+          ai_enabled: aiConfig.ai_enabled,
+          ai_base_url: aiConfig.ai_base_url || '',
+          ai_api_key: aiKeyInput || undefined
+        })
+      })
+      setAiKeyInput('')
+      setAiSaved(true)
+      setTimeout(() => setAiSaved(false), 2000)
+    } catch {}
+    setAiSaving(false)
   }
 
   const formatINR = (amt: number) => `₹${(amt || 0).toLocaleString('en-IN')}`
@@ -508,60 +502,69 @@ export default function SuperAdmin() {
         </div>
       )}
 
-      {/* AI Content Providers Section */}
+      {/* Single Unified AI Provider — powers the whole OS */}
       <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Bot size={20} className="text-brand-500" /> AI Content Providers
+              <Bot size={20} className="text-brand-500" /> AI Provider (One Key, Whole OS)
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Add AI models for social media content generation. Max 3 active providers.</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              One external AI key powers the AI Assistant, social content generation, and website copy across every gym. Super Admin only.
+            </p>
+          </div>
+          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${aiConfig.ai_enabled && aiConfig.has_key ? 'bg-green-500/10 text-green-500' : 'bg-amber-500/10 text-amber-500'}`}>
+            {aiConfig.ai_enabled && aiConfig.has_key ? 'Active' : 'Not Connected'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Provider</label>
+            <select value={aiConfig.ai_provider} onChange={e => setAiConfig({ ...aiConfig, ai_provider: e.target.value })}
+              className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md">
+              <option value="openrouter">OpenRouter</option>
+              <option value="openai">OpenAI</option>
+              <option value="anthropic">Anthropic</option>
+              <option value="custom">Custom (self-hosted / other)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Model ID</label>
+            <input value={aiConfig.ai_model_id} onChange={e => setAiConfig({ ...aiConfig, ai_model_id: e.target.value })}
+              placeholder="e.g. meta-llama/llama-3.3-70b-instruct:free"
+              className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md" />
+          </div>
+          {aiConfig.ai_provider === 'custom' && (
+            <div className="sm:col-span-2">
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Base URL</label>
+              <input value={aiConfig.ai_base_url || ''} onChange={e => setAiConfig({ ...aiConfig, ai_base_url: e.target.value })}
+                placeholder="https://your-endpoint.com/v1/chat/completions"
+                className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md" />
+            </div>
+          )}
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
+              API Key {aiConfig.has_key && <span className="text-slate-400">(currently set: {aiConfig.key_preview})</span>}
+            </label>
+            <input type="password" value={aiKeyInput} onChange={e => setAiKeyInput(e.target.value)}
+              placeholder={aiConfig.has_key ? 'Enter a new key to replace it' : 'Paste your API key'}
+              className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md" />
           </div>
         </div>
 
-        <div className="space-y-3">
-          {aiProviders.map((provider: any, idx: number) => (
-            <div key={idx} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-700/30 rounded-xl">
-              <div className={`w-2 h-2 rounded-full ${provider.enabled ? 'bg-green-500' : 'bg-slate-400'}`} />
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-slate-900 dark:text-white">{provider.name}</span>
-                  <span className="text-xs text-slate-400">{provider.model_id}</span>
-                </div>
-                <div className="text-xs text-slate-400 mt-0.5">API Key: {provider.api_key ? '••••••••' + provider.api_key.slice(-4) : 'Not set'}</div>
-              </div>
-              <button onClick={() => toggleProvider(idx)} className={`px-3 py-1.5 rounded-lg text-xs font-medium ${provider.enabled ? 'bg-amber-500/20 text-amber-600' : 'bg-green-500/20 text-green-600'}`}>
-                {provider.enabled ? 'Disable' : 'Enable'}
-              </button>
-              <button onClick={() => removeProvider(idx)} className="p-1.5 text-red-500 hover:bg-red-500/10 rounded-lg">
-                <X size={14} />
-              </button>
-            </div>
-          ))}
-
-          {aiProviders.length < 3 && (
-            <div className="border-2 border-dashed border-slate-200 dark:border-slate-600 rounded-xl p-4 space-y-3">
-              <p className="text-xs font-semibold text-slate-500">Add New Provider</p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <select id="ai_provider_name" className="px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md">
-                  <option value="openrouter">OpenRouter</option>
-                  <option value="openai">OpenAI</option>
-                  <option value="anthropic">Anthropic</option>
-                  <option value="custom">Custom</option>
-                </select>
-                <input id="ai_provider_model" placeholder="model id (e.g. llama-3.3-70b)" className="px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md" />
-                <input id="ai_provider_key" placeholder="API Key" type="password" className="px-3 py-2 text-sm border border-slate-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 rounded-md" />
-              </div>
-              <button onClick={addProvider} className="w-full py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 rounded-md flex items-center justify-center gap-1.5">
-                <Plus size={14} /> Add Provider
-              </button>
-            </div>
-          )}
-
-          {aiProviders.length >= 3 && (
-            <p className="text-xs text-amber-500 text-center py-2">Maximum 3 active providers reached. Remove one to add another.</p>
-          )}
+        <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100 dark:border-slate-700">
+          <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
+            <input type="checkbox" checked={!!aiConfig.ai_enabled} onChange={e => setAiConfig({ ...aiConfig, ai_enabled: e.target.checked })} className="w-4 h-4" />
+            Enable AI features across the OS
+          </label>
+          <button onClick={saveAIConfig} disabled={aiSaving} className="px-4 py-2 text-sm font-medium text-white bg-brand-600 hover:bg-brand-700 disabled:opacity-50 rounded-md flex items-center gap-2">
+            {aiSaving ? 'Saving...' : aiSaved ? 'Saved ✓' : 'Save AI Config'}
+          </button>
         </div>
+        {!aiConfig.has_key && (
+          <p className="text-xs text-amber-500 mt-2">No key set yet — AI Assistant and content generation will show "Not Connected" until you add one here.</p>
+        )}
       </div>
     </div>
   )

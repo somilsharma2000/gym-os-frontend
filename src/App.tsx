@@ -4,6 +4,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import ProtectedRoute from './components/ProtectedRoute'
 import SuperAdminRoute from './components/SuperAdminRoute'
 import Sidebar from './components/Sidebar'
+import HelpSuggestionWidget from './components/HelpSuggestionWidget'
 import Header from './components/Header'
 import Footer from './components/Footer'
 import NotFound from './components/NotFound'
@@ -116,6 +117,7 @@ function AppShell() {
         <Footer />
       </div>
       <AIAssistant />
+      <HelpSuggestionWidget />
     </div>
   )
 }

@@ -110,23 +110,14 @@ export default function Integrations() {
           )}
         </div>
 
-        {/* Social Integration Status */}
-        <div className="mb-6 bg-[#0F1535] border border-slate-800 rounded-xl p-5">
-          <h2 className="text-base font-semibold text-white mb-3">Connected Channels</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[
-              { name: 'WhatsApp', status: 'Configure in Settings', color: 'text-green-400', icon: '💬' },
-              { name: 'Instagram', status: 'Add API Token', color: 'text-pink-400', icon: '📷' },
-              { name: 'Facebook', status: 'Add API Token', color: 'text-blue-400', icon: '👤' },
-              { name: 'Website API', status: apiKey ? 'Active' : 'Set API key', color: apiKey ? 'text-green-400' : 'text-amber-400', icon: '🌐' },
-            ].map((ch) => (
-              <div key={ch.name} className="bg-[#0A0E27] border border-slate-800 rounded-lg p-3 text-center">
-                <div className="text-2xl mb-1">{ch.icon}</div>
-                <div className="text-xs font-semibold text-white">{ch.name}</div>
-                <div className={`text-[10px] ${ch.color}`}>{ch.status}</div>
-              </div>
-            ))}
-          </div>
+        {/* One Key, Everything */}
+        <div className="mb-6 bg-gradient-to-r from-[#0066FF]/10 to-[#0F1535] border border-[#0066FF]/20 rounded-xl p-5">
+          <h2 className="text-sm font-semibold text-white mb-1.5">One Key Powers Everything</h2>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            The API key above authenticates <span className="text-[#0066FF] font-medium">every</span> endpoint on this page, your generated
+            gym website, your connected existing website, and the member portal. There is nothing else to set up here —
+            for WhatsApp, Instagram, Facebook, and payment tokens, go to <a href="/settings" className="text-[#0066FF] underline">Settings</a>.
+          </p>
         </div>
 
         {/* API Cards */}
