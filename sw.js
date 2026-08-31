@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gym-os-v9.0.0';
+const CACHE_NAME = 'gym-os-v11.0.0';
 const STATIC_ASSETS = [
   './manifest.json',
   './favicon.ico',
