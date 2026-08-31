@@ -5,7 +5,6 @@ import {
   CreditCard,
   Users,
   Calendar,
-  Zap,
   CheckCircle2,
   ChevronRight,
   ChevronLeft,
@@ -19,8 +18,6 @@ import {
   ShieldCheck,
   Check,
   AlertCircle,
-  MessageSquare,
-  Mail,
   X
 } from 'lucide-react'
 
@@ -64,17 +61,6 @@ interface GymClass {
   trainerId: string
 }
 
-interface IntegrationItem {
-  enabled: boolean
-  apiKey: string
-}
-
-interface Integrations {
-  whatsapp: IntegrationItem
-  payments: IntegrationItem
-  email: IntegrationItem
-}
-
 interface OnboardingData {
   profile: {
     name: string
@@ -88,7 +74,6 @@ interface OnboardingData {
   plans: MembershipPlan[]
   trainers: Trainer[]
   classes: GymClass[]
-  integrations: Integrations
   completedAt?: string
 }
 
@@ -144,14 +129,7 @@ export default function Onboarding() {
     { id: '1', name: '', day: 'Monday', time: '07:00', capacity: '20', trainerId: '' },
   ])
 
-  // Step 5 State
-  const [integrations, setIntegrations] = useState<Integrations>({
-    whatsapp: { enabled: false, apiKey: '' },
-    payments: { enabled: false, apiKey: '' },
-    email: { enabled: false, apiKey: '' },
-  })
-
-  const totalSteps = 6
+  const totalSteps = 5
 
   // Logo upload preview handler
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -228,7 +206,6 @@ export default function Onboarding() {
       plans: cleanedPlans.length > 0 ? cleanedPlans : plans,
       trainers: cleanedTrainers.length > 0 ? cleanedTrainers : trainers,
       classes: cleanedClasses.length > 0 ? cleanedClasses : classesList,
-      integrations,
       completedAt: new Date().toISOString(),
     }
 
@@ -289,8 +266,7 @@ export default function Onboarding() {
     { num: 2, label: 'Membership Plans', icon: CreditCard },
     { num: 3, label: 'Trainers', icon: Users },
     { num: 4, label: 'Classes', icon: Calendar },
-    { num: 5, label: 'Integrations', icon: Zap },
-    { num: 6, label: 'Review & Complete', icon: ShieldCheck },
+    { num: 5, label: 'Review & Complete', icon: ShieldCheck },
   ]
 
   return (
@@ -334,7 +310,7 @@ export default function Onboarding() {
             </div>
 
             {/* Step Pills */}
-            <div className="hidden sm:grid grid-cols-6 gap-2 pt-2">
+            <div className="hidden sm:grid grid-cols-5 gap-2 pt-2">
               {stepsConfig.map((s) => {
                 const Icon = s.icon
                 const isCurrent = s.num === currentStep
@@ -890,172 +866,8 @@ export default function Onboarding() {
             </div>
           )}
 
-          {/* STEP 5: INTEGRATIONS */}
+          {/* STEP 5: REVIEW & COMPLETE */}
           {currentStep === 5 && (
-            <div className="bg-[#111827] border border-slate-800 rounded-2xl p-5 sm:p-8 space-y-6 shadow-xl">
-              <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-blue-500" />
-                  Integrations
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                  Connect third-party services. All fields are optional and can be updated anytime in Settings.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                {/* WhatsApp Integration */}
-                <div className="p-4 rounded-xl bg-[#0f172a] border border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg">
-                        <MessageSquare size={20} />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-semibold text-white">WhatsApp Business API</h3>
-                        <p className="text-xs text-slate-400">
-                          Automate member reminders, payment receipts, and marketing broadcasts.
-                        </p>
-                      </div>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={integrations.whatsapp.enabled}
-                        onChange={(e) =>
-                          setIntegrations({
-                            ...integrations,
-                            whatsapp: { ...integrations.whatsapp, enabled: e.target.checked },
-                          })
-                        }
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-
-                  {integrations.whatsapp.enabled && (
-                    <div className="pt-2">
-                      <label className="text-xs text-slate-300 block mb-1">WhatsApp API Key / Token</label>
-                      <input
-                        type="password"
-                        value={integrations.whatsapp.apiKey}
-                        onChange={(e) =>
-                          setIntegrations({
-                            ...integrations,
-                            whatsapp: { ...integrations.whatsapp, apiKey: e.target.value },
-                          })
-                        }
-                        placeholder="e.g. EAAGm0PX4ZC0..."
-                        className="w-full bg-[#1a233a] border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Razorpay Integration */}
-                <div className="p-4 rounded-xl bg-[#0f172a] border border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg">
-                        <CreditCard size={20} />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-semibold text-white">Razorpay Payments</h3>
-                        <p className="text-xs text-slate-400">
-                          Collect Online Payments via UPI, Cards, NetBanking, and auto-recurring.
-                        </p>
-                      </div>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={integrations.payments.enabled}
-                        onChange={(e) =>
-                          setIntegrations({
-                            ...integrations,
-                            payments: { ...integrations.payments, enabled: e.target.checked },
-                          })
-                        }
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-
-                  {integrations.payments.enabled && (
-                    <div className="pt-2">
-                      <label className="text-xs text-slate-300 block mb-1">Razorpay Key ID</label>
-                      <input
-                        type="password"
-                        value={integrations.payments.apiKey}
-                        onChange={(e) =>
-                          setIntegrations({
-                            ...integrations,
-                            payments: { ...integrations.payments, apiKey: e.target.value },
-                          })
-                        }
-                        placeholder="e.g. rzp_live_xxxxxxxxxxxxxx"
-                        className="w-full bg-[#1a233a] border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Email Integration */}
-                <div className="p-4 rounded-xl bg-[#0f172a] border border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-purple-500/10 text-purple-400 rounded-lg">
-                        <Mail size={20} />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-semibold text-white">Email Gateway</h3>
-                        <p className="text-xs text-slate-400">
-                          Send transactional emails, membership invoices, and welcome packs.
-                        </p>
-                      </div>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={integrations.email.enabled}
-                        onChange={(e) =>
-                          setIntegrations({
-                            ...integrations,
-                            email: { ...integrations.email, enabled: e.target.checked },
-                          })
-                        }
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                  </div>
-
-                  {integrations.email.enabled && (
-                    <div className="pt-2">
-                      <label className="text-xs text-slate-300 block mb-1">Email Service API Key</label>
-                      <input
-                        type="password"
-                        value={integrations.email.apiKey}
-                        onChange={(e) =>
-                          setIntegrations({
-                            ...integrations,
-                            email: { ...integrations.email, apiKey: e.target.value },
-                          })
-                        }
-                        placeholder="e.g. SG.xxxxxxxxxxxxxxxxxxxxxx"
-                        className="w-full bg-[#1a233a] border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 6: REVIEW & COMPLETE */}
-          {currentStep === 6 && (
             <div className="bg-[#111827] border border-slate-800 rounded-2xl p-5 sm:p-8 space-y-6 shadow-xl">
               <div className="text-center space-y-2 pb-2">
                 <div className="w-14 h-14 bg-blue-600/20 text-blue-400 rounded-2xl border border-blue-500/30 flex items-center justify-center mx-auto shadow-inner">
@@ -1188,50 +1000,6 @@ export default function Onboarding() {
                       <p className="text-slate-500 italic">No classes scheduled</p>
                     )}
                   </div>
-                </div>
-              </div>
-
-              {/* Integrations Summary */}
-              <div className="p-4 rounded-xl bg-[#0f172a] border border-slate-800 space-y-2">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                  <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                    <Zap size={16} className="text-blue-400" /> Integrations Status
-                  </h3>
-                  <button
-                    onClick={() => setCurrentStep(5)}
-                    className="text-xs text-blue-400 hover:underline"
-                  >
-                    Edit
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-2 pt-1">
-                  <span
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 ${
-                      integrations.whatsapp.enabled
-                        ? 'bg-emerald-950/60 text-emerald-400 border border-emerald-800/80'
-                        : 'bg-slate-800/60 text-slate-500'
-                    }`}
-                  >
-                    WhatsApp: {integrations.whatsapp.enabled ? 'Enabled' : 'Disabled'}
-                  </span>
-                  <span
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 ${
-                      integrations.payments.enabled
-                        ? 'bg-blue-950/60 text-blue-400 border border-blue-800/80'
-                        : 'bg-slate-800/60 text-slate-500'
-                    }`}
-                  >
-                    Razorpay: {integrations.payments.enabled ? 'Enabled' : 'Disabled'}
-                  </span>
-                  <span
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1.5 ${
-                      integrations.email.enabled
-                        ? 'bg-purple-950/60 text-purple-400 border border-purple-800/80'
-                        : 'bg-slate-800/60 text-slate-500'
-                    }`}
-                  >
-                    Email: {integrations.email.enabled ? 'Enabled' : 'Disabled'}
-                  </span>
                 </div>
               </div>
 

@@ -104,7 +104,7 @@ function AppShell() {
                 <Route path="/at-risk" element={<AtRisk />} />
                 <Route path="/staff" element={<Staff />} />
                 <Route path="/referrals" element={<Referrals />} />
-                <Route path="/integrations" element={<Integrations />} />
+                <Route path="/integrations" element={<SuperAdminRoute><Integrations /></SuperAdminRoute>} />
                 <Route path="/website-sync" element={<WebsiteSync />} />
                 <Route path="/super-admin" element={<SuperAdminRoute><SuperAdmin /></SuperAdminRoute>} />
                 <Route path="/qr-passes" element={<QrPasses />} />

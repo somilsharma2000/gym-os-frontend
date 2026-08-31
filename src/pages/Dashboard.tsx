@@ -5,7 +5,7 @@ import {
   Users, UserPlus, Ticket, UserCheck, ClipboardList, CreditCard,
   AlertTriangle, Calendar, RefreshCw, TrendingUp,
   PieChart as PieChartIcon, Activity, ArrowUpRight, Megaphone,
-  IndianRupee, Zap, X, CheckCircle2, Send, Sparkles
+  IndianRupee, Zap, X, CheckCircle2, Send
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -48,13 +48,6 @@ export default function Dashboard() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [error, setError] = useState('')
   const [lastRefresh, setLastRefresh] = useState('')
-
-  const [hasOnboardingData, setHasOnboardingData] = useState(true)
-
-  useEffect(() => {
-    const onboarding = localStorage.getItem('gym_os_onboarding_data')
-    setHasOnboardingData(!!onboarding)
-  }, [])
 
   // Section-specific independent loading states
   const [kpiLoading, setKpiLoading] = useState(true)
@@ -349,25 +342,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {!hasOnboardingData && (
-        <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white p-4 rounded-xl shadow-lg border border-blue-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-white/10 rounded-lg backdrop-blur-sm">
-              <Sparkles className="w-5 h-5 text-blue-200" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-base sm:text-lg">Welcome to Gym OS! Complete your setup →</h3>
-              <p className="text-xs text-blue-100">Set up your gym profile, plans, trainers, classes, and integrations to get started.</p>
-            </div>
-          </div>
-          <button
-            onClick={() => navigate('/onboarding')}
-            className="cursor-pointer shrink-0 px-4 py-2 bg-white text-blue-600 hover:bg-blue-50 font-semibold text-sm rounded-lg transition-all shadow-sm hover:shadow flex items-center gap-1.5"
-          >
-            Start Setup <ArrowUpRight className="w-4 h-4" />
-          </button>
-        </div>
-      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Command Center</h2>

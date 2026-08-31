@@ -49,7 +49,7 @@ const allNavItems = [
   { path: '/socials', label: 'Social Media', icon: Megaphone },
   { path: '/staff', label: 'Staff', icon: UserCog },
   { path: '/settings', label: 'Settings', icon: Settings, roles: ['gym_owner', 'super_admin'] },
-  { path: '/integrations', label: 'Integrations', icon: Settings },
+  { path: '/integrations', label: 'Integrations', icon: Settings, superAdminOnly: true },
   { path: '/website-sync', label: 'Website Sync', icon: Globe },
   { path: '/super-admin', label: 'Super Admin', icon: Building2, superAdminOnly: true },
 ]
