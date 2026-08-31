@@ -33,9 +33,6 @@ const GYMOS_FUNCTIONS = new Set([
   'checkInWithAttendance', 'connectGymWebsite', 'setupGymProfile', 'detectAtRiskMembers',
   'expireTrialPasses', 'autoFollowUpTask', 'sendDailySummary', 'updateRenewalPipeline',
   'seedGymData', 'createTrialBooking',
-  'activateTrial', 'getPayments', 'getRevenue', 'fetchExpiringMembers',
-  'getApiKey', 'regenerateApiKey', 'ingestFeedback',
-  'createTrialPassV2', 'createMembershipPass', 'validatePass', 'getPassStatus'
 ])
 
 // Functions handled by the unified gymAdmin backend function
@@ -55,6 +52,9 @@ const GYM_ADMIN_ACTIONS = new Set([
 const ADMIN_FUNCTIONS = new Set([
   'login', 'getGymSettings', 'updateGymSettings', 'getAllGyms', 'getGymProfile',
   'getIntegrations', 'updateIntegrations', 'generateGymWebsite',
+  'getPayments', 'getRevenue', 'getApiKey', 'regenerateApiKey',
+  'ingestFeedback', 'activateTrial', 'fetchExpiringMembers',
+  'createTrialPassV2', 'createMembershipPass', 'validatePass', 'getPassStatus',
   ...GYM_ADMIN_ACTIONS
 ])
 
@@ -581,7 +581,7 @@ export const api = {
   // Renewals
   getRenewals: async (days: number = 30): Promise<any> => {
     if (DEMO_MODE) return { success: true, renewals: demoRenewals, expiring_members: demoRenewals }
-    return apiCall('fetchExpiringMembers', { days })
+    return apiCall('getRenewals', { days })
   },
 
   fetchExpiringMembers: async (gym_id?: string, days: number = 30): Promise<any> => {
@@ -677,7 +677,7 @@ export const api = {
   // Feedback
   submitFeedback: async (data: any): Promise<any> => {
     if (DEMO_MODE) return { success: true }
-    return apiCall('ingestFeedback', data)
+    return apiCall(data)
   },
 
   // API Key management
