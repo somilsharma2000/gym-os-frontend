@@ -54,7 +54,7 @@ export default function Payments() {
   const handleGenerateInvoice = async (paymentId: string) => {
     setInvoiceLoading(paymentId)
     try {
-      const gymId = localStorage.getItem('gym_os_gym_id') || 'gym_oxigen'
+      const gymId = localStorage.getItem('gym_os_gym_id') || ''
       const res = await fetch(`${API_BASE}/generateInvoice`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ payment_id: paymentId, gym_id: gymId })
@@ -88,7 +88,7 @@ export default function Payments() {
   const handleMarkPaid = async (payment: any) => {
     setActionLoading(payment.id)
     try {
-      const gymId = localStorage.getItem('gym_os_gym_id') || 'gym_oxigen'
+      const gymId = localStorage.getItem('gym_os_gym_id') || ''
       const res = await fetch(`${API_BASE}/recordPaymentWithInvoice`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -281,7 +281,7 @@ function RecordPaymentModal({ onClose, onRecorded }: { onClose: () => void; onRe
     setSubmitting(true)
     setError('')
     try {
-      const gymId = localStorage.getItem('gym_os_gym_id') || 'gym_oxigen'
+      const gymId = localStorage.getItem('gym_os_gym_id') || ''
       const res = await fetch(`${API_BASE}/recordPaymentWithInvoice`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -89,7 +89,7 @@ export default function Classes() {
   const handleBatchEnroll = async () => {
     if (!enrollModal || selectedMembers.size === 0) return
     setEnrollLoading(true)
-    const gymId = localStorage.getItem('gym_os_gym_id') || 'gym_oxigen'
+    const gymId = localStorage.getItem('gym_os_gym_id') || ''
     let successCount = 0
     let failedCount = 0
 
@@ -193,7 +193,7 @@ export default function Classes() {
   }
 
   const generateEnrollmentLink = (classId: string) => {
-    const gymId = localStorage.getItem('gym_os_gym_id') || 'gym_oxigen'
+    const gymId = localStorage.getItem('gym_os_gym_id') || ''
     return `${window.location.origin}/#/enroll?class=${classId}&gym=${gymId}`
   }
 

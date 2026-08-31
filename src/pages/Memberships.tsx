@@ -155,7 +155,7 @@ function MembershipModal({ membership, plans, onClose, onSaved }: { membership: 
     setSubmitting(true)
     setError('')
     try {
-      const gymId = localStorage.getItem('gym_os_gym_id') || 'gym_oxigen'
+      const gymId = localStorage.getItem('gym_os_gym_id') || ''
       const expiry = calculateExpiry(startDate, planDuration)
       // Create or update membership
       const payload = {

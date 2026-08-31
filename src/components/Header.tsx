@@ -30,7 +30,7 @@ interface BranchInfo {
 }
 
 const DEFAULT_GYMS: GymInfo[] = [
-  { gym_id: 'gym_oxigen', gym_name: 'Oxigen Fitness', branding: { primary_color: '#0066FF' } },
+  
   { gym_id: 'gym_powerhouse', gym_name: 'PowerHouse Fitness', branding: { primary_color: '#0066FF' } },
   { gym_id: 'gym_ironforge', gym_name: 'IronForge Fitness', branding: { primary_color: '#0066FF' } }
 ]

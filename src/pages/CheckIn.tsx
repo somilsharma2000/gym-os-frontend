@@ -351,7 +351,7 @@ export default function CheckIn() {
     if (!qrGenMember) return
     setQrGenLoading(true)
     try {
-      const gymId = localStorage.getItem('gym_os_gym_id') || 'gym_oxigen'
+      const gymId = localStorage.getItem('gym_os_gym_id') || ''
       const member = members.find(m => m.id === qrGenMember)
       const res = await fetch(`${API_BASE}/generateMemberQR`, {
         method: 'POST',

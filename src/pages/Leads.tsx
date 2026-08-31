@@ -990,7 +990,7 @@ function ConvertToMemberModal({
   const handleConvert = async () => {
     setSubmitting(true)
     try {
-      const gymId = localStorage.getItem('gym_os_gym_id') || 'gym_oxigen'
+      const gymId = localStorage.getItem('gym_os_gym_id') || ''
       const res = await api.convertLeadToMember(gymId, lead.id, {
         name: lead.name,
         phone: lead.phone,
@@ -1076,7 +1076,7 @@ function AddLeadModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
     if (!consent) { setError('Consent is required to add a lead (GDPR compliance)'); return }
     setSubmitting(true)
     try {
-      const gymId = localStorage.getItem('gym_os_gym_id') || 'gym_oxigen'
+      const gymId = localStorage.getItem('gym_os_gym_id') || ''
       const res = await fetch(`${API_BASE}/createLeadWithConsent`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1146,7 +1146,7 @@ function ImportModal({ onClose, onImported }: { onClose: () => void; onImported:
     setImporting(true)
     const lines = csvText.trim().split('\n')
     let added = 0, failed = 0
-    const gymId = localStorage.getItem('gym_os_gym_id') || 'gym_oxigen'
+    const gymId = localStorage.getItem('gym_os_gym_id') || ''
 
     for (const line of lines) {
       const [name, phone, email, source, interest] = line.split(',').map(s => s.trim())

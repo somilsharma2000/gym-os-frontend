@@ -194,7 +194,7 @@ export function getGymId(): string {
     return user.gym_id
   }
   // SUPER ADMIN can switch gyms — use localStorage selection
-  return localStorage.getItem(GYM_KEY) || import.meta.env.VITE_DEFAULT_GYM_ID || 'gym_oxigen'
+  return localStorage.getItem(GYM_KEY) || import.meta.env.VITE_DEFAULT_GYM_ID || ''
 }
 
 export function setGymId(gymId: string): void {
@@ -282,8 +282,8 @@ export async function apiCall<T = any>(functionName: string, payload?: Record<st
     if (user && user.role === 'gym_owner' && user.gym_id && user.gym_id !== 'ALL') {
       effectiveGymId = user.gym_id  // Use locked gym_id
     } else {
-      // Super admin with ALL — use last selected gym, don't default to gym_oxigen
-      effectiveGymId = localStorage.getItem(GYM_KEY) || 'gym_oxigen'
+      // Super admin with ALL — use last selected gym, don't default to a hardcoded gym
+      effectiveGymId = localStorage.getItem(GYM_KEY) || ''
     }
   }
   try {
