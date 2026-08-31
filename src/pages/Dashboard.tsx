@@ -5,7 +5,7 @@ import {
   Users, UserPlus, Ticket, UserCheck, ClipboardList, CreditCard,
   AlertTriangle, Calendar, RefreshCw, TrendingUp,
   PieChart as PieChartIcon, Activity, ArrowUpRight, Megaphone,
-  IndianRupee, Zap, X, CheckCircle2, Plus, Send
+  IndianRupee, Zap, X, CheckCircle2, Send
 } from 'lucide-react'
 import {
   ResponsiveContainer,

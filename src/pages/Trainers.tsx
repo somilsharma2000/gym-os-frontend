@@ -7,15 +7,15 @@ import {
   IndianRupee,
   Plus,
   CheckCircle2,
-  Clock,
+
   QrCode,
   Bell,
   X,
   Phone,
-  Mail,
-  Award,
+
+
   Check,
-  AlertCircle,
+
   Search,
   MessageCircle,
   Eye,
@@ -23,7 +23,6 @@ import {
   ClipboardList
 } from 'lucide-react'
 import { api } from '../api/client'
-import StatusBadge from '../components/StatusBadge'
 import LoadingScreen from '../components/LoadingScreen'
 
 export interface TrainerTask {

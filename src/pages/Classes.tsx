@@ -4,7 +4,7 @@ import {
   Users,
   Clock,
   UserPlus,
-  UserMinus,
+
   Loader,
   Check,
   AlertCircle,
@@ -17,7 +17,7 @@ import {
   Search,
   CheckSquare,
   Square,
-  Sparkles,
+
   Dumbbell
 } from 'lucide-react'
 import LoadingScreen from '../components/LoadingScreen'

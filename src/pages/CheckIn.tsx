@@ -3,9 +3,10 @@ import {
   Search, UserCheck, AlertCircle, Clock, Ban, MapPin, Repeat, Camera,
   CameraOff, QrCode, Loader, Download, Plus, X, Copy, Check, TrendingUp,
   Calendar, Users, FileText, LogOut, Sparkles, Filter, Activity, BarChart2,
-  CheckCircle, ArrowUpRight
+  CheckCircle, ArrowUpRight, CheckCircle2, Zap
 } from 'lucide-react'
 import { api } from '../api/client'
+import { demoMembers } from '../data/demoData'
 import { exportToCSV } from '../utils/csvExport'
 import type { ValidationResult, CheckInResult, CheckIn } from '../types'
 
@@ -88,6 +89,98 @@ export default function CheckIn() {
   const [qrSearch, setQrSearch] = useState('')
   const [toastMessage, setToastMessage] = useState<string | null>(null)
   const [exportingPdf, setExportingPdf] = useState(false)
+
+  // Visual QR Scanner Mockup states
+  const [simulating, setSimulating] = useState(false)
+  const [scanSuccess, setScanSuccess] = useState(false)
+  const [lastSimulatedScan, setLastSimulatedScan] = useState<{ member: any; time: string; pass_type: string } | null>(null)
+  const [recentSimulatedScans, setRecentSimulatedScans] = useState<Array<{ id: string; member: any; time: string; entry_method: string }>>([])
+
+  // Seed initial simulated scans for demo display
+  useEffect(() => {
+    const memberPool = demoMembers && demoMembers.length > 0 ? demoMembers : [
+      { id: 'mem_001', name: 'Arjun Singh', membership_type: 'Annual VIP Pass', qr_code: 'QR-ARJ-001' },
+      { id: 'mem_002', name: 'Karan Mehta', membership_type: 'Quarterly Pass', qr_code: 'QR-KAR-002' },
+      { id: 'mem_003', name: 'Sanjay Rao', membership_type: 'Monthly Pass', qr_code: 'QR-SAN-003' }
+    ]
+    setRecentSimulatedScans([
+      {
+        id: 'sim_init_1',
+        member: memberPool[0] || { name: 'Arjun Singh', membership_type: 'Annual VIP Pass' },
+        time: '08:15 AM',
+        entry_method: 'QR'
+      },
+      {
+        id: 'sim_init_2',
+        member: memberPool[1] || { name: 'Karan Mehta', membership_type: 'Quarterly Pass' },
+        time: '08:42 AM',
+        entry_method: 'QR'
+      },
+      {
+        id: 'sim_init_3',
+        member: memberPool[2] || { name: 'Sanjay Rao', membership_type: 'Monthly Pass' },
+        time: '09:05 AM',
+        entry_method: 'QR'
+      }
+    ])
+  }, [])
+
+  const handleSimulateScan = () => {
+    setSimulating(true)
+    setScanSuccess(false)
+
+    const memberPool = demoMembers && demoMembers.length > 0 ? demoMembers : [
+      { id: 'mem_001', name: 'Arjun Singh', membership_type: 'Annual VIP Pass', qr_code: 'QR-ARJ-001' },
+      { id: 'mem_002', name: 'Karan Mehta', membership_type: 'Quarterly Pass', qr_code: 'QR-KAR-002' },
+      { id: 'mem_003', name: 'Sanjay Rao', membership_type: 'Monthly Pass', qr_code: 'QR-SAN-003' },
+      { id: 'mem_004', name: 'John Doe', membership_type: 'Annual VIP Pass', qr_code: 'QR-JOH-004' },
+      { id: 'mem_005', name: 'Sarah Chen', membership_type: 'Half-Yearly Pass', qr_code: 'QR-SAR-005' },
+      { id: 'mem_006', name: 'Mike Ross', membership_type: 'Quarterly Pass', qr_code: 'QR-MIK-006' },
+      { id: 'mem_007', name: 'Emma Wilson', membership_type: 'Monthly Pass', qr_code: 'QR-EMM-007' }
+    ]
+
+    const randomMember = memberPool[Math.floor(Math.random() * memberPool.length)]
+    const now = new Date()
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    const isoTime = now.toISOString()
+
+    setTimeout(() => {
+      const scanData = {
+        member: randomMember,
+        time: timeStr,
+        pass_type: randomMember.membership_type || (randomMember as any).plan_name || 'Annual VIP Pass'
+      }
+
+      setLastSimulatedScan(scanData)
+      setSimulating(false)
+      setScanSuccess(true)
+
+      // Auto-add to today's check-in list (sessions state)
+      const newSession: CheckIn = {
+        id: 'cin_sim_' + Date.now(),
+        member_name: randomMember.name,
+        member_id: randomMember.id,
+        check_in_time: isoTime,
+        entry_method: 'QR',
+        qr_token: (randomMember as any).qr_code || (randomMember as any).qr_token || ('QR-' + randomMember.id)
+      }
+
+      setSessions(prev => [newSession, ...prev])
+
+      // Update recent simulated scans list (last 5)
+      setRecentSimulatedScans(prev => [
+        {
+          id: newSession.id,
+          member: randomMember,
+          time: timeStr,
+          entry_method: 'QR'
+        },
+        ...prev
+      ].slice(0, 5))
+
+      showToast('QR Check-in recorded for ' + randomMember.name + '!')
+    }, 350)
+  }
 
   const scannerRef = useRef<any>(null)
   const scannerDivId = 'qr-reader'
@@ -649,159 +742,295 @@ export default function CheckIn() {
 
       {/* TAB 1: SCANNER */}
       {activeTab === 'scanner' && (
-        <div className="max-w-2xl mx-auto space-y-6">
-          {/* Camera Scanner Box */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                <Camera size={18} className="text-brand-600" /> Camera Scanner
-              </h3>
-              {cameraActive ? (
-                <button
-                  onClick={stopCamera}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-600 bg-red-50 dark:bg-red-900/30 rounded-md hover:bg-red-100 dark:hover:bg-red-900/50"
-                >
-                  <CameraOff size={14} /> Stop Camera
-                </button>
-              ) : (
-                <button
-                  onClick={startCamera}
-                  disabled={cameraLoading}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 text-sm text-white bg-brand-600 rounded-md hover:bg-brand-700 disabled:opacity-50 font-medium"
-                >
-                  {cameraLoading ? <Loader size={14} className="animate-spin" /> : <Camera size={14} />}
-                  {cameraLoading ? 'Starting...' : 'Start Camera'}
-                </button>
+        <div className="space-y-8 max-w-4xl mx-auto">
+          {/* VISUAL QR SCANNER MOCKUP CARD */}
+          <div className="bg-[#0a0e17] rounded-3xl border border-slate-800/80 p-6 sm:p-8 shadow-2xl relative overflow-hidden text-white">
+            {/* Ambient Background Glow */}
+            <div className="absolute -top-24 -left-24 w-72 h-72 bg-[#2563eb]/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-24 -right-24 w-72 h-72 bg-[#2563eb]/10 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Mockup Header */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-slate-800/80">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                  </span>
+                  <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                    Visual QR Scanner
+                  </h3>
+                  <span className="px-2.5 py-0.5 text-[11px] font-semibold tracking-wide uppercase rounded-full bg-[#2563eb]/20 text-blue-400 border border-[#2563eb]/30">
+                    Live Demo
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  Simulate member QR pass scans for instant attendance verification
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs font-mono text-slate-400 bg-slate-900/80 border border-slate-800 px-3 py-1.5 rounded-lg">
+                <Zap size={14} className="text-[#2563eb]" />
+                <span>Status: Scanner Active</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              {/* VIEWPORT & SIMULATE BUTTON COLUMN */}
+              <div className="lg:col-span-7 flex flex-col items-center">
+                {/* CAMERA VIEWPORT BOX (Dark Navy #0a0e17 / slate-950, ~300x300px, rounded corners) */}
+                <div className="relative w-[300px] h-[300px] bg-[#060913] rounded-2xl border border-slate-800 shadow-2xl overflow-hidden flex flex-col items-center justify-center p-4 group">
+                  
+                  {/* Corner Brackets (4 L-shaped borders in #2563eb blue) */}
+                  <div className="absolute top-3 left-3 w-8 h-8 border-t-4 border-l-4 border-[#2563eb] rounded-tl-md pointer-events-none z-20 shadow-[0_0_8px_#2563eb]" />
+                  <div className="absolute top-3 right-3 w-8 h-8 border-t-4 border-r-4 border-[#2563eb] rounded-tr-md pointer-events-none z-20 shadow-[0_0_8px_#2563eb]" />
+                  <div className="absolute bottom-3 left-3 w-8 h-8 border-b-4 border-l-4 border-[#2563eb] rounded-bl-md pointer-events-none z-20 shadow-[0_0_8px_#2563eb]" />
+                  <div className="absolute bottom-3 right-3 w-8 h-8 border-b-4 border-r-4 border-[#2563eb] rounded-br-md pointer-events-none z-20 shadow-[0_0_8px_#2563eb]" />
+
+                  {/* Scanning Horizontal Line Animation */}
+                  <div className="absolute left-3 right-3 h-[3px] bg-gradient-to-r from-transparent via-[#2563eb] to-transparent shadow-[0_0_15px_#2563eb] animate-scan-line pointer-events-none z-15" />
+
+                  {/* Viewport Content: Scan Success Screen vs Idle Scanner Screen */}
+                  {scanSuccess && lastSimulatedScan ? (
+                    <div className="absolute inset-0 bg-[#060913]/95 backdrop-blur-md z-30 flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+                      {/* Green Checkmark Pop-in */}
+                      <div className="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400 flex items-center justify-center mb-3 animate-checkmark-pop shadow-[0_0_25px_rgba(16,185,129,0.4)]">
+                        <Check size={36} strokeWidth={3} />
+                      </div>
+
+                      <span className="px-2.5 py-0.5 text-[10px] font-bold tracking-widest uppercase rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 mb-1">
+                        Check-in Verified
+                      </span>
+
+                      <h4 className="text-lg font-bold text-white leading-tight">
+                        {lastSimulatedScan.member.name}
+                      </h4>
+
+                      <p className="text-xs text-slate-300 font-mono mt-1">
+                        Time: {lastSimulatedScan.time}
+                      </p>
+
+                      <div className="mt-2 text-[11px] text-blue-300 bg-[#2563eb]/20 px-2.5 py-1 rounded border border-[#2563eb]/30 font-medium">
+                        {lastSimulatedScan.pass_type}
+                      </div>
+
+                      <p className="text-[10px] text-emerald-400/90 mt-2 font-medium flex items-center gap-1">
+                        <CheckCircle2 size={12} /> Auto-added to today's list
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-center z-10 p-4">
+                      <div className="w-20 h-20 rounded-2xl bg-[#2563eb]/10 border border-[#2563eb]/20 flex items-center justify-center mb-3 text-[#2563eb]">
+                        <QrCode size={42} className="opacity-80 animate-pulse" />
+                      </div>
+                      <p className="text-sm font-medium text-slate-200">
+                        {simulating ? 'Scanning QR Pass...' : 'Align QR Pass in Frame'}
+                      </p>
+                      <p className="text-[11px] text-slate-400 mt-1 max-w-[200px]">
+                        Click Simulate Scan below to test instant member check-in
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* SIMULATE SCAN BUTTON (Below Viewport Box) */}
+                <div className="w-full max-w-[300px] mt-5">
+                  <button
+                    onClick={handleSimulateScan}
+                    disabled={simulating}
+                    className="w-full py-3.5 px-6 bg-[#2563eb] hover:bg-blue-600 active:scale-95 disabled:opacity-50 text-white font-semibold rounded-xl shadow-lg shadow-blue-600/30 hover:shadow-blue-600/50 transition-all flex items-center justify-center gap-2.5 cursor-pointer text-sm"
+                  >
+                    {simulating ? (
+                      <>
+                        <Loader size={18} className="animate-spin text-white" />
+                        <span>Scanning...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles size={18} className="text-blue-200" />
+                        <span>Simulate Scan</span>
+                      </>
+                    )}
+                  </button>
+                  <p className="text-[11px] text-slate-400 text-center mt-2">
+                    Random demo member check-in trigger
+                  </p>
+                </div>
+              </div>
+
+              {/* RECENT SCANS LIST COLUMN (Last 5 simulated scans) */}
+              <div className="lg:col-span-5 bg-slate-900/70 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between h-full min-h-[340px]">
+                <div>
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                    <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                      <Clock size={16} className="text-[#2563eb]" /> Recent Scans
+                    </h4>
+                    <span className="text-[11px] text-slate-400 font-mono">
+                      Last 5 QR Entries
+                    </span>
+                  </div>
+
+                  {recentSimulatedScans.length === 0 ? (
+                    <div className="py-8 text-center text-slate-500 text-xs">
+                      No simulated scans recorded yet. Click "Simulate Scan" to test.
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {recentSimulatedScans.slice(0, 5).map((scan, index) => (
+                        <div
+                          key={scan.id || index}
+                          className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-slate-700 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-[#2563eb]/20 text-blue-400 border border-[#2563eb]/30 flex items-center justify-center text-xs font-bold shrink-0">
+                              {(scan.member.name || '?').charAt(0).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-xs font-semibold text-white truncate">
+                                {scan.member.name}
+                              </div>
+                              <p className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+                                <span>{scan.time}</span>
+                                <span className="text-slate-600">•</span>
+                                <span className="text-slate-300 font-mono text-[10px] truncate max-w-[100px]">
+                                  {scan.member.membership_type || (scan.member as any).plan_name || 'Pass'}
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0 ml-2">
+                            <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                              {scan.entry_method || 'QR'}
+                            </span>
+                            <span className="w-2 h-2 rounded-full bg-emerald-500" title="Checked In" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-400">
+                  <span>Entry Method: <strong className="text-blue-400">QR</strong></span>
+                  <span className="text-emerald-400 flex items-center gap-1 font-medium">
+                    <CheckCircle2 size={12} /> Auto Sync Active
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* SECONDARY SECTION: Webcam Device & Manual QR Token Lookup */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Webcam Device Option */}
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                  <Camera size={18} className="text-brand-600" /> Physical Camera Hardware
+                </h3>
+                {cameraActive ? (
+                  <button
+                    onClick={stopCamera}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-600 bg-red-50 dark:bg-red-900/30 rounded-md hover:bg-red-100 dark:hover:bg-red-900/50"
+                  >
+                    <CameraOff size={14} /> Stop Camera
+                  </button>
+                ) : (
+                  <button
+                    onClick={startCamera}
+                    disabled={cameraLoading}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white bg-brand-600 rounded-md hover:bg-brand-700 disabled:opacity-50 font-medium"
+                  >
+                    {cameraLoading ? <Loader size={14} className="animate-spin" /> : <Camera size={14} />}
+                    {cameraLoading ? 'Starting...' : 'Connect USB/Webcam'}
+                  </button>
+                )}
+              </div>
+
+              {cameraActive && (
+                <div className="rounded-lg overflow-hidden border-2 border-brand-200 dark:border-brand-800">
+                  <div id={scannerDivId} className="w-full" style={{ minHeight: '220px' }} />
+                </div>
+              )}
+
+              {!cameraActive && !cameraLoading && (
+                <div className="flex flex-col items-center justify-center py-6 text-center bg-slate-50 dark:bg-slate-900/40 rounded-lg border border-dashed border-slate-200 dark:border-slate-700">
+                  <Camera size={32} className="text-slate-300 dark:text-slate-600 mb-2" />
+                  <p className="text-xs font-medium text-slate-600 dark:text-slate-300">Optionally connect external physical camera</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">Scans live physical member QR cards</p>
+                </div>
               )}
             </div>
 
-            {cameraActive && (
-              <div className="rounded-lg overflow-hidden border-2 border-brand-200 dark:border-brand-800">
-                <div id={scannerDivId} className="w-full" style={{ minHeight: '300px' }} />
-              </div>
-            )}
-
-            {!cameraActive && !cameraLoading && (
-              <div className="flex flex-col items-center justify-center py-8 text-center bg-slate-50 dark:bg-slate-900/40 rounded-lg border border-dashed border-slate-200 dark:border-slate-700">
-                <Camera size={44} className="text-slate-300 dark:text-slate-600 mb-3" />
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-300">Click "Start Camera" to scan QR codes</p>
-                <p className="text-xs text-slate-400 mt-1">Or use manual entry token below</p>
-              </div>
-            )}
-          </div>
-
-          {/* Manual Entry */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-6 space-y-4 shadow-sm">
-            <div>
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">
-                Manual Entry (Token lookup)
-              </label>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    type="text"
-                    placeholder="Enter or paste QR token (e.g. QR-ARJ-001)..."
-                    value={token}
-                    onChange={e => setToken(e.target.value)}
-                    onKeyDown={e => e.key === 'Enter' && handleValidate()}
-                    className="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 dark:border-slate-700 rounded-md bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 font-mono"
-                  />
-                </div>
-                <button
-                  onClick={() => handleValidate()}
-                  disabled={validating || !token.trim()}
-                  className="px-6 py-2.5 text-sm font-medium text-white bg-brand-600 rounded-md hover:bg-brand-700 disabled:opacity-50 whitespace-nowrap"
-                >
-                  {validating ? 'Validating...' : 'Validate'}
-                </button>
-              </div>
-            </div>
-
-            {error && (
-              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-sm text-red-600 dark:text-red-400">
-                {error}
-              </div>
-            )}
-
-            {validation && config && (
-              <div className={`border-2 rounded-lg p-4 ${config.color}`}>
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-lg font-bold">{config.label}</span>
-                </div>
-                {validation.valid && validation.person_name && (
-                  <div className="space-y-1 text-sm">
-                    <div><span className="opacity-60">Person:</span> <span className="font-semibold">{validation.person_name}</span></div>
-                    <div><span className="opacity-60">Pass Type:</span> <span className="font-medium">{validation.pass_type || 'Member'}</span></div>
-                    <div><span className="opacity-60">Status:</span> <span className="font-medium">{validation.status || 'Active'}</span></div>
+            {/* Manual Entry (Token lookup) */}
+            <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 space-y-3 shadow-sm">
+              <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                <Search size={18} className="text-brand-600" /> Manual Pass Lookup
+              </h3>
+              <div>
+                <label className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5 block">
+                  Enter or Paste QR Code Token
+                </label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="e.g. QR-ARJ-001 or MBR-AJS-001..."
+                      value={token}
+                      onChange={e => setToken(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleValidate()}
+                      className="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 dark:border-slate-700 rounded-md bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 focus:outline-none focus:border-brand-400 font-mono"
+                    />
                   </div>
-                )}
-                {!validation.valid && (
-                  <p className="text-sm opacity-80">
-                    {validation.result === 'INVALID' && 'This QR token was not found in the system.'}
-                    {validation.result === 'EXPIRED' && 'Membership has expired. Please renew.'}
-                    {validation.result === 'REVOKED' && 'This pass has been revoked.'}
-                    {validation.result === 'WRONG_BRANCH' && 'This member belongs to a different gym branch.'}
-                    {validation.result === 'ALREADY_USED' && 'This member has already checked in today.'}
-                  </p>
-                )}
-                {validation.valid && !checkInResult && (
                   <button
-                    onClick={handleCheckIn}
-                    disabled={checkingIn}
-                    className="mt-3 px-6 py-2 text-sm font-medium text-white bg-brand-600 rounded-md hover:bg-brand-700 disabled:opacity-50"
+                    onClick={() => handleValidate()}
+                    disabled={validating || !token.trim()}
+                    className="px-4 py-2 text-xs font-medium text-white bg-brand-600 rounded-md hover:bg-brand-700 disabled:opacity-50 whitespace-nowrap"
                   >
-                    {checkingIn ? 'Checking in...' : 'Confirm Check-In'}
+                    {validating ? 'Validating...' : 'Validate'}
                   </button>
-                )}
-                {checkInResult && checkInResult.success && (
-                  <div className="mt-3 p-3 bg-green-100 dark:bg-green-900/30 rounded text-sm text-green-700 dark:text-green-400">
-                    {checkInResult.message || 'Check-in successful!'}
-                  </div>
-                )}
-                <button onClick={reset} className="mt-3 text-xs opacity-60 hover:opacity-100 block">
-                  Reset Scanner
-                </button>
+                </div>
               </div>
-            )}
-          </div>
 
-          {/* Recent Check-ins */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-200 mb-3 flex items-center justify-between">
-              <span>Recent Check-ins</span>
-              <span className="text-xs text-slate-400 font-normal">Last scans</span>
-            </h3>
-            {recentCheckins.length === 0 ? (
-              <p className="text-sm text-slate-400 text-center py-4">No recent check-ins recorded.</p>
-            ) : (
-              <div className="space-y-2">
-                {recentCheckins.slice(0, 5).map((c, i) => (
-                  <div key={i} className="flex items-center justify-between py-2 border-b border-slate-100 dark:border-slate-700 last:border-0">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-brand-50 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 flex items-center justify-center text-xs font-bold">
-                        {(c.member_name || '?').charAt(0).toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{c.member_name || 'Unknown'}</p>
-                        <p className="text-xs text-slate-400">
-                          {c.check_in_time ? formatTime(c.check_in_time) : ''} · {c.entry_method || 'QR Scan'}
-                        </p>
-                      </div>
-                    </div>
-                    {c.duration_minutes ? (
-                      <span className="text-xs text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded">
-                        {c.duration_minutes} min
-                      </span>
-                    ) : (
-                      <span className="text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded font-medium">
-                        Active
-                      </span>
-                    )}
+              {error && (
+                <div className="p-2.5 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-xs text-red-600 dark:text-red-400">
+                  {error}
+                </div>
+              )}
+
+              {validation && config && (
+                <div className={`border-2 rounded-lg p-3 ${config.color}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-sm font-bold">{config.label}</span>
                   </div>
-                ))}
-              </div>
-            )}
+                  {validation.valid && validation.person_name && (
+                    <div className="space-y-1 text-xs">
+                      <div><span className="opacity-60">Person:</span> <span className="font-semibold">{validation.person_name}</span></div>
+                      <div><span className="opacity-60">Pass Type:</span> <span className="font-medium">{validation.pass_type || 'Member'}</span></div>
+                    </div>
+                  )}
+                  {validation.valid && !checkInResult && (
+                    <button
+                      onClick={handleCheckIn}
+                      disabled={checkingIn}
+                      className="mt-2.5 px-4 py-1.5 text-xs font-medium text-white bg-brand-600 rounded-md hover:bg-brand-700 disabled:opacity-50"
+                    >
+                      {checkingIn ? 'Checking in...' : 'Confirm Check-In'}
+                    </button>
+                  )}
+                  {checkInResult && checkInResult.success && (
+                    <div className="mt-2.5 p-2 bg-green-100 dark:bg-green-900/30 rounded text-xs text-green-700 dark:text-green-400">
+                      {checkInResult.message || 'Check-in successful!'}
+                    </div>
+                  )}
+                  <button onClick={reset} className="mt-2 text-[11px] opacity-60 hover:opacity-100 block">
+                    Reset Scanner
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

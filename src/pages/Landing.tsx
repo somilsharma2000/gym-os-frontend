@@ -11,7 +11,7 @@ import {
   X,
   Mail,
   Phone,
-  ArrowRight,
+
   ShieldCheck,
   Building2,
   Zap,
@@ -23,7 +23,7 @@ import {
   Loader2,
   MapPin,
   Clock,
-  Sparkle
+
 } from 'lucide-react'
 import { enableDemoMode } from '../data/demoData'
 

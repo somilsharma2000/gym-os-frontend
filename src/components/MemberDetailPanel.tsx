@@ -11,7 +11,7 @@ import {
   Snowflake,
   RefreshCw,
   User,
-  ShieldAlert,
+
   Clock,
   CreditCard,
   Send,
@@ -23,7 +23,6 @@ import {
   UserCheck
 } from 'lucide-react'
 import type { Member } from '../types'
-import { api } from '../api/client'
 import { demoCheckIns, demoPayments, demoStaff } from '../data/demoData'
 import StatusBadge from './StatusBadge'
 

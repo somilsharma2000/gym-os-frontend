@@ -18,12 +18,12 @@ import {
   MessageCircle,
   Building2,
   Settings,
-  Zap,
   Megaphone,
   BarChart3,
   Dumbbell,
   ClipboardList,
-  ChevronLeft
+  ChevronLeft,
+  Globe
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { isSuperAdmin } from '../api/client'
@@ -40,7 +40,6 @@ const allNavItems = [
   { path: '/trainers', label: 'Trainers', icon: Dumbbell },
   { path: '/payments', label: 'Payments', icon: IndianRupee },
   { path: '/revenue', label: 'Revenue', icon: TrendingUp },
-  { path: '/revenue-engine', label: 'Revenue Engine', icon: Zap },
   { path: '/at-risk', label: 'At-Risk', icon: AlertTriangle },
   { path: '/renewals', label: 'Renewals', icon: RefreshCw },
   { path: '/referrals', label: 'Referrals', icon: Share2 },
@@ -50,6 +49,7 @@ const allNavItems = [
   { path: '/staff', label: 'Staff', icon: UserCog },
   { path: '/settings', label: 'Settings', icon: Settings, roles: ['gym_owner', 'super_admin'] },
   { path: '/integrations', label: 'Integrations', icon: Settings },
+  { path: '/website-sync', label: 'Website Sync', icon: Globe },
   { path: '/super-admin', label: 'Super Admin', icon: Building2, superAdminOnly: true },
 ]
 

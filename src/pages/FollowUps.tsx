@@ -7,19 +7,18 @@ import {
   CheckCircle2,
   Clock,
   User,
-  Filter,
+
   Search,
   Plus,
-  AlertCircle,
+
   X,
   ExternalLink,
-  ChevronRight,
-  Sparkles,
-  ArrowRight,
-  ShieldAlert,
-  Tag
+
+
+
+
+
 } from 'lucide-react'
-import { api } from '../api/client'
 
 const FOLLOWUPS_KEY = 'gym_os_followups_data'
 

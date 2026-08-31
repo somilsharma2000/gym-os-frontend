@@ -1,22 +1,22 @@
 import { useState, useEffect, useMemo } from 'react'
 import {
   BarChart3,
-  TrendingUp,
-  Filter,
+
+
   Users,
   PieChart as PieChartIcon,
   Share2,
   Target,
   ArrowUpRight,
-  ArrowDownRight,
+
   RefreshCw,
-  Zap,
-  Globe,
-  Instagram,
-  UserCheck,
-  Calendar,
-  Layers,
-  ChevronRight
+
+
+
+
+
+
+
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -31,15 +31,15 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Funnel,
-  FunnelChart,
-  LabelList
+
+
+
 } from 'recharts'
 import { api } from '../api/client'
 
 export default function Analytics() {
   const [loading, setLoading] = useState(true)
-  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d')
+  const [] = useState<'7d' | '30d' | '90d'>('30d')
   const [dashboardMetrics, setDashboardMetrics] = useState<any>(null)
   const [leadsList, setLeadsList] = useState<any[]>([])
 

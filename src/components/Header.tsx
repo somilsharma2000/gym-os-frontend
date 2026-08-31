@@ -13,7 +13,7 @@ import {
   Settings
 } from 'lucide-react'
 import { api, getGymId, setGymId, getBranchId, setBranchId, isSuperAdmin } from '../api/client'
-import { DEMO_MODE } from '../data/demoData'
+import { DEMO_MODE, getDemoScale, getDemoDataForScale } from '../data/demoData'
 import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 
@@ -30,7 +30,6 @@ interface BranchInfo {
 }
 
 const DEFAULT_GYMS: GymInfo[] = [
-  
   { gym_id: 'gym_powerhouse', gym_name: 'PowerHouse Fitness', branding: { primary_color: '#0066FF' } },
   { gym_id: 'gym_ironforge', gym_name: 'IronForge Fitness', branding: { primary_color: '#0066FF' } }
 ]
@@ -47,8 +46,9 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
   const [gyms, setGyms] = useState<GymInfo[]>(DEFAULT_GYMS)
   const [selectedGym, setSelectedGym] = useState<GymInfo | null>(null)
 
-  // Demo mode: show demo gym, no branch switcher
-  const demoGym: GymInfo = { gym_id: 'gym_demo', gym_name: 'PULSE Fitness Hyderabad' }
+  // Demo mode scale state
+  const [demoScale, setDemoScale] = useState<'small' | 'large'>(() => getDemoScale())
+
   const [gymDropdownOpen, setGymDropdownOpen] = useState(false)
 
   const [branches] = useState<BranchInfo[]>(SAMPLE_BRANCHES)
@@ -64,22 +64,16 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
   const _isSuperAdmin = isSuperAdmin() || user?.role === 'super_admin'
   const _isGymOwner = user?.role === 'gym_owner'
 
-  // Determine visibility rules:
-  // Gym Switcher: Only shown for super_admin (never in demo mode)
+  // Visibility rules
   const showGymSwitcher = _isSuperAdmin && !DEMO_MODE
-
-  // Branch Selector: Only shown for super_admin OR if gym_owner has > 1 branch.
-  // Hidden in demo mode, hidden for gym owners with single branch.
   const showBranchSelector = (_isSuperAdmin || (_isGymOwner && branches.length > 1)) && !DEMO_MODE
 
-  // Initialize selected branch from localStorage
   useEffect(() => {
     const currentBranchId = getBranchId()
     const found = branches.find(b => b.id === currentBranchId) || branches[0]
     setSelectedBranch(found)
   }, [branches])
 
-  // Initialize gyms list and selected gym
   useEffect(() => {
     let isMounted = true
 
@@ -118,7 +112,6 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
     return () => { isMounted = false }
   }, [_isSuperAdmin, user])
 
-  // Close dropdowns on outside click
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
       if (gymDropdownRef.current && !gymDropdownRef.current.contains(e.target as Node)) {
@@ -149,6 +142,15 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
     window.dispatchEvent(new CustomEvent('branch:changed', { detail: branch.id }))
   }
 
+  const handleScaleToggle = (newScale: 'small' | 'large') => {
+    if (newScale === demoScale) return
+    setDemoScale(newScale)
+    localStorage.setItem('gym_os_demo_scale', newScale)
+    // ensure scale data is updated
+    getDemoDataForScale(newScale)
+    window.location.reload()
+  }
+
   const handleLogout = () => {
     logout()
     navigate('/login', { replace: true })
@@ -156,7 +158,7 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
 
   return (
     <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700/80 px-4 sm:px-6 py-2.5 flex items-center justify-between sticky top-0 z-40 transition-colors shadow-sm">
-      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-wrap">
         <button
           type="button"
           onClick={onMenuClick}
@@ -166,7 +168,7 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
           <Menu size={22} />
         </button>
 
-        {/* GYM SWITCHER (Super Admin only dropdown, static badge for gym owners) */}
+        {/* GYM SWITCHER */}
         <div className="relative" ref={gymDropdownRef}>
           {showGymSwitcher ? (
             <button
@@ -194,7 +196,6 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
             </div>
           )}
 
-          {/* Gym Dropdown Menu (Super Admin only) */}
           {gymDropdownOpen && showGymSwitcher && (
             <div className="absolute top-full left-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 py-1.5 z-50 animate-in fade-in zoom-in-95">
               <div className="px-3 py-1.5 border-b border-slate-100 dark:border-slate-700/60">
@@ -228,7 +229,7 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
           )}
         </div>
 
-        {/* BRANCH SELECTOR DROPDOWN (hidden if gym_owner has only 1 branch) */}
+        {/* BRANCH SELECTOR DROPDOWN */}
         {showBranchSelector && (
           <div className="relative hidden md:block" ref={branchDropdownRef}>
             <button
@@ -247,7 +248,6 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
               <ChevronDown size={14} className={`text-slate-400 transition-transform ${branchDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* Branch Dropdown Menu */}
             {branchDropdownOpen && (
               <div className="absolute top-full left-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 py-1.5 z-50 animate-in fade-in zoom-in-95">
                 <div className="px-3 py-1.5 border-b border-slate-100 dark:border-slate-700/60">
@@ -278,6 +278,34 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* DEMO MODE SCALE TOGGLE (Pill Toggle) */}
+        {DEMO_MODE && (
+          <div className="flex items-center bg-slate-100 dark:bg-slate-900/90 p-1 rounded-full border border-slate-200 dark:border-slate-700/80 text-xs shadow-inner">
+            <button
+              type="button"
+              onClick={() => handleScaleToggle('small')}
+              className={`px-3 py-1 rounded-full font-semibold transition-all cursor-pointer ${
+                demoScale === 'small'
+                  ? 'bg-brand-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              Small Gym
+            </button>
+            <button
+              type="button"
+              onClick={() => handleScaleToggle('large')}
+              className={`px-3 py-1 rounded-full font-semibold transition-all cursor-pointer ${
+                demoScale === 'large'
+                  ? 'bg-brand-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              Established Gym (300+)
+            </button>
           </div>
         )}
       </div>

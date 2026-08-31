@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, X, Copy, Check, Clock, AlertCircle, Calendar, UserCheck, Zap } from 'lucide-react'
+import { Plus, X, Copy, Check, Clock, AlertCircle, UserCheck, Zap } from 'lucide-react'
 import { api } from '../api/client'
 import type { TrialPass, Lead } from '../types'
 import StatusBadge from '../components/StatusBadge'

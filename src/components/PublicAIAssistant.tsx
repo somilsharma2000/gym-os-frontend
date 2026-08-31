@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Sparkles, X, Send, ChevronDown } from 'lucide-react'
+import { Sparkles, Send, ChevronDown } from 'lucide-react'
 
 type Msg = { role: 'user' | 'ai'; text: string }
 

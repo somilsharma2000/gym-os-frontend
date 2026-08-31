@@ -21,10 +21,10 @@ const Members = React.lazy(() => import('./pages/Members'))
 const Memberships = React.lazy(() => import('./pages/Memberships'))
 const Payments = React.lazy(() => import('./pages/Payments'))
 const Revenue = React.lazy(() => import('./pages/Revenue'))
-const RevenueEngine = React.lazy(() => import('./pages/RevenueEngine'))
 const Analytics = React.lazy(() => import('./pages/Analytics'))
 const Socials = React.lazy(() => import('./pages/Socials'))
 const Integrations = React.lazy(() => import('./pages/Integrations'))
+const WebsiteSync = React.lazy(() => import('./pages/WebsiteSync'))
 const WhatsApp = React.lazy(() => import('./pages/WhatsApp'))
 const Classes = React.lazy(() => import('./pages/Classes'))
 const Trainers = React.lazy(() => import('./pages/Trainers'))
@@ -72,7 +72,6 @@ function AppShell() {
               <Route path="/memberships" element={<Memberships />} />
               <Route path="/payments" element={<Payments />} />
               <Route path="/revenue" element={<Revenue />} />
-              <Route path="/revenue-engine" element={<RevenueEngine />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/socials" element={<Socials />} />
               <Route path="/whatsapp" element={<WhatsApp />} />
@@ -83,6 +82,7 @@ function AppShell() {
               <Route path="/staff" element={<Staff />} />
               <Route path="/referrals" element={<Referrals />} />
               <Route path="/integrations" element={<Integrations />} />
+              <Route path="/website-sync" element={<WebsiteSync />} />
               <Route path="/super-admin" element={<SuperAdminRoute><SuperAdmin /></SuperAdminRoute>} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />

@@ -10,28 +10,28 @@ import {
   Copy,
   Check,
   Zap,
-  Instagram,
-  Facebook,
-  MessageCircle,
-  Video,
+
+
+
+
   Clock,
-  TrendingUp,
-  Heart,
-  MessageSquare,
-  Eye,
-  Send,
+
+
+
+
+
   X,
-  FileText,
+
   Lightbulb,
-  Award,
-  Layers
+
+
 } from 'lucide-react'
 import {
   ResponsiveContainer,
   AreaChart,
   Area,
-  BarChart,
-  Bar,
+
+
   PieChart,
   Pie,
   Cell,

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { TrendingUp, AlertTriangle, Users, Target, Gift, Zap, IndianRupee, RefreshCw, Phone, MessageSquare, Award, Flame, ChevronRight, Loader, CheckCircle } from 'lucide-react'
-import { api } from '../api/client'
+import { TrendingUp, AlertTriangle, Users, Target, Gift, Zap, IndianRupee, RefreshCw, MessageSquare, Award, Flame, Loader, CheckCircle } from 'lucide-react'
 
 interface RevenueData {
   forecast: {

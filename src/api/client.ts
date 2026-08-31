@@ -1,7 +1,7 @@
 // API Client with authentication, env-based config, and proper error handling
 import {
   DEMO_MODE,
-  demoUser,
+
   demoDashboardData,
   demoLeads,
   demoTrials,
@@ -11,7 +11,9 @@ import {
   demoClasses,
   demoStaff,
   demoReferrals,
-  demoRenewals
+  demoRenewals,
+  demoPayments,
+  demoRevenue
 } from '../data/demoData'
 
 // GYMOS app (6a8949954092729194579577) — has real data: leads, members, memberships, check-ins, classes
@@ -114,7 +116,7 @@ export function isTokenExpired(token: string): boolean {
     // Legacy base64 format: payload.signature (2 parts)
     if (parts.length === 2) {
       const payload = atob(parts[0])
-      const [accountId, gymId, expiryStr] = payload.split(':')
+      const [expiryStr] = payload.split(':')
       if (!expiryStr) return true
       const expiryTimestamp = parseInt(expiryStr, 10)
       if (isNaN(expiryTimestamp)) return true
@@ -459,7 +461,7 @@ export const api = {
 
   // At-risk members
   getAtRiskMembers: async (gym_id: string, days_threshold?: number): Promise<any> => {
-    if (DEMO_MODE) return { success: true, at_risk_members: [], count: 0 }
+    if (DEMO_MODE) return { success: true, at_risk_members: demoMembers.filter((m: any) => m.risk_status === "high"), count: demoMembers.filter((m: any) => m.risk_status === "high").length }
     return apiCall('getAtRiskMembers', { gym_id, days_threshold })
   },
 
@@ -506,7 +508,7 @@ export const api = {
 
   // Payments
   getPayments: async (): Promise<any> => {
-    if (DEMO_MODE) return { success: true, payments: [] }
+    if (DEMO_MODE) return { success: true, payments: demoPayments }
     return apiCall('getPayments')
   },
 
@@ -518,7 +520,7 @@ export const api = {
   // Expenses
   // Revenue
   getRevenue: async (): Promise<any> => {
-    if (DEMO_MODE) return { success: true, revenue: { monthly: [], breakdown: {} } }
+    if (DEMO_MODE) return { success: true, ...demoRevenue }
     return apiCall('getRevenue')
   },
 

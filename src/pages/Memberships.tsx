@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { CreditCard, CheckCircle, AlertCircle, XCircle, Plus, X, Loader, Calendar, User, Phone, IndianRupee, Edit, Clock } from 'lucide-react'
+import { CreditCard, CheckCircle, AlertCircle, XCircle, Plus, X, Calendar, User, Phone, IndianRupee, Edit, Clock } from 'lucide-react'
 import LoadingScreen from '../components/LoadingScreen'
 import { api } from '../api/client'
 import StatusBadge from '../components/StatusBadge'

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { AlertTriangle, ShieldCheck, AlertCircle, Phone, MessageCircle, Gift, Calendar, UserCheck, Activity, TrendingDown, Clock, X, Send, Loader, Bell, Tag, Star, UserPlus, Zap } from 'lucide-react'
+import { AlertTriangle, ShieldCheck, AlertCircle, Phone, MessageCircle, Gift, Calendar, Activity, TrendingDown, Clock, X, Send, Loader, Bell, UserPlus, Zap } from 'lucide-react'
 import LoadingScreen from '../components/LoadingScreen'
 import { api } from '../api/client'
 import StatusBadge from '../components/StatusBadge'

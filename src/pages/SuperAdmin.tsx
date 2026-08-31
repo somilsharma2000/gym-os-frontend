@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Building2, Plus, Globe, Settings as SettingsIcon, Users, Search, X, TrendingUp, CheckCircle, AlertCircle, Loader, IndianRupee, ArrowRight, Link2, Key, Trash2, AlertTriangle, Code, Copy } from 'lucide-react'
+import { Building2, Plus, Globe, Settings as SettingsIcon, Users, Search, X, TrendingUp, CheckCircle, AlertCircle, Loader, IndianRupee, ArrowRight, Link2, Trash2, AlertTriangle, Code, Copy } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 
 const API_BASE = 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'

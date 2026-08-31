@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Users,
   UserCheck,
@@ -12,20 +12,20 @@ import {
   ChevronRight,
   Sparkles,
   QrCode,
-  ShieldCheck,
-  Zap,
+
+
   BarChart2,
-  Calendar,
+
   Phone,
   Mail,
   CheckCircle2,
   Clock,
-  ExternalLink,
+
   Building2,
   Lock,
   MessageSquare
 } from 'lucide-react'
-import { demoDashboardData, demoLeads, demoRevenue, demoCheckIns } from '../data/demoData'
+import { demoDashboardData, demoLeads, demoRevenue } from '../data/demoData'
 
 // Custom count-up hook for animated statistics
 function useCountUp(endValue: number, duration: number = 1000) {
