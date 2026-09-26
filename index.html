@@ -1,34 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/jpeg" href="/gym-os-frontend/brand/beyond-pixells-logo.jpg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-    <meta name="theme-color" content="#0A0E27" />
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
-    <link rel="manifest" href="/gym-os-frontend/manifest.json" />
-    <link rel="apple-touch-icon" href="/gym-os-frontend/apple-touch-icon.png" />
-    <title>GYM OS — by Beyond Pixels</title>
-    <script type="module" crossorigin src="/gym-os-frontend/assets/index-CyUlefS_.js"></script>
-    <link rel="stylesheet" crossorigin href="/gym-os-frontend/assets/index-DVOGpGtF.css">
-  </head>
-  <body>
-    <div id="root"></div>
-    <script>
-      // Kill any old service workers that are caching stale content
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-          for (var registration of registrations) {
-            registration.unregister();
-          }
-          // After unregistering, register the fresh one
-          navigator.serviceWorker.register("./sw.js").catch(function() {});
-        });
-      }
-    </script>
-  </body>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="refresh" content="0; url=https://gym-os-app.vercel.app/">
+  <meta name="robots" content="noindex">
+  <title>GYM OS — by Beyond Pixels</title>
+  <style>
+    body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+           background:#08132e; color:#fff; font-family:system-ui, sans-serif; }
+    a { color:#7ba4f0; font-size:1.1rem; }
+  </style>
+</head>
+<body>
+  <p>GYM OS has moved. <a href="https://gym-os-app.vercel.app/">Continue to the new site →</a></p>
+  <script>location.replace("https://gym-os-app.vercel.app/");</script>
+</body>
 </html>
