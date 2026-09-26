@@ -4,7 +4,6 @@ import PublicFooter from '../components/PublicFooter'
 import { api } from '../api/client'
 import {
   Calendar,
-  Instagram,
   CheckCircle2,
   Loader2,
   Sparkles,
@@ -26,8 +25,11 @@ export default function Contact() {
     notes: ''
   })
 
+  const WHATSAPP = '917737077479'
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [viaWhatsApp, setViaWhatsApp] = useState(false)
+  const [waLink, setWaLink] = useState('')
   const [errorMsg, setErrorMsg] = useState('')
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -42,27 +44,39 @@ export default function Contact() {
     setLoading(true)
     setErrorMsg('')
 
+    let captured = false
     try {
-      // Call api.createLeadWithConsent
-      await api.createLeadWithConsent({
-        name: formData.name,
-        gym_name: formData.gym_name,
-        phone: formData.phone,
-        email: formData.email,
-        city: formData.city,
-        notes: formData.notes,
-        source: 'Contact Form - Book Demo',
-        status: 'new'
-      })
-
-      setLoading(false)
-      setSubmitted(true)
-    } catch (err: any) {
-      console.error('Lead creation error:', err)
-      // Even if network fails in static env, show success state or graceful error fallback
-      setLoading(false)
-      setSubmitted(true)
+      // REAL capture — posts to our own backend (gym-os-app).
+      const res = await Promise.race([
+        api.createLeadWithConsent({
+          name: formData.name,
+          gym_name: formData.gym_name,
+          phone: formData.phone,
+          email: formData.email,
+          city: formData.city,
+          notes: formData.notes,
+          source: 'Contact Form - Book Demo',
+          status: 'new',
+          consent: true,
+          consent_purpose: 'Contact about Gym OS demo',
+        }),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 7000)),
+      ])
+      captured = !!(res && res.success)
+    } catch {
+      captured = false
     }
+
+    if (!captured) {
+      // WhatsApp fallback — enquiry prefilled, user clicks (never popup-blocked)
+      setViaWhatsApp(true)
+      const msg = encodeURIComponent(
+        `Hi Beyond Pixells! I want a Gym OS demo.\nName: ${formData.name}\nGym: ${formData.gym_name}\nPhone: ${formData.phone}\nCity: ${formData.city}`
+      )
+      setWaLink(`https://wa.me/${WHATSAPP}?text=${msg}`)
+    }
+    setLoading(false)
+    setSubmitted(true)
   }
 
   return (
@@ -95,17 +109,17 @@ export default function Contact() {
             <div className="bg-[#131a26] border border-slate-800 rounded-3xl p-6 sm:p-8">
               <h3 className="text-xl font-bold text-white mb-2">Have a quick question?</h3>
               <p className="text-xs text-slate-300 leading-relaxed mb-6">
-                Prefer direct messaging? DM us on Instagram for quick answers about Gym OS, custom website options, or onboarding details.
+                Prefer direct messaging? WhatsApp us for quick answers about Gym OS, custom website options, or onboarding details.
               </p>
               
               <a
-                href="https://instagram.com"
+                href="https://wa.me/917737077479?text=Hi%20Beyond%20Pixells!%20I%20have%20a%20quick%20question%20about%20Gym%20OS."
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 hover:from-pink-500 hover:to-indigo-500 transition-all flex items-center justify-center gap-2 shadow-lg shadow-pink-600/20"
+                className="w-full py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20"
               >
-                <Instagram size={18} />
-                <span>DM us on Instagram</span>
+                <MessageSquare size={18} />
+                <span>WhatsApp us directly</span>
               </a>
             </div>
 
@@ -138,11 +152,26 @@ export default function Contact() {
                   </div>
                   <h3 className="text-2xl font-extrabold text-white">Demo Request Received!</h3>
                   <p className="text-slate-300 text-sm max-w-md mx-auto leading-relaxed">
-                    Thank you! Your demo request has been successfully recorded. Our product specialist from Beyond Pixells will reach out to schedule your walkthrough.
+                    {viaWhatsApp
+                      ? 'We opened WhatsApp with your enquiry prefilled — just hit send and we have you covered. Our product specialist from Beyond Pixells will reach out to schedule your walkthrough.'
+                      : 'Thank you! Your demo request has been successfully recorded. Our product specialist from Beyond Pixells will reach out to schedule your walkthrough.'}
                   </p>
+                  {viaWhatsApp && waLink && (
+                    <a
+                      href={waLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 rounded-xl shadow-lg shadow-emerald-600/20 transition-all"
+                    >
+                      <MessageSquare size={16} />
+                      Continue on WhatsApp
+                    </a>
+                  )}
                   <button
                     onClick={() => {
                       setSubmitted(false)
+                      setViaWhatsApp(false)
+                      setWaLink('')
                       setFormData({ name: '', gym_name: '', phone: '', email: '', city: '', notes: '' })
                     }}
                     className="mt-4 px-6 py-2.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 rounded-xl transition-all cursor-pointer"

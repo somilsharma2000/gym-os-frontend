@@ -26,7 +26,8 @@ import {
   Award,
   FileText,
   RotateCcw,
-  Menu
+  Menu,
+  MessageSquare
 } from 'lucide-react'
 import { enableDemoMode } from '../data/demoData'
 import { api } from '../api/client'
@@ -102,6 +103,7 @@ export default function Landing() {
   const navigate = useNavigate()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [waFallbackLink, setWaFallbackLink] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [consentGiven, setConsentGiven] = useState(false)
@@ -116,7 +118,10 @@ export default function Landing() {
 
   const handleLiveDemo = () => {
     enableDemoMode()
-    navigate('/dashboard')
+    // Full reload — AuthContext reads demo mode at mount; a SPA navigate
+    // would bounce the visitor to /login. Reload guarantees the demo session.
+    window.location.hash = '#/dashboard'
+    window.location.reload()
   }
 
   const handleLogin = () => {
@@ -154,19 +159,22 @@ export default function Landing() {
     }
 
     if (!captured) {
-      // WhatsApp fallback — enquiry prefilled, nothing lost
+      // WhatsApp fallback — enquiry prefilled, user clicks (never popup-blocked)
       const msg = encodeURIComponent(
         `Hi Beyond Pixells! I want a Gym OS demo.\nName: ${formData.name}\nGym: ${formData.gymName}\nPhone: ${formData.phone}`
       )
-      window.open(`https://wa.me/${WHATSAPP}?text=${msg}`, '_blank', 'noopener')
+      setWaFallbackLink(`https://wa.me/${WHATSAPP}?text=${msg}`)
     }
 
     setIsSubmitting(false)
     setIsSubmitted(true)
-    setTimeout(() => {
-      enableDemoMode()
-      navigate('/dashboard')
-    }, 1500)
+    if (captured) {
+      setTimeout(() => {
+        enableDemoMode()
+        window.location.hash = '#/dashboard'
+        window.location.reload()
+      }, 1500)
+    }
   }
 
   const handleCloseModal = () => {
@@ -920,8 +928,19 @@ export default function Landing() {
                 </div>
                 <h3 className="text-xl font-bold text-white">Demo Request Received!</h3>
                 <p className="text-sm text-slate-300 leading-relaxed">
-                  Thank you <span className="font-semibold text-white">{formData.name}</span>. Our team at Beyond Pixells is redirecting you to the live demo environment now...
+                  Thank you <span className="font-semibold text-white">{formData.name}</span>. {waFallbackLink ? "We couldn't reach our server, so we've prepared your enquiry on WhatsApp — just tap below and hit send." : "Our team at Beyond Pixells is redirecting you to the live demo environment now..."}
                 </p>
+                {waFallbackLink && (
+                  <a
+                    href={waFallbackLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-6 py-3 text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 rounded-xl shadow-lg shadow-emerald-600/20 transition-all"
+                  >
+                    <MessageSquare size={16} />
+                    Continue on WhatsApp
+                  </a>
+                )}
                 <div className="flex items-center justify-center gap-2 text-xs text-blue-400 pt-3 font-semibold">
                   <Loader2 size={16} className="animate-spin" />
                   <span>Launching Live Demo...</span>

@@ -24,7 +24,10 @@ export default function PublicHeader() {
 
   const handleDashboardClick = () => {
     enableDemoMode()
-    navigate('/dashboard')
+    // Full reload — AuthContext reads demo mode at mount; a SPA navigate
+    // would bounce the visitor to /login. Reload guarantees the demo session.
+    window.location.hash = '#/dashboard'
+    window.location.reload()
   }
 
   return (

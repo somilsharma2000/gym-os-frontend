@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Dumbbell, ShieldCheck, FileText, RotateCcw, Calendar, Instagram } from 'lucide-react'
+import { Dumbbell, ShieldCheck, FileText, RotateCcw, Calendar, MessageCircle } from 'lucide-react'
 
 export default function PublicFooter() {
   return (
@@ -20,13 +20,13 @@ export default function PublicFooter() {
           </p>
           <div className="pt-2">
             <a
-              href="https://instagram.com"
+              href="https://wa.me/917737077479?text=Hi%20Beyond%20Pixells!%20I%20have%20a%20question%20about%20Gym%20OS."
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700 rounded-lg transition-all"
             >
-              <Instagram size={15} className="text-pink-400" />
-              <span>DM us on Instagram</span>
+              <MessageCircle size={15} className="text-emerald-400" />
+              <span>WhatsApp us</span>
             </a>
           </div>
         </div>
