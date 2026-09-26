@@ -17,9 +17,9 @@ import {
 } from '../data/demoData'
 
 // GYMOS app (6a8949954092729194579577) — has real data: leads, members, memberships, check-ins, classes
-const GYMOS_API_BASE = 'https://base44.app/api/apps/6a8949954092729194579577/functions'
-// Superagent app (6a700b150c8d8b8e923580a1) — auth, gym management, settings, integrations
-const ADMIN_API_BASE = 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
+// Own backend (gym-os-app on Vercel, Neon Postgres) — no third-party limits
+const GYMOS_API_BASE = 'https://gym-os-app.vercel.app/api/ops'
+const ADMIN_API_BASE = 'https://gym-os-app.vercel.app/api/ops'
 // Legacy aliases (for backward compat)
 const API_BASE = GYMOS_API_BASE
 const AUTH_API_BASE = ADMIN_API_BASE
@@ -106,7 +106,8 @@ export function getAuthUser(): AuthUser | null {
 }
 
 export function isTokenExpired(token: string): boolean {
-  if (token.startsWith('demo_') || token.startsWith('gymos_')) return false
+  // Opaque bearer tokens (own backend, no dots) — expiry is enforced server-side via 401
+  if (token.startsWith('demo_') || token.startsWith('gymos_') || !token.includes('.')) return false
   try {
     const parts = token.split('.')
     // JWT format: header.payload.signature (3 parts)
