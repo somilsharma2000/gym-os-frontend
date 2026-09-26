@@ -417,6 +417,21 @@ export const api = {
     return apiCall('createLeadWithConsent', data)
   },
 
+  // Public website lead capture (unauthenticated, consent-gated on the backend)
+  captureWebsiteLead: async (data: Record<string, unknown>): Promise<any> => {
+    let res: Response
+    try {
+      res = await fetch(`${GYMOS_API_BASE}/captureWebsiteLead`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+    } catch {
+      throw new ApiRequestError('Network error — unable to reach the server.', 0)
+    }
+    try { return await res.json() } catch { throw new ApiRequestError('Invalid server response.', res.status) }
+  },
+
   // Trials
   getTrialPasses: async (filters?: Record<string, unknown>): Promise<any> => {
     if (DEMO_MODE) return { success: true, trial_passes: demoTrials.map(t => ({ id: t.id, lead_id: t.lead_id, member_name: t.lead_name, member_phone: t.phone, qr_token: t.qr_token, status: t.status, pass_type: 'Trial Pass', valid_from: t.created_date, valid_until: t.expiry_date + 'T23:59:59Z', check_in_time: t.check_in_time || '', created_date: t.created_date, preferred_visit_period: t.preferred_visit_time })) }

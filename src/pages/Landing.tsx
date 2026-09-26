@@ -140,7 +140,7 @@ export default function Landing() {
     let captured = false
     try {
       const res = await Promise.race([
-        api.createLeadWithConsent({
+        api.captureWebsiteLead({
           name: formData.name,
           phone: formData.phone,
           email: formData.email,

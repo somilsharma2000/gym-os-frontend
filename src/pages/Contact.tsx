@@ -48,7 +48,7 @@ export default function Contact() {
     try {
       // REAL capture — posts to our own backend (gym-os-app).
       const res = await Promise.race([
-        api.createLeadWithConsent({
+        api.captureWebsiteLead({
           name: formData.name,
           gym_name: formData.gym_name,
           phone: formData.phone,
