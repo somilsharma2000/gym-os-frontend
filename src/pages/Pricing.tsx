@@ -142,7 +142,7 @@ export default function Pricing() {
               key={idx}
               className={`relative rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 ${
                 plan.highlight
-                  ? 'bg-[#131a26] border-2 border-[#2563eb] shadow-2xl shadow-[#2563eb]/20 scale-100 lg:-translate-y-2'
+                  ? 'beam-tier bg-[#131a26] border-2 border-[#2563eb] shadow-2xl shadow-[#2563eb]/20 scale-100 lg:-translate-y-2'
                   : 'bg-[#131a26] border border-slate-800 hover:border-slate-700'
               }`}
             >
@@ -186,7 +186,7 @@ export default function Pricing() {
                 to="/contact"
                 className={`w-full py-3.5 px-6 rounded-xl text-sm font-bold text-center transition-all flex items-center justify-center gap-2 cursor-pointer ${
                   plan.highlight
-                    ? 'bg-[#2563eb] hover:bg-blue-500 text-white shadow-lg shadow-blue-600/30 hover:scale-[1.02] active:scale-[0.98]'
+                    ? 'cta-shine bg-[#2563eb] hover:bg-blue-500 text-white shadow-lg shadow-blue-600/30 hover:scale-[1.02] active:scale-[0.98]'
                     : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
                 }`}
               >

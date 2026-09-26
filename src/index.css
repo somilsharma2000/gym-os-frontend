@@ -330,3 +330,69 @@ html {
 .animate-fade-in {
   animation: fadeIn 0.25s ease-out forwards;
 }
+
+/* ===== PREMIUM MICRO-INTERACTIONS (Animaster/Skiper/Vengeance patterns) ===== */
+/* 1. Shine sweep on primary CTAs — slow at rest, quick on hover */
+.cta-shine {
+  position: relative;
+  overflow: hidden;
+}
+.cta-shine::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -130%;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.24), transparent);
+  transform: skewX(-18deg);
+  animation: cta-shine-sweep 5.2s ease-in-out infinite;
+  pointer-events: none;
+}
+.cta-shine:hover::after {
+  animation-duration: 1.3s;
+}
+@keyframes cta-shine-sweep {
+  0%, 58% { left: -130%; }
+  88%, 100% { left: 175%; }
+}
+
+/* 2. Traveling border beam — pricing highlight tier */
+@property --beam-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+.beam-tier {
+  position: relative;
+}
+.beam-tier::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  z-index: 1;
+  background: conic-gradient(
+    from var(--beam-angle),
+    transparent 0deg,
+    transparent 260deg,
+    rgba(37, 99, 235, 0.95) 315deg,
+    rgba(147, 197, 253, 0.85) 340deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: beam-orbit 4.2s linear infinite;
+}
+@keyframes beam-orbit {
+  to { --beam-angle: 360deg; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta-shine::after { display: none; }
+  .beam-tier::before { animation: none; background: none; }
+}

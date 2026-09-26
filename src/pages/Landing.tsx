@@ -29,6 +29,74 @@ import {
   Menu
 } from 'lucide-react'
 import { enableDemoMode } from '../data/demoData'
+import { api } from '../api/client'
+
+const FAQ_ITEMS = [
+  {
+    q: 'My staff isn\'t technical. Will they manage this?',
+    a: 'Gym OS runs where your staff already lives: WhatsApp and a browser. Check-in is one QR scan, and we train your front desk in one call. Most teams are comfortable on day one.',
+  },
+  {
+    q: 'I already use a register and Excel. Why switch?',
+    a: 'A register tells you what happened after it happened. Gym OS tells you what\'s about to happen: who expires this week, which lead was never called, which payment is pending — and it acts on renewals automatically.',
+  },
+  {
+    q: 'Do my members need to download an app?',
+    a: 'No. Reminders, QR passes, receipts and plans all arrive on WhatsApp. Your members don\'t change a single habit.',
+  },
+  {
+    q: 'What happens to my data?',
+    a: 'Your data stays yours. Every record is exportable anytime, your members\' details stay in your gym\'s own account, and consent is captured at every touchpoint per India\'s DPDP Act.',
+  },
+  {
+    q: 'How long does setup take?',
+    a: 'We transfer your existing member base for you and set up your branded system — typically within a day. You keep the register as backup until you stop reaching for it yourself.',
+  },
+  {
+    q: 'Is WhatsApp automation legal?',
+    a: 'Yes — when members have opted in. Gym OS records consent at every lead form and at member onboarding, in line with India\'s DPDP Act, and only sends messages your members asked for.',
+  },
+]
+
+function FaqAccordion() {
+  const [openIndex, setOpenIndex] = useState<number | null>(0)
+  return (
+    <div className="space-y-3">
+      {FAQ_ITEMS.map((item, i) => {
+        const isOpen = openIndex === i
+        return (
+          <div
+            key={i}
+            className={`rounded-2xl border transition-colors duration-300 ${
+              isOpen ? 'border-blue-500/40 bg-slate-950/80' : 'border-slate-800/80 bg-slate-950/50 hover:border-slate-700'
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => setOpenIndex(isOpen ? null : i)}
+              aria-expanded={isOpen}
+              className="w-full flex items-center justify-between gap-4 px-5 sm:px-6 py-5 text-left cursor-pointer"
+            >
+              <span className="text-sm sm:text-base font-bold text-white">{item.q}</span>
+              <span
+                className={`relative w-3 h-3 flex-shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-0' : ''}`}
+                aria-hidden="true"
+              >
+                <span className={`absolute left-0 top-[5px] w-3 h-0.5 rounded bg-blue-400 transition-opacity ${isOpen ? 'opacity-100' : 'opacity-70'}`} />
+                <span className={`absolute left-[5px] top-0 w-0.5 h-3 rounded bg-blue-400 transition-transform duration-300 origin-center ${isOpen ? 'scale-y-0' : 'scale-y-100'}`} />
+              </span>
+            </button>
+            <div
+              className={`overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${isOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'}`}
+            >
+              <p className="px-5 sm:px-6 pb-5 text-sm leading-relaxed text-slate-300">{item.a}</p>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
 
 export default function Landing() {
   const navigate = useNavigate()
@@ -36,6 +104,7 @@ export default function Landing() {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [consentGiven, setConsentGiven] = useState(false)
 
   // Form state for contact modal
   const [formData, setFormData] = useState({
@@ -54,20 +123,50 @@ export default function Landing() {
     navigate('/login')
   }
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const WHATSAPP = '917737077479'
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!consentGiven) return
     setIsSubmitting(true)
 
-    // Simulate submission, show success message, then navigate to /dashboard after 1.5s
-    setTimeout(() => {
-      setIsSubmitting(false)
-      setIsSubmitted(true)
+    // REAL capture — never lose a lead. Posts to our own backend (gym-os-app).
+    // If the backend is unreachable, fall back to WhatsApp so the lead is still in our hands.
+    let captured = false
+    try {
+      const res = await Promise.race([
+        api.createLeadWithConsent({
+          name: formData.name,
+          phone: formData.phone,
+          email: formData.email,
+          gym_name: formData.gymName,
+          source: 'Website',
+          interest: 'Free Demo Request',
+          notes: `Demo request from landing page. Gym: ${formData.gymName}`,
+          consent: true,
+          consent_purpose: 'Contact about Gym OS demo',
+        }),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 7000)),
+      ])
+      captured = !!(res && res.success)
+    } catch {
+      captured = false
+    }
 
-      setTimeout(() => {
-        enableDemoMode()
-        navigate('/dashboard')
-      }, 1500)
-    }, 400)
+    if (!captured) {
+      // WhatsApp fallback — enquiry prefilled, nothing lost
+      const msg = encodeURIComponent(
+        `Hi Beyond Pixells! I want a Gym OS demo.\nName: ${formData.name}\nGym: ${formData.gymName}\nPhone: ${formData.phone}`
+      )
+      window.open(`https://wa.me/${WHATSAPP}?text=${msg}`, '_blank', 'noopener')
+    }
+
+    setIsSubmitting(false)
+    setIsSubmitted(true)
+    setTimeout(() => {
+      enableDemoMode()
+      navigate('/dashboard')
+    }, 1500)
   }
 
   const handleCloseModal = () => {
@@ -269,7 +368,7 @@ export default function Landing() {
         <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md sm:max-w-none">
           <button
             onClick={handleLiveDemo}
-            className="w-full sm:w-auto px-8 py-4 text-base font-bold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-xl transition-all shadow-xl shadow-blue-600/30 flex items-center justify-center gap-2.5 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+            className="cta-shine w-full sm:w-auto px-8 py-4 text-base font-bold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-xl transition-all shadow-xl shadow-blue-600/30 flex items-center justify-center gap-2.5 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
           >
             <Sparkles size={18} className="text-white" />
             <span>Explore Live Demo</span>
@@ -651,6 +750,17 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* FAQ */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+            Questions, <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">answered</span>
+          </h2>
+          <p className="mt-3 text-sm sm:text-base text-slate-400">The things gym owners ask us before switching.</p>
+        </div>
+        <FaqAccordion />
+      </section>
+
       {/* CLOSING HIGH-IMPACT CTA BANNER */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full my-8">
         <div className="bg-gradient-to-r from-blue-950/90 via-[#0a0e27] to-indigo-950/90 border border-blue-500/30 rounded-3xl p-8 sm:p-14 text-center relative overflow-hidden shadow-2xl">
@@ -664,7 +774,7 @@ export default function Landing() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <button
               onClick={handleLiveDemo}
-              className="w-full sm:w-auto px-8 py-4 text-base font-bold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-xl transition-all shadow-xl shadow-blue-600/30 flex items-center justify-center gap-2.5 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+              className="cta-shine w-full sm:w-auto px-8 py-4 text-base font-bold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-xl transition-all shadow-xl shadow-blue-600/30 flex items-center justify-center gap-2.5 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
             >
               <Sparkles size={18} />
               <span>Explore Live Demo</span>
@@ -683,6 +793,11 @@ export default function Landing() {
 
       {/* FOOTER */}
       <footer className="mt-auto border-t border-slate-800/80 bg-[#070a1e] py-12 text-slate-400">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 text-center">
+        <p className="text-[11px] text-slate-600 tracking-wide">
+          © 2026 Beyond Pixells · Gym OS is proprietary software — copying, cloning or reproducing it, in part or full, is prohibited.
+        </p>
+      </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pb-10 border-b border-slate-800/60">
             {/* Brand Column */}
@@ -887,11 +1002,24 @@ export default function Landing() {
                     />
                   </div>
 
+                  {/* DPDP Consent */}
+                  <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={consentGiven}
+                      onChange={(e) => setConsentGiven(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded border-slate-600 bg-slate-900 accent-blue-500 cursor-pointer"
+                    />
+                    <span className="text-[11px] leading-relaxed text-slate-400">
+                      I agree to be contacted by Beyond Pixells about my demo request. My details are used only for this and are never shared. (DPDP consent)
+                    </span>
+                  </label>
+
                   {/* Submit Button */}
                   <button
                     type="submit"
-                    disabled={isSubmitting}
-                    className="w-full py-3 text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 disabled:opacity-60 rounded-xl transition-all shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 cursor-pointer mt-2"
+                    disabled={isSubmitting || !consentGiven}
+                    className="w-full py-3 text-sm font-bold text-white bg-blue-600 hover:bg-blue-500 disabled:opacity-40 rounded-xl transition-all shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 cursor-pointer mt-2 relative overflow-hidden"
                   >
                     {isSubmitting ? (
                       <>

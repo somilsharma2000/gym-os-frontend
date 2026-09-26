@@ -1,0 +1,7 @@
+# Gym OS by Beyond Pixells
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /superadmin
+
+Sitemap: https://somilsharma2000.github.io/gym-os-frontend/sitemap.xml
