@@ -3,6 +3,7 @@ import { Bot, Building2, Plus, Globe, Settings as SettingsIcon, Users, Search, X
 import { Link, useNavigate } from 'react-router-dom'
 
 const API_BASE = 'https://base44.app/api/apps/6a700b150c8d8b8e923580a1/functions'
+const authHeaders = () => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('gym_os_auth_token') || ''}` })
 
 interface Gym {
   gym_id: string
@@ -83,7 +84,7 @@ export default function SuperAdmin() {
     setSubmitting(true)
     try {
       const res = await fetch(`${API_BASE}/createGym`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: authHeaders(),
         body: JSON.stringify(formData)
       })
       const data = await res.json()
@@ -106,7 +107,7 @@ export default function SuperAdmin() {
     setConnectingGym(gymId)
     try {
       const res = await fetch(`${API_BASE}/updateGymProfile`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: authHeaders(),
         body: JSON.stringify({ gym_id: gymId, website_url: connectUrl, website_generated: true })
       })
       const data = await res.json()
@@ -128,7 +129,7 @@ export default function SuperAdmin() {
     setDeleting(true)
     try {
       const res = await fetch(`${API_BASE}/deleteGym`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
+        method: "POST", headers: authHeaders(),
         body: JSON.stringify({ gym_id: gymId })
       })
       const data = await res.json()
@@ -158,7 +159,7 @@ export default function SuperAdmin() {
 
   useEffect(() => {
     fetch(`${API_BASE}/manageAIConfig`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: authHeaders(),
       body: JSON.stringify({ action: 'get' })
     }).then(r => r.json()).then(res => {
       if (res?.success && res.config) setAiConfig(res.config)
@@ -169,7 +170,7 @@ export default function SuperAdmin() {
     setAiSaving(true)
     try {
       await fetch(`${API_BASE}/manageAIConfig`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: authHeaders(),
         body: JSON.stringify({
           action: 'save',
           ai_provider: aiConfig.ai_provider,
