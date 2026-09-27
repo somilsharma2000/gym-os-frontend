@@ -352,7 +352,7 @@ export default function Landing() {
       </header>
 
       {/* HERO SECTION */}
-      <section className="relative pt-12 sm:pt-20 pb-16 sm:pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center flex flex-col items-center animate-fade-in-up">
+      <section className="relative pt-12 sm:pt-20 pb-16 sm:pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto min-w-0 w-full text-center flex flex-col items-center animate-fade-in-up">
         {/* Badge Pill */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs sm:text-sm font-semibold mb-8 backdrop-blur-sm">
           <Zap size={14} className="text-blue-400" />
@@ -403,7 +403,7 @@ export default function Landing() {
         </div>
 
         {/* Interactive Command Center Preview */}
-        <div className="mt-14 w-full max-w-4xl p-1 bg-slate-900/60 border border-slate-800/80 rounded-2xl backdrop-blur-md shadow-2xl overflow-hidden">
+        <div className="mt-14 w-full max-w-4xl min-w-0 p-1 bg-slate-900/60 border border-slate-800/80 rounded-2xl backdrop-blur-md shadow-2xl overflow-hidden">
           <div className="bg-[#0c122c] rounded-xl p-6 sm:p-8 border border-slate-800/60 text-left">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 pb-4 border-b border-slate-800/80 gap-3">
               <div className="flex items-center gap-2">
@@ -465,12 +465,12 @@ export default function Landing() {
             </div>
 
             {/* Live Ticker Feed Bar */}
-            <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-400 overflow-x-auto gap-4">
+            <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-400 overflow-x-auto gap-4 min-w-0">
               <div className="flex items-center gap-2 flex-shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
                 <span className="text-slate-300 font-mono text-[11px]">Recent Feed:</span>
               </div>
-              <div className="flex items-center gap-6 text-[11px] font-medium text-slate-300 flex-shrink-0">
+              <div className="flex items-center gap-6 text-[11px] font-medium text-slate-300 flex-shrink-0 max-w-full min-w-0 whitespace-nowrap overflow-x-auto">
                 <span>[10:14 AM] QR Check-in: Rahul M. verified</span>
                 <span className="text-slate-600">•</span>
                 <span>[10:12 AM] WhatsApp: Renewal nudge sent to Priya S.</span>
