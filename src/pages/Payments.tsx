@@ -55,11 +55,7 @@ export default function Payments() {
     setInvoiceLoading(paymentId)
     try {
       const gymId = localStorage.getItem('gym_os_gym_id') || ''
-      const res = await fetch(`${API_BASE}/generateInvoice`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ payment_id: paymentId, gym_id: gymId })
-      })
-      const data = await res.json()
+      const data = await api.generateInvoice({ payment_id: paymentId, gym_id: gymId })
       if (data.success && data.html) {
         const w = window.open('', '_blank')
         if (w) { w.document.write(data.html); w.document.close() }
@@ -89,22 +85,18 @@ export default function Payments() {
     setActionLoading(payment.id)
     try {
       const gymId = localStorage.getItem('gym_os_gym_id') || ''
-      const res = await fetch(`${API_BASE}/recordPaymentWithInvoice`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          payment_id: payment.id,
-          gym_id: gymId,
-          member_id: payment.member_id,
-          member_name: payment.member_name,
-          amount: payment.amount,
-          type: payment.type,
-          method: payment.method,
-          status: 'paid',
-          date: new Date().toISOString().split('T')[0],
-          auto_generate_invoice: true
-        })
+      const data = await api.recordPaymentWithInvoice({
+        payment_id: payment.id,
+        gym_id: gymId,
+        member_id: payment.member_id,
+        member_name: payment.member_name,
+        amount: payment.amount,
+        type: payment.type,
+        method: payment.method,
+        status: 'paid',
+        date: new Date().toISOString().split('T')[0],
+        auto_generate_invoice: true
       })
-      const data = await res.json()
       if (data.success) {
         setPayments(prev => prev.map(p => p.id === payment.id ? { ...p, status: 'paid', invoice_number: data.invoice_number || p.invoice_number } : p))
         fetchPayments()
@@ -283,19 +275,15 @@ function RecordPaymentModal({ onClose, onRecorded }: { onClose: () => void; onRe
     setError('')
     try {
       const gymId = localStorage.getItem('gym_os_gym_id') || ''
-      const res = await fetch(`${API_BASE}/recordPaymentWithInvoice`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          gym_id: gymId,
-          member_id: memberId || null,
-          member_name: memberName || 'Walk-in',
-          amount: Number(amount),
-          type, method, status,
-          date: new Date().toISOString().split('T')[0],
-          auto_generate_invoice: status === 'paid'
-        })
+      const data = await api.recordPaymentWithInvoice({
+        gym_id: gymId,
+        member_id: memberId || null,
+        member_name: memberName || 'Walk-in',
+        amount: Number(amount),
+        type, method, status,
+        date: new Date().toISOString().split('T')[0],
+        auto_generate_invoice: status === 'paid'
       })
-      const data = await res.json()
       if (data.success) {
         if (data.invoice_html) {
           const w = window.open('', '_blank')

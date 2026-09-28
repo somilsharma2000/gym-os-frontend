@@ -1077,14 +1077,9 @@ function AddLeadModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
     setSubmitting(true)
     try {
       const gymId = localStorage.getItem('gym_os_gym_id') || ''
-      const res = await fetch(`${API_BASE}/createLeadWithConsent`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          gym_id: gymId, name, phone, email, source, interest, fitness_goal: fitnessGoal, notes, consent_status: 'granted'
-        })
+      const data = await api.createLeadWithConsent({
+        gym_id: gymId, name, phone, email, source, interest, fitness_goal: fitnessGoal, notes, consent_status: 'granted'
       })
-      const data = await res.json()
       if (data.success) {
         onAdded()
       } else {
@@ -1152,11 +1147,9 @@ function ImportModal({ onClose, onImported }: { onClose: () => void; onImported:
       const [name, phone, email, source, interest] = line.split(',').map(s => s.trim())
       if (!name || !phone) { failed++; continue }
       try {
-        const res = await fetch(`${API_BASE}/createLeadWithConsent`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ gym_id: gymId, name, phone, email: email || '', source: source || 'spreadsheet', interest: interest || '', fitness_goal: interest || '', status: 'new', consent_status: 'granted' })
+        const data = await api.createLeadWithConsent({
+          gym_id: gymId, name, phone, email: email || '', source: source || 'spreadsheet', interest: interest || '', fitness_goal: interest || '', status: 'new', consent_status: 'granted'
         })
-        const data = await res.json()
         if (data.success) added++
         else failed++
       } catch { failed++ }

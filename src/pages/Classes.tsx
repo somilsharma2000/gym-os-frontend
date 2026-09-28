@@ -96,12 +96,7 @@ export default function Classes() {
     const selectedArray = Array.from(selectedMembers)
     for (const memberId of selectedArray) {
       try {
-        const res = await fetch(`${API_BASE}/enrollInClass`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ gym_id: gymId, class_id: enrollModal.id, member_id: memberId, action: 'enroll' })
-        })
-        const data = await res.json()
+        const data = await api.enrollInClass({ gym_id: gymId, class_id: enrollModal.id, member_id: memberId })
         if (data.success || data.enrolled) {
           successCount++
         } else {

@@ -172,21 +172,12 @@ function MembershipModal({ membership, plans, onClose, onSaved }: { membership: 
         status: new Date(expiry) < new Date() ? 'expired' : 'active'
       }
 
-      // Also record payment if paid
-      if (paymentStatus === 'paid') {
-        await fetch(`${API_BASE}/recordPaymentWithInvoice`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            gym_id: gymId,
-            member_name: memberName,
-            amount: Number(planPrice),
-            type: 'Membership',
-            method: paymentMethod,
-            status: 'paid',
-            date: startDate,
-            auto_generate_invoice: true
-          })
-        })
+      // Save the membership (backend also records the payment + invoice when paid)
+      const result = await api.saveMembership(payload)
+      if (!result.success) {
+        setError(result.error || 'Failed to save membership')
+        setSubmitting(false)
+        return
       }
       onSaved()
     } catch (err) { setError('Failed to save membership') }

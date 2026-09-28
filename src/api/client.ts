@@ -361,6 +361,26 @@ async function authCall<T = any>(functionName: string, payload?: Record<string, 
 
 // --- API Surface ---
 
+
+// demo receipt HTML for the sandbox (DEMO_MODE invoice generation)
+function demoReceiptHtml(data: Record<string, unknown>): string {
+  const amount = Number(data.amount ?? 0)
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>DEMO Receipt</title>
+<style>body{font-family:system-ui,sans-serif;max-width:640px;margin:40px auto;padding:0 24px;color:#0f172a}h1{font-size:22px}.muted{color:#64748b;font-size:13px}.box{border:1px solid #e2e8f0;border-radius:10px;padding:18px;margin:18px 0}.row{display:flex;justify-content:space-between;padding:6px 0}.total{font-size:18px;font-weight:700;border-top:2px solid #0f172a;margin-top:8px;padding-top:10px}.demo{background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px;padding:10px 14px;color:#3730a3;font-size:13px}</style></head><body>
+<h1>GYM OS — Payment Receipt</h1>
+<p class="muted">by Beyond Pixells</p>
+<div class="demo">DEMO MODE — this receipt is simulated sandbox data, not a real payment.</div>
+<div class="box">
+<div class="row"><span>Member</span><strong>${data.member_name ?? 'Member'}</strong></div>
+<div class="row"><span>Method</span><span>${String(data.method ?? 'cash').toUpperCase()}</span></div>
+</div>
+<div class="box">
+<div class="row total"><span>Total paid</span><span>₹${amount.toLocaleString('en-IN')}</span></div>
+</div>
+<p class="muted">In production every payment is backed by a double-entry ledger entry.</p>
+</body></html>`
+}
+
 export const api = {
   // Auth
   login: async (email: string, password: string): Promise<LoginResponse> => {
@@ -482,6 +502,28 @@ export const api = {
   createPayment: async (data: Record<string, unknown>): Promise<any> => {
     if (DEMO_MODE) return { success: true, invoice_number: 'DEMO-' + Date.now() }
     return apiCall('createPayment', data)
+  },
+
+  // SPA console parity — real endpoints on the backend, simulated in demo mode
+  recordPaymentWithInvoice: async (data: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) return { success: true, payment_id: 'demo_' + Date.now(), invoice_number: 'DEMO-' + Date.now() }
+    return apiCall('recordPaymentWithInvoice', data)
+  },
+  saveMembership: async (data: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) return { success: true, membership: { id: 'demo_' + Date.now(), expires_on: data.expiry_date }, invoice_number: 'DEMO-' + Date.now() }
+    return apiCall('saveMembership', data)
+  },
+  generateInvoice: async (data: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) return { success: true, html: demoReceiptHtml(data), invoice_number: 'DEMO-' + Date.now() }
+    return apiCall('generateInvoice', data)
+  },
+  generateMemberQR: async (data: Record<string, unknown>): Promise<any> => {
+    if (DEMO_MODE) {
+      const token = 'DEMO-' + Math.random().toString(36).slice(2, 12)
+      const img = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent('GYMOS|demo|' + token)}`
+      return { success: true, qr_token: token, qr_url: img, qr_image_url: img }
+    }
+    return apiCall('generateMemberQR', data)
   },
 
   // Members

@@ -446,17 +446,12 @@ export default function CheckIn() {
     try {
       const gymId = localStorage.getItem('gym_os_gym_id') || ''
       const member = members.find(m => m.id === qrGenMember)
-      const res = await fetch(`${API_BASE}/generateMemberQR`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          gym_id: gymId,
-          member_id: qrGenMember,
-          member_name: member?.name || '',
-          membership_type: member?.membership_type || 'Member'
-        })
+      const data = await api.generateMemberQR({
+        gym_id: gymId,
+        member_id: qrGenMember,
+        member_name: member?.name || '',
+        membership_type: member?.membership_type || 'Member'
       })
-      const data = await res.json()
       if (data.success) setQrGenResult(data)
     } catch (e) { /* silent */ }
     setQrGenLoading(false)
